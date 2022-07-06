@@ -78,7 +78,51 @@ class PlayingCardDataset(Dataset):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, has_class=True):
+class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
+	"""Samples elements randomly from a given list of indices for imbalanced dataset
+	Arguments:
+		indices (list, optional): a list of indices
+		num_samples (int, optional): number of samples to draw
+	"""
+
+	def __init__(self, dataset, indices=None):
+		# if indices is not provided,
+		# all elements in the dataset will be considered
+		self.indices = list(range(len(dataset))) \
+			if indices is None else indices
+
+		# if num_samples is not provided,
+		# draw `len(indices)` samples in each iteration
+		self.num_samples = len(self.indices)
+
+		# distribution of classes in the dataset
+		label_to_count = {}
+		for idx in self.indices:
+			label = self._get_label(dataset, idx)
+			if label in label_to_count:
+				label_to_count[label] += 1
+			else:
+				label_to_count[label] = 1
+
+		# weight for each sample
+		weights = [1.0 / label_to_count[self._get_label(dataset, idx)]
+			for idx in self.indices]
+		self.weights = torch.DoubleTensor(weights)
+
+	def _get_label(self, dataset, idx):  # Note: for single attribute dataset
+		return dataset.data[idx]["id"]['attribute_label'][0]
+
+	def __iter__(self):
+		idx = (self.indices[i] for i in torch.multinomial(
+			self.weights, self.num_samples, replacement=True))
+		return idx
+
+	def __len__(self):
+		return self.num_samples
+
+
+# https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, has_class=True, resampling=False):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -102,7 +146,11 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 	else:
 		drop_last = False
 		shuffle = False
-	loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
+	if resampling:
+		sampler = BatchSampler(ImbalancedDatasetSampler(dataset), batch_size=batch_size, drop_last=drop_last)
+		loader = DataLoader(dataset, batch_sampler=sampler)
+	else:
+		loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
 	return loader
 
 

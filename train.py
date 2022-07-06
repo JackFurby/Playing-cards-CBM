@@ -18,8 +18,9 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 		outputs = model(images)
 
 		if mode == "standard":
-			loss = criterion(outputs, concepts)
-			sigmoid_outputs = torch.nn.Sigmoid()(outputs)
+			loss = criterion(outputs, labels)
+			_, predicted = outputs.max(1)
+			accuracy.extend(predicted.eq(labels))
 		else:
 			batch_losses = []
 			for i in range(len(criterion)):
@@ -29,16 +30,17 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 			loss = sum(batch_losses) / len(concepts[:, i])
 			sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
-		# accuracy for concepts
-		accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+			# accuracy for concepts
+			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
 		losses.append(loss.item())
 		loss.backward()
 
-		acc = sum(accuracy) / len(accuracy)
 
 		# Optimizing the parameters
 		optimizer.step()
+
+	acc = sum(accuracy) / len(accuracy)
 
 	# Return the average loss and accuracy
 	return sum(losses) / len(losses), acc
@@ -56,8 +58,9 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 			outputs = model(images)
 
 			if mode == "standard":
-				loss = criterion(outputs, concepts)
-				sigmoid_outputs = torch.nn.Sigmoid()(outputs)
+				loss = criterion(outputs, labels)
+				_, predicted = outputs.max(1)
+				accuracy.extend(predicted.eq(labels))
 			else:
 				batch_losses = []
 				# caculate loss for each concept seperatly
@@ -68,11 +71,13 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 				loss = sum(batch_losses) / len(concepts[:, i])
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
-			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+
+
 
 			losses.append(loss.item())
 
-			acc = sum(accuracy) / len(accuracy)
+		acc = sum(accuracy) / len(accuracy)
 
 	# Return the average loss
 	return sum(losses) / len(losses), acc

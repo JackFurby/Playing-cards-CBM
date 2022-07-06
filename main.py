@@ -102,7 +102,7 @@ if __name__ == "__main__":
 	parser.add_argument(
 		'--attr_loss_weight',
 		type=float,
-		default=0.01,
+		default=1.0,
 		help='weight for loss by predicting attributes'
 	)
 	parser.add_argument(
@@ -141,7 +141,7 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
-	train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class)
+	train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, resampling=True)
 	val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class)
 
 	if parameters['training_mode'] == "XtoC":
@@ -164,6 +164,7 @@ if __name__ == "__main__":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/train.pkl", True)
+			print(imbalance)
 			for ratio in imbalance:
 				attr_criterion.append(torch.nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
 		else:
@@ -208,7 +209,7 @@ if __name__ == "__main__":
 		print("Finished training!")
 
 	elif args.mode == "standard":
-		criterion = nn.BCEWithLogitsLoss()
+		criterion = nn.CrossEntropyLoss()
 
 		bestAccuracy = None
 
