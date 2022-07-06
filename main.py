@@ -85,16 +85,6 @@ if __name__ == "__main__":
 		help='file path to dataset root dir'
 	)
 	parser.add_argument(
-		'--use_relu',
-		action='store_true',
-		help='Whether to include relu activation before using attributes to predict Y. For end2end & bottleneck model'
-	)
-	parser.add_argument(
-		'--use_sigmoid',
-		action='store_true',
-		help='Whether to include sigmoid activation before using attributes to predict Y. For end2end & bottleneck model'
-	)
-	parser.add_argument(
 		'--weighted_loss',
 		action='store_true',
 		help='Whether to use weighted loss for single attribute or multiple ones'
@@ -109,6 +99,11 @@ if __name__ == "__main__":
 		'--has_class',
 		action='store_true',
 		help='Whether the dataset includes class labels'
+	)
+	parser.add_argument(
+		'--freeze',
+		action='store_true',
+		help='whether to freeze the bottom part of the model'
 	)
 	args = parser.parse_args()
 
@@ -130,12 +125,11 @@ if __name__ == "__main__":
 		optimizer=args.optimizer,
 		n_concepts=args.n_concepts,
 		n_classes=args.n_classes,
-		use_relu=args.use_relu,
-		use_sigmoid=args.use_sigmoid,
 		dataset_root=args.dataset_root,
 		has_class=args.has_class,
 		attr_loss_weight=args.attr_loss_weight,
-		weighted_loss=args.weighted_loss
+		weighted_loss=args.weighted_loss,
+		freeze=args.freeze
 	)
 
 	wandb.init(project="playing_cards_CBM", config=parameters)
@@ -145,8 +139,7 @@ if __name__ == "__main__":
 	val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class)
 
 	if parameters['training_mode'] == "XtoC":
-		model = ConcpetPlayingCardNet(num_concepts=args.n_concepts, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights)
-		#model = PlayingCardNet(num_classes=args.n_concepts, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights)
+		model = ConcpetPlayingCardNet(num_concepts=args.n_concepts, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights)
 
@@ -155,10 +148,10 @@ if __name__ == "__main__":
 	wandb.watch(model, log_freq=100)
 
 	if args.optimizer == "adam":
-		optimizer = torch.optim.Adam(model.parameters(), lr=parameters['start_lr'])
+		optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 	else:
-		optimizer = torch.optim.SGD(model.parameters(), lr=parameters['start_lr'])
-	scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=parameters['lr_patience'], factor=0.1)
+		optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+	scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
 	if args.mode == "XtoC":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
@@ -206,8 +199,6 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
-		print("Finished training!")
-
 	elif args.mode == "standard":
 		criterion = nn.CrossEntropyLoss()
 
@@ -224,26 +215,26 @@ if __name__ == "__main__":
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
-				saveName = "./saves/XtoC_best.pth"
+				saveName = "./saves/playing_card_best.pth"
 				torch.save(model.state_dict(), saveName)
 				wandb.save(saveName)
 				print("Model saved")
 
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
-			print("trainAcc:", trainAcc, "%")
+			print("trainAcc:", 100 * trainAcc, "%")
 			print("testLoss:", testLoss)
-			print("testAcc:", testAcc, "%")
+			print("testAcc:", 100 * testAcc, "%")
 
 			# Log to wandb
 			wandb.log({
 				"epoch": epoch,
 				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": trainAcc,
+				"XtoC Train Accuracy": 100 * trainAcc,
 				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": testAcc
+				"XtoC Test Accuracy": 100 * testAcc
 			})
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
-		print("Finished training!")
+	print("Finished training!")

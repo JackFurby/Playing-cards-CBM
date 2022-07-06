@@ -36,7 +36,6 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 		losses.append(loss.item())
 		loss.backward()
 
-
 		# Optimizing the parameters
 		optimizer.step()
 
@@ -72,8 +71,6 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
 				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
-
-
 
 			losses.append(loss.item())
 

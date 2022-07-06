@@ -57,16 +57,13 @@ class PlayingCardNet(nn.Module):
 
 
 class ConcpetPlayingCardNet(nn.Module):
-	def __init__(self, num_concepts, pretrained=False, pretrained_weights=None, expand_dim=0):
+	def __init__(self, num_concepts, pretrained=False, pretrained_weights=None, expand_dim=0, freeze=False):
 		super(ConcpetPlayingCardNet, self).__init__()
 		self.conv1 = nn.Conv2d(3, 64, 3)  # 3 channels; 64 is the output channel size; 3 is the kernel size;
 		self.conv2 = nn.Conv2d(64, 64, 3)
 		self.conv3 = nn.Conv2d(64, 128, 3)
 		self.conv4 = nn.Conv2d(128, 128, 3)
-		self.conv5 = nn.Conv2d(128, 128, 3)
-		self.conv6 = nn.Conv2d(128, 256, 3)
-		self.conv7 = nn.Conv2d(256, 256, 3)
-		self.fc1 = nn.Linear(23296, 512)
+		self.fc1 = nn.Linear(17280, 512)
 		self.pool = nn.MaxPool2d(2, 2)
 		self.flatten = nn.Flatten()
 		self.dropout = nn.Dropout(0.5)
@@ -77,14 +74,17 @@ class ConcpetPlayingCardNet(nn.Module):
 		for i in range(num_concepts):
 			self.all_fc.append(FC(512, 1, expand_dim))
 
+		# if freeze == true then freeze all but fc layers
+		if freeze:  # only finetune fc layer
+			for name, param in self.named_parameters():
+				if 'fc' not in name:
+					param.requires_grad = False
+
 	def forward(self, x):
-		x = self.ReLU(self.conv1(x))
+		x = self.pool(self.ReLU(self.conv1(x)))
 		x = self.pool(self.ReLU(self.conv2(x)))
-		x = self.ReLU(self.conv3(x))
+		x = self.pool(self.ReLU(self.conv3(x)))
 		x = self.pool(self.ReLU(self.conv4(x)))
-		x = self.pool(self.ReLU(self.conv5(x)))
-		x = self.ReLU(self.conv6(x))
-		x = self.pool(self.ReLU(self.conv7(x)))
 		x = self.flatten(x)
 		x = self.dropout(x)
 		x = self.fc1(x)
