@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# extra folders and files
+wandb/
+saves/
+dataset/multi_playing_cards
+dataset/playing_cards
