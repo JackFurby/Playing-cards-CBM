@@ -15,7 +15,6 @@ conversion_table = {
 
 
 def convert(module, modules=None):
-	print(module)
 	# First time
 	if modules is None:
 		modules = []

@@ -140,12 +140,10 @@ if __name__ == "__main__":
 	val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class)
 
 	if parameters['training_mode'] == "XtoC":
-		#model = ModelXtoC(num_attributes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights)
+		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
 	else:  # standard training
-		#model = vgg_mini_bn(pretrained=False, num_classes=args.n_classes, pretrained_weights=args.pretrained_weights)
-		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights)
+		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
 	model.to(device)
 

@@ -70,13 +70,15 @@ class PlayingCardNet(nn.Module):
 
 		# if weights file provided, load them
 		if pretrained_weights is not None:
-			self.load_state_dict(torch.load(pretrained_weights))
+			self.load_state_dict(torch.load(pretrained_weights), strict=False)  # as we are replacing the final fc layer we can set strict to False
+			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all but fc layers
 		if freeze:  # only finetune fc layer
 			for name, param in self.named_parameters():
 				if 'fc' not in name:
 					param.requires_grad = False
+			print("frozen lower model layers")
 
 	def forward(self, x):
 		x = self.features(x)

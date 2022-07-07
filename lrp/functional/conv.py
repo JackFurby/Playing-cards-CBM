@@ -24,7 +24,12 @@ def _backward_rho(ctx, relevance_output):
     Z                = ctx.incr(F.conv2d(input, weight, bias, ctx.stride, ctx.padding, ctx.dilation, ctx.groups))
 
     relevance_output = relevance_output / Z
-    relevance_input  = F.conv_transpose2d(relevance_output, weight, None, padding=1)
+    #relevance_input  = F.conv_transpose2d(relevance_output, weight, None, padding=1)
+    if ctx.stride[0] >= 2:
+        output_padding = 1
+    else:
+        output_padding = 0
+    relevance_input  = F.conv_transpose2d(relevance_output, weight, None, stride=ctx.stride, padding=ctx.padding, output_padding=output_padding)
     relevance_input  = relevance_input * input
 
     trace.do_trace(relevance_input)
@@ -64,6 +69,8 @@ def _conv_alpha_beta_forward(ctx, input, weight, bias, stride, padding, dilation
     ctx.save_for_backward(input, weight, Z,  bias)
     ctx.stride = stride
     ctx.padding = padding
+    ctx.dilation = dilation
+    ctx.groups = groups
     return Z
 
 def _conv_alpha_beta_backward(alpha, beta, ctx, relevance_output):
@@ -79,19 +86,22 @@ def _conv_alpha_beta_backward(alpha, beta, ctx, relevance_output):
 
         def f(X1, X2, W1, W2):
 
-            #Z2  = F.conv2d(X2, W2, bias=None, stride=ctx.stride, padding=ctx.padding)
-            #Z2  = F.conv2d(X2, W2, bias=None, stride=ctx.stride, padding=ctx.padding)
-            Z1  = F.conv2d(X1, W1, bias=None, stride=1, padding=1)
-            Z2  = F.conv2d(X2, W2, bias=None, stride=1, padding=1)
+            # Z1  = F.conv2d(X1, W1, bias=None, stride=1, padding=1)
+            # Z2  = F.conv2d(X2, W2, bias=None, stride=1, padding=1)
+            Z1 = F.conv2d(X1, W1, None, ctx.stride, ctx.padding, ctx.dilation, ctx.groups)
+            Z2 = F.conv2d(X2, W2, None, ctx.stride, ctx.padding, ctx.dilation, ctx.groups)
             Z   = Z1 + Z2
 
             rel_out = relevance_output / (Z + (Z==0).float()* 1e-6)
 
-            #t1 = F.conv_transpose2d(rel_out, W1, bias=None, padding=ctx.padding, stride=ctx.stride)
-            #t2 = F.conv_transpose2d(rel_out, W2, bias=None, padding=ctx.padding, stride=ctx.stride)
-            t1 = F.conv_transpose2d(rel_out, W1, bias=None, padding=1)
-            t2 = F.conv_transpose2d(rel_out, W2, bias=None, padding=1)
-
+            # t1 = F.conv_transpose2d(rel_out, W1, bias=None, padding=1)
+            # t2 = F.conv_transpose2d(rel_out, W2, bias=None, padding=1)
+            if ctx.stride[0] >= 2:
+                output_padding = 1
+            else:
+                output_padding = 0
+            t1 = F.conv_transpose2d(rel_out, W1, None, stride=ctx.stride, padding=ctx.padding, output_padding=output_padding)
+            t2 = F.conv_transpose2d(rel_out, W2, None, stride=ctx.stride, padding=ctx.padding, output_padding=output_padding)
 
             r1  = t1 * X1
             r2  = t2 * X2

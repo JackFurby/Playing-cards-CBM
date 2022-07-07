@@ -19,7 +19,7 @@ def get_concept_model(model_path, num_concepts):
 	"""
 
 	XtoC = PlayingCardNet(num_concepts=num_concepts)
-	XtoC.load_state_dict(torch.load(model_path), map_location=torch.device('cpu'))
+	XtoC.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return XtoC
 
 
@@ -84,13 +84,8 @@ if __name__ == "__main__":
 		type=int,
 		help='Number of concepts/attributes in dataset'
 	)
-	parser.add_argument(
-		'--num_classes',
-		type=int,
-		help='Number of classes in dataset'
-	)
 	args = parser.parse_args()
 
 	XtoC_model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts)
-	XtoC_model = get_converted_model(XtoC_model, num_classes=args.classes, num_concepts=len(XtoC_model.all_fc), expand_dim=args.expand_dim)
+	XtoC_model = get_converted_model(XtoC_model, num_concepts=len(XtoC_model.all_fc), expand_dim=args.expand_dim)
 	torch.save(XtoC_model.state_dict(), args.model_out_path)
