@@ -69,7 +69,6 @@ class PlayingCardDataset(Dataset):
 		if self.return_orig:
 			# hard coded transform without normalise (can I make this better?)
 			img = transforms.ToTensor()(img)
-			img = transforms.CenterCrop(self.resol)(img)
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(img)
 		elif self.return_path:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), img_path

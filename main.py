@@ -8,8 +8,14 @@ import wandb
 import os
 
 from train import train, test
-from models.model import PlayingCardNet, ConcpetPlayingCardNet
+from models.model import PlayingCardNet
 from dataset.dataset import load_data, find_class_imbalance
+
+
+# Independent & Sequential Model
+def ModelXtoC(pretrained, freeze, num_attributes, expand_dim):
+	vgg_model = vgg_mini_bn(pretrained=pretrained, num_attributes=num_attributes, bottleneck=True, expand_dim=expand_dim)
+	return x_to_c_model(freeze=freeze, model=vgg_model)
 
 
 if __name__ == "__main__":
@@ -58,11 +64,6 @@ if __name__ == "__main__":
 		default='adam',
 		choices=["adam", "sgd"],
 		help='Select optimizer to use for training'
-	)
-	parser.add_argument(
-		'--pretrained',
-		action='store_true',
-		help='Sets whether the model loads pretrained weights'
 	)
 	parser.add_argument(
 		'--pretrained_weights',
@@ -121,7 +122,7 @@ if __name__ == "__main__":
 		lr_patience=args.lr_patience,
 		epochs=args.epochs,
 		training_mode=args.mode,
-		pretrained=args.pretrained,
+		pretrained_weights=args.pretrained_weights,
 		optimizer=args.optimizer,
 		n_concepts=args.n_concepts,
 		n_classes=args.n_classes,
@@ -139,9 +140,12 @@ if __name__ == "__main__":
 	val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class)
 
 	if parameters['training_mode'] == "XtoC":
-		model = ConcpetPlayingCardNet(num_concepts=args.n_concepts, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		#model = ModelXtoC(num_attributes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights)
+
 	else:  # standard training
-		model = PlayingCardNet(num_classes=args.n_classes, pretrained=args.pretrained, pretrained_weights=args.pretrained_weights)
+		#model = vgg_mini_bn(pretrained=False, num_classes=args.n_classes, pretrained_weights=args.pretrained_weights)
+		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights)
 
 	model.to(device)
 

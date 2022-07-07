@@ -31,48 +31,46 @@ class FC(nn.Module):
 
 
 class PlayingCardNet(nn.Module):
-	def __init__(self, num_classes, pretrained=False, pretrained_weights=None):
+	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, expand_dim=0, freeze=False):
 		super(PlayingCardNet, self).__init__()
-		self.conv1 = nn.Conv2d(3, 64, 3)  # 3 channels; 64 is the output channel size; 3 is the kernel size;
-		self.conv2 = nn.Conv2d(64, 64, 3)
-		self.conv3 = nn.Conv2d(64, 128, 3)
-		self.conv4 = nn.Conv2d(128, 128, 3)
-		self.fc1 = nn.Linear(17280, 512)
-		self.fc2 = nn.Linear(512, num_classes)
-		self.pool = nn.MaxPool2d(2, 2)
-		self.flatten = nn.Flatten()
-		self.dropout = nn.Dropout(0.5)
-		self.ReLU = nn.ReLU()
+		self.num_concepts = num_concepts
+		self.features = nn.Sequential(
+			nn.Conv2d(3, 64, 3),  # 3 channels; 64 is the output channel size; 3 is the kernel size;
+			nn.BatchNorm2d(64),
+			nn.ReLU(),
+			nn.MaxPool2d(2, 2),
+			nn.Conv2d(64, 64, 3),
+			nn.BatchNorm2d(64),
+			nn.ReLU(),
+			nn.MaxPool2d(2, 2),
+			nn.Conv2d(64, 128, 3),
+			nn.BatchNorm2d(128),
+			nn.ReLU(),
+			nn.MaxPool2d(2, 2),
+			nn.Conv2d(128, 128, 3),
+			nn.BatchNorm2d(128),
+			nn.ReLU()
+		)
+		self.avgPool = nn.AdaptiveAvgPool2d((7, 7))
+		self.classifier = nn.Sequential(
+			nn.Flatten(),
+			nn.Dropout(0.5),
+			nn.Linear(6272, 512),
+			nn.ReLU()
+		)
+		# concept training requires a module list for loss
+		if self.num_concepts > 0:
+			# all_fc replaces fc2 from standard model
+			self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
+			for i in range(self.num_concepts):
+				self.all_fc.append(FC(512, 1, expand_dim))
+		# basic fc for standdard training
+		else:
+			self.out_fc = nn.Linear(512, num_classes)
 
-	def forward(self, x):
-		x = self.pool(self.ReLU(self.conv1(x)))
-		x = self.pool(self.ReLU(self.conv2(x)))
-		x = self.pool(self.ReLU(self.conv3(x)))
-		x = self.pool(self.ReLU(self.conv4(x)))
-		x = self.flatten(x)
-		x = self.dropout(x)
-		x = self.fc1(x)
-		x = self.fc2(x)
-		return x
-
-
-class ConcpetPlayingCardNet(nn.Module):
-	def __init__(self, num_concepts, pretrained=False, pretrained_weights=None, expand_dim=0, freeze=False):
-		super(ConcpetPlayingCardNet, self).__init__()
-		self.conv1 = nn.Conv2d(3, 64, 3)  # 3 channels; 64 is the output channel size; 3 is the kernel size;
-		self.conv2 = nn.Conv2d(64, 64, 3)
-		self.conv3 = nn.Conv2d(64, 128, 3)
-		self.conv4 = nn.Conv2d(128, 128, 3)
-		self.fc1 = nn.Linear(17280, 512)
-		self.pool = nn.MaxPool2d(2, 2)
-		self.flatten = nn.Flatten()
-		self.dropout = nn.Dropout(0.5)
-		self.ReLU = nn.ReLU()
-
-		# all_fc replaces fc2 from standard model
-		self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
-		for i in range(num_concepts):
-			self.all_fc.append(FC(512, 1, expand_dim))
+		# if weights file provided, load them
+		if pretrained_weights is not None:
+			self.load_state_dict(torch.load(pretrained_weights))
 
 		# if freeze == true then freeze all but fc layers
 		if freeze:  # only finetune fc layer
@@ -81,15 +79,13 @@ class ConcpetPlayingCardNet(nn.Module):
 					param.requires_grad = False
 
 	def forward(self, x):
-		x = self.pool(self.ReLU(self.conv1(x)))
-		x = self.pool(self.ReLU(self.conv2(x)))
-		x = self.pool(self.ReLU(self.conv3(x)))
-		x = self.pool(self.ReLU(self.conv4(x)))
-		x = self.flatten(x)
-		x = self.dropout(x)
-		x = self.fc1(x)
-
-		out = []
-		for fc in self.all_fc:
-			out.append(fc(x))
+		x = self.features(x)
+		x = self.avgPool(x)
+		x = self.classifier(x)
+		if self.num_concepts > 0:
+			out = []
+			for fc in self.all_fc:
+				out.append(fc(x))
+		else:
+			out = self.out_fc(x)
 		return out
