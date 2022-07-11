@@ -70,7 +70,7 @@ class PlayingCardNet(nn.Module):
 
 		# if weights file provided, load them
 		if pretrained_weights is not None:
-			self.load_state_dict(torch.load(pretrained_weights), strict=False)  # as we are replacing the final fc layer we can set strict to False
+			self.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=False)  # as we are replacing the final fc layer we can set strict to False
 			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all but fc layers

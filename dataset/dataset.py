@@ -127,15 +127,15 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 	is_training = True if 'train.pkl' in pkl_path else False
 	if is_training:
 		transform = transforms.Compose([
-			transforms.Resize((274, 174)),
-			#transforms.Resize((250, 250)),
+			#transforms.Resize((274, 174)),
+			transforms.Resize((280, 280)),
 			transforms.ToTensor(),
 			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
 	else:
 		transform = transforms.Compose([
-			transforms.Resize((274, 174)),
-			#transforms.Resize((250, 250)),
+			#transforms.Resize((274, 174)),
+			transforms.Resize((280, 280)),
 			transforms.ToTensor(),
 			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
