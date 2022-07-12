@@ -121,21 +121,20 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, has_class=True, resampling=False):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, has_class=True, resampling=False, shuffle=None):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
 	if is_training:
 		transform = transforms.Compose([
-			#transforms.Resize((274, 174)),
-			transforms.Resize((280, 280)),
+			transforms.Resize((299, 299)),
+			transforms.RandomHorizontalFlip(),
 			transforms.ToTensor(),
 			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
 	else:
 		transform = transforms.Compose([
-			#transforms.Resize((274, 174)),
-			transforms.Resize((280, 280)),
+			transforms.Resize((299, 299)),
 			transforms.ToTensor(),
 			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
@@ -143,10 +142,10 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, has_class=has_class, train=is_training, return_orig=return_orig, return_path=return_path)
 	if is_training:
 		drop_last = True
-		shuffle = True
+		shuffle = True if shuffle is None else shuffle
 	else:
 		drop_last = False
-		shuffle = False
+		shuffle = False if shuffle is None else shuffle
 	if resampling:
 		sampler = BatchSampler(ImbalancedDatasetSampler(dataset), batch_size=batch_size, drop_last=drop_last)
 		loader = DataLoader(dataset, batch_sampler=sampler)

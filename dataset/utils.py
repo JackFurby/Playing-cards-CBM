@@ -13,7 +13,7 @@ class IndexToString(object):
 			lines = f.readlines()
 			for i in lines:
 				i = i.split(" ")
-				self.string_dict[int(i[1])] = i[0]  # ids start from 1 but indexes start from 0
+				self.string_dict[int(i[1])] = i[0]
 
 	def __call__(self, index):
 		"""
