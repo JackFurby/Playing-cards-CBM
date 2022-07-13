@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
+from torchmetrics import F1Score
 import argparse
 import wandb
 import os
@@ -155,6 +156,8 @@ if __name__ == "__main__":
 		optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 	scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
+	f1 = F1Score().to(device)
+
 	if args.mode == "XtoC":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
@@ -169,8 +172,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
-			testLoss, testAcc = test(model, val_loader, optimizer, attr_criterion, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
 
 			scheduler.step(testLoss)
 
@@ -187,9 +190,22 @@ if __name__ == "__main__":
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
-			print("f1:", trainF1)
+			print("trainF1:", trainF1.item())
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
+			print("testF1:", testF1.item())
+
+			log_values = {
+				"epoch": epoch,
+				"XtoC Train Loss": trainLoss,
+				"XtoC Train Accuracy": trainAcc,
+				"XtoC Test Loss": testLoss,
+				"XtoC Test Accuracy": testAcc
+			}
+
+			if testLoss is not None:
+				log_values["trainF1"] = trainF1.item()
+				log_values["testF1"] = testF1.item()
 
 			# Log to wandb
 			wandb.log({

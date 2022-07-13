@@ -1,11 +1,10 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from torchmetrics import F1Score
 
 
 # def train(model, data_loader, optimizer, criterion, attr_loss_weight, device="cpu"):
-def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_weight=None, device="cpu"):
+def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, device="cpu"):
 	model.train()
 	losses = []
 	accuracy = []
@@ -23,6 +22,9 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 			loss = criterion(outputs, labels)
 			_, predicted = outputs.max(1)
 			accuracy.extend(predicted.eq(labels))
+
+			if f1 is not None:
+				f1_acc.append(f1(accuracy, labels.to(torch.int32)))
 		else:
 			batch_losses = []
 			for i in range(len(criterion)):
@@ -35,8 +37,8 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 			# accuracy for concepts
 			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
-			f1 = F1Score().to(device)
-			f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
+			if f1 is not None:
+				f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 
 		losses.append(loss.item())
 		loss.backward()
@@ -46,14 +48,20 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 
 	acc = sum(accuracy) / len(accuracy)
 
+	if f1 is not None:
+		f1_avg_acc = sum(f1_acc) / len(f1_acc)
+	else:
+		f1_avg_acc = None
+
 	# Return the average loss and accuracy
-	return sum(losses) / len(losses), acc, sum(f1_acc) / len(f1_acc)
+	return sum(losses) / len(losses), acc, f1_avg_acc
 
 
-def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_weight=None, device="cpu"):
+def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, device="cpu"):
 	model.eval()
 	losses = []
 	accuracy = []
+	f1_acc = []
 	with torch.no_grad():
 		for images, labels, concepts in data_loader:
 			# Transfering images and labels to GPU if available
@@ -65,6 +73,9 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 				loss = criterion(outputs, labels)
 				_, predicted = outputs.max(1)
 				accuracy.extend(predicted.eq(labels))
+
+				if f1 is not None:
+					f1_acc.append(f1(accuracy, labels.to(torch.int32)))
 			else:
 				batch_losses = []
 				# caculate loss for each concept seperatly
@@ -77,13 +88,21 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 
 				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
+				if f1 is not None:
+					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
+
 			losses.append(loss.item())
 
 		acc = sum(accuracy) / len(accuracy)
 
+		if f1 is not None:
+			f1_avg_acc = sum(f1_acc) / len(f1_acc)
+		else:
+			f1_avg_acc = None
+
 	# Return the average loss
-	return sum(losses) / len(losses), acc
- 
+	return sum(losses) / len(losses), acc, f1_avg_acc
+
 
 def binary_accuracy(output, target):
 	"""
