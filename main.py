@@ -219,8 +219,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
-			testLoss, testAcc = test(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
+			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
 
 			scheduler.step(testLoss)
 
@@ -234,20 +234,21 @@ if __name__ == "__main__":
 				wandb.save(saveName)
 				print("Model saved")
 
-			print("epoch:", epoch)
-			print("trainLoss:", trainLoss)
-			print("trainAcc:", 100 * trainAcc, "%")
-			print("testLoss:", testLoss)
-			print("testAcc:", 100 * testAcc, "%")
-
-			# Log to wandb
-			wandb.log({
+			log_values = {
 				"epoch": epoch,
 				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": 100 * trainAcc,
+				"XtoC Train Accuracy": trainAcc,
 				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": 100 * testAcc
-			})
+				"XtoC Test Accuracy": testAcc
+			}
+
+			if testLoss is not None:
+				log_values["trainF1"] = trainF1.item()
+				log_values["testF1"] = testF1.item()
+
+			# Log to wandb
+			wandb.log(log_values)
+
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
