@@ -35,8 +35,8 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 			# accuracy for concepts
 			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
-			f1 = F1Score()
-			f1_acc.append(f1(sigmoid_outputs, concepts))
+			f1 = F1Score().to(device)
+			f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 
 		losses.append(loss.item())
 		loss.backward()
@@ -83,7 +83,7 @@ def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_we
 
 	# Return the average loss
 	return sum(losses) / len(losses), acc
-
+ 
 
 def binary_accuracy(output, target):
 	"""

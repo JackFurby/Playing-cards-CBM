@@ -187,7 +187,7 @@ if __name__ == "__main__":
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
-			print("f1": trainF1)
+			print("f1:", trainF1)
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
 
