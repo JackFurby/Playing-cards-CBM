@@ -208,13 +208,8 @@ if __name__ == "__main__":
 				log_values["testF1"] = testF1.item()
 
 			# Log to wandb
-			wandb.log({
-				"epoch": epoch,
-				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": trainAcc,
-				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": testAcc
-			})
+			wandb.log(log_values)
+
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
