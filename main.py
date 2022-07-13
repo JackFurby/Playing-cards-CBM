@@ -219,8 +219,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc = train(model, train_loader, optimizer, criterion, mode=args.mode, device=device)
-			testLoss, testAcc = test(model, val_loader, optimizer, criterion, mode=args.mode, device=device)
+			trainLoss, trainAcc = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
+			testLoss, testAcc = test(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
 
 			scheduler.step(testLoss)
 
