@@ -169,7 +169,7 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc = train(model, train_loader, optimizer, attr_criterion, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
 			testLoss, testAcc = test(model, val_loader, optimizer, attr_criterion, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
 
 			scheduler.step(testLoss)
@@ -187,6 +187,7 @@ if __name__ == "__main__":
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
+			print("f1": trainF1)
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
 
@@ -202,7 +203,7 @@ if __name__ == "__main__":
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
 	elif args.mode == "standard":
-		criterion = nn.CrossEntropyLoss()
+		criterion = torch.nn.BCEWithLogitsLoss()
 
 		bestAccuracy = None
 

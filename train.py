@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from torchmetrics import F1Score
 
 
 # def train(model, data_loader, optimizer, criterion, attr_loss_weight, device="cpu"):
@@ -8,6 +9,7 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 	model.train()
 	losses = []
 	accuracy = []
+	f1_acc = []
 	for images, labels, concepts in data_loader:
 		# Transfering images and labels to GPU if available
 		images, labels, concepts = images.to(device), labels.to(device), concepts.to(device)
@@ -33,6 +35,9 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 			# accuracy for concepts
 			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
+			f1 = F1Score()
+			f1_acc.append(f1(sigmoid_outputs, concepts))
+
 		losses.append(loss.item())
 		loss.backward()
 
@@ -42,7 +47,7 @@ def train(model, data_loader, optimizer, criterion, mode="standard", attr_loss_w
 	acc = sum(accuracy) / len(accuracy)
 
 	# Return the average loss and accuracy
-	return sum(losses) / len(losses), acc
+	return sum(losses) / len(losses), acc, sum(f1_acc) / len(f1_acc)
 
 
 def test(model, data_loader, optimizer, criterion, mode="standard", attr_loss_weight=None, device="cpu"):
