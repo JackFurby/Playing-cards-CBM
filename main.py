@@ -164,10 +164,10 @@ if __name__ == "__main__":
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/train.pkl", True)
 			print(imbalance)
 			for ratio in imbalance:
-				attr_criterion.append(torch.nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
+				attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
 		else:
 			for i in range(args.n_concepts):
-				attr_criterion.append(torch.nn.CrossEntropyLoss())
+				attr_criterion.append(nn.CrossEntropyLoss())
 
 		bestAccuracy = None
 
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
 	elif args.mode == "standard":
-		criterion = torch.nn.BCEWithLogitsLoss()
+		criterion = nn.CrossEntropyLoss()
 
 		bestAccuracy = None
 

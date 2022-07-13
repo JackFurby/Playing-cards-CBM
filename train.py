@@ -24,7 +24,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			accuracy.extend(predicted.eq(labels))
 
 			if f1 is not None:
-				f1_acc.append(f1(accuracy, labels.to(torch.int32)))
+				f1_acc.append(f1(predicted, labels.to(torch.int32)))
 		else:
 			batch_losses = []
 			for i in range(len(criterion)):
@@ -75,7 +75,7 @@ def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", att
 				accuracy.extend(predicted.eq(labels))
 
 				if f1 is not None:
-					f1_acc.append(f1(accuracy, labels.to(torch.int32)))
+					f1_acc.append(f1(predicted, labels.to(torch.int32)))
 			else:
 				batch_losses = []
 				# caculate loss for each concept seperatly
