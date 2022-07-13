@@ -234,6 +234,14 @@ if __name__ == "__main__":
 				wandb.save(saveName)
 				print("Model saved")
 
+			print("epoch:", epoch)
+			print("trainLoss:", trainLoss)
+			print("trainAcc:", 100 * trainAcc, "%")
+			print("trainF1:", trainF1.item())
+			print("testLoss:", testLoss)
+			print("testAcc:", 100 * testAcc, "%")
+			print("testF1:", testF1.item())
+
 			log_values = {
 				"epoch": epoch,
 				"XtoC Train Loss": trainLoss,
