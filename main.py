@@ -138,8 +138,8 @@ if __name__ == "__main__":
 	config = wandb.config
 
 	if args.mode == "joint":
-		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
-		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers)
+		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers, multi_image=True)
+		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 	else:
 		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, resampling=True, num_workers=args.num_workers)
 		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, num_workers=args.num_workers)

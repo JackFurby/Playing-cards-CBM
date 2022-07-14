@@ -11,7 +11,7 @@ class End2EndModel(torch.nn.Module):
 
 	def forward_stage2(self, image_1_out, image_2_out, image_3_out):
 		if self.use_sigmoid:
-			outputs = torch.nn.Sigmoid()torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0)
+			outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0))
 		else:
 			outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=0)
 
