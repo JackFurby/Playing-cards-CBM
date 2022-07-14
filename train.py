@@ -26,11 +26,21 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			if f1 is not None:
 				f1_acc.append(f1(predicted, labels.to(torch.int32)))
 		elif mode == "joint":
+			# turn concepts into one hot vectors and concat them
+			concept_vecs = []
+			for i in concepts:
+				concept_vecs.append(torch.zeros(len(criterion) - 1))  # should be size of concept vector for each image
+
+			concepts = torch.stack(concept_vecs)
+
+			print(concepts)
+			print(concepts.size())
+
 			concept_out = outputs[0]
 			task_out = outputs[1]
 
 			batch_losses = []
-			batch_losses.append(1 - attr_loss_weight) * (criterion[0](task_out, labels))
+			batch_losses.append(1 - attr_loss_weight) * (criterion[0](task_out, labels))  # <----------------this might be in the wrong place? sum with concept loss?
 			for i in range(len(criterion) - 1):
 				concept_loss = criterion[i + 1](concept_out[i].squeeze(), concepts[:, i + 1])
 				batch_losses.append((attr_loss_weight * concept_loss))
