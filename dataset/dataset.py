@@ -100,7 +100,6 @@ class MultiImagePlayingCardDataset(Dataset):
 		self.train = train
 		self.transform = transform
 		self.return_orig = return_orig
-		self.return_path = return_path
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
@@ -133,7 +132,7 @@ class MultiImagePlayingCardDataset(Dataset):
 		img_1 = Image.open(img_1_path).convert('RGB')
 		img_2 = Image.open(img_2_path).convert('RGB')
 		img_3 = Image.open(img_3_path).convert('RGB')
-		class_index = img_data['class_index']
+		class_label = img_data['class_label']
 		card_1_index = img_data['card_1_class_index']
 		card_2_index = img_data['card_2_class_index']
 		card_3_index = img_data['card_3_class_index']
@@ -152,9 +151,9 @@ class MultiImagePlayingCardDataset(Dataset):
 			img_1 = transforms.ToTensor()(img_1)
 			img_2 = transforms.ToTensor()(img_2)
 			img_3 = transforms.ToTensor()(img_3)
-			return torch.as_tensor([altered_img_1, altered_img_2, altered_img_3]), torch.as_tensor(class_index), torch.as_tensor([card_1_index, card_2_index, card_3_index]), torch.as_tensor([img_1, img_2, img_3])
+			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor([card_1_index, card_2_index, card_3_index]), torch.as_tensor(torch.stack((img_1, img_2, img_3),dim=0))
 		else:
-			return torch.as_tensor([altered_img_1, altered_img_2, altered_img_3]), torch.as_tensor(class_index), torch.as_tensor([card_1_index, card_2_index, card_3_index])
+			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor([card_1_index, card_2_index, card_3_index])
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
@@ -221,7 +220,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 			])
 
 	if multi_image:
-		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig)
+		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig)
 	else:
 		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, has_class=has_class, train=is_training, return_orig=return_orig, return_path=return_path)
 	if is_training:
