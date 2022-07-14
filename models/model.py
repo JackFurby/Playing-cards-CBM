@@ -3,35 +3,29 @@ from torch import nn
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/template_model.py
-class FC(nn.Module):
+class End2EndModel(torch.nn.Module):
+	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False):
+		super(End2EndModel, self).__init__()
+		self.x_to_c_model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		self.c_to_y_model = nn.Linear(num_concepts*num_images_per_output, num_classes)
 
-	def __init__(self, input_dim, output_dim, expand_dim, stddev=None):
-		"""
-		Extend standard Torch Linear layer to include the option of expanding into 2 Linear layers
-		"""
-		super(FC, self).__init__()
-		self.expand_dim = expand_dim
-		if self.expand_dim > 0:
-			self.relu = nn.ReLU()
-			self.fc_new = nn.Linear(input_dim, expand_dim)
-			self.fc = nn.Linear(expand_dim, output_dim)
+	def forward_stage2(self, image_1_out, image_2_out, image_3_out):
+		if self.use_sigmoid:
+			outputs = torch.nn.Sigmoid()torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0)
 		else:
-			self.fc = nn.Linear(input_dim, output_dim)
-		if stddev:
-			self.fc.stddev = stddev
-			if expand_dim > 0:
-				self.fc_new.stddev = stddev
+			outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=0)
+
+		return (outputs, self.c_to_y_model(outputs))
 
 	def forward(self, x):
-		if self.expand_dim > 0:
-			x = self.fc_new(x)
-			x = self.relu(x)
-		x = self.fc(x)
-		return x
+		output_image_1 = self.x_to_c_model(x[0])
+		output_image_2 = self.x_to_c_model(x[1])
+		output_image_3 = self.x_to_c_model(x[2])
+		return self.forward_stage2(output_image_1, output_image_2, output_image_3)
 
 
 class PlayingCardNet(nn.Module):
-	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, expand_dim=0, freeze=False):
+	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
 		super(PlayingCardNet, self).__init__()
 		self.num_concepts = num_concepts
 		self.features = nn.Sequential(
@@ -63,7 +57,7 @@ class PlayingCardNet(nn.Module):
 			# all_fc replaces fc2 from standard model
 			self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
 			for i in range(self.num_concepts):
-				self.all_fc.append(FC(512, 1, expand_dim))
+				self.all_fc.append(nn.Linear(512, 1))
 		# basic fc for standdard training
 		else:
 			self.out_fc = nn.Linear(512, num_classes)

@@ -38,7 +38,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard"],
+		choices=["XtoC", "standard", "joint"],
 		help='model to run script'
 	)
 	parser.add_argument(
@@ -137,12 +137,17 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
-	train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, resampling=True, num_workers=args.num_workers)
-	val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, num_workers=args.num_workers)
+	if args.mode == "joint":
+		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
+		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers)
+	else:
+		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, resampling=True, num_workers=args.num_workers)
+		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, num_workers=args.num_workers)
 
-	if parameters['training_mode'] == "XtoC":
+	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-
+	elif args.mode == "joint":
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=3, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
@@ -213,6 +218,61 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
 
+	elif args.mode == "joint":
+		attr_criterion = []  # separate criterion (loss function) for each attribute
+		attr_criterion.append(nn.CrossEntropyLoss())  # criterion for c->y model out
+		if args.weighted_loss:
+			imbalance = find_class_imbalance(f"./{args.dataset_root}/train.pkl", True)
+			print(imbalance)
+			for ratio in imbalance:
+				attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
+		else:
+			for i in range(args.n_concepts):
+				attr_criterion.append(nn.CrossEntropyLoss())
+
+		bestAccuracy = None
+
+		for epoch in range(parameters['epochs']):
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+
+			scheduler.step(testLoss)
+
+			if (bestAccuracy is None) or (bestAccuracy < testAcc):
+				bestAccuracy = testAcc
+
+				if not os.path.exists("./saves"):
+					os.makedirs("./saves")
+				saveName = "./saves/XtoCtoY_best.pth"
+				torch.save(model.state_dict(), saveName)
+				wandb.save(saveName)
+				print("Model saved")
+
+			print("epoch:", epoch)
+			print("trainLoss:", trainLoss)
+			print("trainAcc:", trainAcc, "%")
+			print("trainF1:", trainF1.item())
+			print("testLoss:", testLoss)
+			print("testAcc:", testAcc, "%")
+			print("testF1:", testF1.item())
+
+			log_values = {
+				"epoch": epoch,
+				"XtoC Train Loss": trainLoss,
+				"XtoC Train Accuracy": trainAcc,
+				"XtoC Test Loss": testLoss,
+				"XtoC Test Accuracy": testAcc
+			}
+
+			if testLoss is not None:
+				log_values["trainF1"] = trainF1.item()
+				log_values["testF1"] = testF1.item()
+
+			# Log to wandb
+			wandb.log(log_values)
+
+			for param_group in optimizer.param_groups:
+				wandb.log({"XtoC learning rate": param_group['lr']})
 	elif args.mode == "standard":
 		criterion = nn.CrossEntropyLoss()
 
@@ -244,10 +304,10 @@ if __name__ == "__main__":
 
 			log_values = {
 				"epoch": epoch,
-				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": trainAcc,
-				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": testAcc
+				"Train Loss": trainLoss,
+				"Train Accuracy": trainAcc,
+				"Test Loss": testLoss,
+				"Test Accuracy": testAcc
 			}
 
 			if testLoss is not None:
@@ -258,6 +318,6 @@ if __name__ == "__main__":
 			wandb.log(log_values)
 
 			for param_group in optimizer.param_groups:
-				wandb.log({"XtoC learning rate": param_group['lr']})
+				wandb.log({"learning rate": param_group['lr']})
 
 	print("Finished training!")

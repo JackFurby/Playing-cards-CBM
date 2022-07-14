@@ -25,6 +25,26 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 			if f1 is not None:
 				f1_acc.append(f1(predicted, labels.to(torch.int32)))
+		elif mode == "joint":
+			concept_out = outputs[0]
+			task_out = outputs[1]
+
+			batch_losses = []
+			batch_losses.append(1 - attr_loss_weight) * (criterion[0](task_out, labels))
+			for i in range(len(criterion) - 1):
+				concept_loss = criterion[i + 1](concept_out[i].squeeze(), concepts[:, i + 1])
+				batch_losses.append((attr_loss_weight * concept_loss))
+
+			loss = sum(batch_losses) / len(concepts[:, i]) + 1
+			sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+
+			# accuracy for concepts
+			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+
+			if f1 is not None:
+				f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
+			f1_acc.append(f1(task_out, labels.to(torch.int32)))
+
 		else:
 			batch_losses = []
 			for i in range(len(criterion)):
