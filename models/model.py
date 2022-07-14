@@ -2,18 +2,18 @@ import torch
 from torch import nn
 
 
-# https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/template_model.py
 class End2EndModel(torch.nn.Module):
 	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False):
 		super(End2EndModel, self).__init__()
-		self.x_to_c_model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
 		self.c_to_y_model = nn.Linear(num_concepts*num_images_per_output, num_classes)
 
 	def forward_stage2(self, image_1_out, image_2_out, image_3_out):
-		if self.use_sigmoid:
-			outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0))
-		else:
-			outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=0)
+		#if self.use_sigmoid:
+		#	outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0)) 
+		#else:
+		#	outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=0)
+		outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0))
 
 		return (outputs, self.c_to_y_model(outputs))
 

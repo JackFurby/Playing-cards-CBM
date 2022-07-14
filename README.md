@@ -16,7 +16,7 @@ Concept Bottleneck Models, possibly using neural-symbolic AI
 
 # Joint
 
-`python main.py --mode joint --n_concepts 52 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 32`
+`python main.py --mode joint --n_classes 6 --n_concepts 52 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 32`
 
 # concept concept model to regular model architecture
 
