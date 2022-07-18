@@ -7,20 +7,24 @@ class End2EndModel(torch.nn.Module):
 		super(End2EndModel, self).__init__()
 		self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
 		self.c_to_y_model = nn.Linear(num_concepts*num_images_per_output, num_classes)
+		self.use_sigmoid = use_sigmoid
 
 	def forward_stage2(self, image_1_out, image_2_out, image_3_out):
-		#if self.use_sigmoid:
-		#	outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0)) 
-		#else:
-		#	outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=0)
-		outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=0))
+		if self.use_sigmoid:
+			outputs = torch.nn.Sigmoid()(torch.cat((torch.cat(image_1_out, dim=1), torch.cat(image_2_out, dim=1),torch.cat(image_3_out, dim=1)), dim=1))
+		else:
+			outputs = torch.cat((image_1_out, image_2_out, image_3_out), dim=1)
 
 		return (outputs, self.c_to_y_model(outputs))
 
 	def forward(self, x):
-		output_image_1 = self.x_to_c_model(x[0])
-		output_image_2 = self.x_to_c_model(x[1])
-		output_image_3 = self.x_to_c_model(x[2])
+		# split batch into first hand card, second hand card etc.
+		# Run each card batch seperatly
+		x = torch.permute(x, (1, 0, 2, 3, 4))
+		split_images = torch.split(x, 1)
+		output_image_1 = self.x_to_c_model(torch.squeeze(split_images[0]))
+		output_image_2 = self.x_to_c_model(torch.squeeze(split_images[1]))
+		output_image_3 = self.x_to_c_model(torch.squeeze(split_images[2]))
 		return self.forward_stage2(output_image_1, output_image_2, output_image_3)
 
 

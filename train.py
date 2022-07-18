@@ -26,29 +26,33 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			if f1 is not None:
 				f1_acc.append(f1(predicted, labels.to(torch.int32)))
 		elif mode == "joint":
-			# turn concepts into one hot vectors and concat them
-			concept_vecs = []
-			for i in concepts:
-				concept_vecs.append(torch.zeros(len(criterion) - 1))  # should be size of concept vector for each image
+			# turn true concepts into one hot vectors and concat them
+			batch_vecs = []
+			for batch_item in concepts:
+				concept_vecs = []
+				for card_id in batch_item:
+					card_concept = torch.zeros(len(criterion) - 1)
+					card_concept[card_id.item()] += 1
+					concept_vecs.append(card_concept)  # should be size of concept vector for each image
+				batch_vecs.append(torch.stack(concept_vecs))
 
-			concepts = torch.stack(concept_vecs)
-
-			print(concepts)
-			print(concepts.size())
+			concepts = torch.stack(batch_vecs).to(device)
 
 			concept_out = outputs[0]
 			task_out = outputs[1]
 
-			batch_losses = []
-			batch_losses.append(1 - attr_loss_weight) * (criterion[0](task_out, labels))  # <----------------this might be in the wrong place? sum with concept loss?
-			for i in range(len(criterion) - 1):
-				concept_loss = criterion[i + 1](concept_out[i].squeeze(), concepts[:, i + 1])
-				batch_losses.append((attr_loss_weight * concept_loss))
+			concept_out = concept_out.view(-1, 3, 52)  # changes shape of output for criterion
 
-			loss = sum(batch_losses) / len(concepts[:, i]) + 1
-			sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+			batch_losses = []
+			for i in range(len(criterion) - 1):
+				concept_loss = criterion[i + 1](concept_out[:, :, i].squeeze(), concepts[:, :, i])
+				batch_losses.append((attr_loss_weight * concept_loss) + (1 - attr_loss_weight) * (criterion[0](task_out, labels)))
+
+			loss = sum(batch_losses) / len(concepts[:, :, i])
+			sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))
 
 			# accuracy for concepts
+			concepts = concepts.view(concepts.size(0), -1)
 			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
 			if f1 is not None:
@@ -106,6 +110,40 @@ def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", att
 
 				if f1 is not None:
 					f1_acc.append(f1(predicted, labels.to(torch.int32)))
+			elif mode == "joint":
+				# turn true concepts into one hot vectors and concat them
+				batch_vecs = []
+				for batch_item in concepts:
+					concept_vecs = []
+					for card_id in batch_item:
+						card_concept = torch.zeros(len(criterion) - 1)
+						card_concept[card_id.item()] += 1
+						concept_vecs.append(card_concept)  # should be size of concept vector for each image
+					batch_vecs.append(torch.stack(concept_vecs))
+
+				concepts = torch.stack(batch_vecs).to(device)
+
+				concept_out = outputs[0]
+				task_out = outputs[1]
+
+				concept_out = concept_out.view(-1, 3, 52)  # changes shape of output for criterion
+
+				batch_losses = []
+				for i in range(len(criterion) - 1):
+					concept_loss = criterion[i + 1](concept_out[:, :, i].squeeze(), concepts[:, :, i])
+					batch_losses.append((attr_loss_weight * concept_loss) + (1 - attr_loss_weight) * (criterion[0](task_out, labels)))
+
+				loss = sum(batch_losses) / len(concepts[:, :, i])
+				sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))
+
+				# accuracy for concepts
+				concepts = concepts.view(concepts.size(0), -1)
+				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+
+				if f1 is not None:
+					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
+				f1_acc.append(f1(task_out, labels.to(torch.int32)))
+
 			else:
 				batch_losses = []
 				# caculate loss for each concept seperatly
