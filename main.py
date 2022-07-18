@@ -8,7 +8,7 @@ import argparse
 import wandb
 import os
 
-from train import train, test
+from train import train
 from models.model import PlayingCardNet, End2EndModel
 from dataset.dataset import load_data, find_class_imbalance
 
@@ -177,8 +177,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
-			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
 			scheduler.step(testLoss)
 
@@ -233,8 +233,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
-			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
 			scheduler.step(testLoss)
 
@@ -251,12 +251,12 @@ if __name__ == "__main__":
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
-			print("trainTaskAcc:", trainTaskAcc, "%")
+			print("trainTaskAcc:", 100 * trainTaskAcc, "%")
 			print("trainF1:", trainF1.item())
 			print("trainTaskF1:", trainTaskF1.item())
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
-			print("testTaskAcc:", testTestAcc, "%")
+			print("testTaskAcc:", 100 * testTestAcc, "%")
 			print("testF1:", testF1.item())
 			print("testTaskF1:", testTaskF1.item())
 
@@ -264,10 +264,10 @@ if __name__ == "__main__":
 				"epoch": epoch,
 				"Train Loss": trainLoss,
 				"Train XtoC Accuracy": trainAcc,
-				"Train Task Accuracy": trainTaskAcc,
+				"Train Task Accuracy": 100 * trainTaskAcc,
 				"Test Loss": testLoss,
 				"Test XtoC Accuracy": testAcc,
-				"Test Task Accuracy": testTaskAcc
+				"Test Task Accuracy": 100 * testTaskAcc
 			}
 
 			if testLoss is not None:
@@ -287,8 +287,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
-			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, device=device)
+			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
+			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, train=False, device=device)
 
 			scheduler.step(testLoss)
 
@@ -313,9 +313,9 @@ if __name__ == "__main__":
 			log_values = {
 				"epoch": epoch,
 				"Train Loss": trainLoss,
-				"Train Accuracy": trainAcc,
+				"Train Accuracy": 100 * trainAcc,
 				"Test Loss": testLoss,
-				"Test Accuracy": testAcc
+				"Test Accuracy": 100 * testAcc
 			}
 
 			if testLoss is not None:
