@@ -110,6 +110,7 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	device = "cpu"
 	if torch.cuda.is_available():
 		print("Device:", device, torch.cuda.get_device_name(0))
 	else:
@@ -256,7 +257,7 @@ if __name__ == "__main__":
 			print("trainTaskF1:", trainTaskF1.item())
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
-			print("testTaskAcc:", 100 * testTestAcc, "%")
+			print("testTaskAcc:", 100 * testTaskAcc, "%")
 			print("testF1:", testF1.item())
 			print("testTaskF1:", testTaskF1.item())
 
