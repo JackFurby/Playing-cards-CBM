@@ -233,8 +233,8 @@ if __name__ == "__main__":
 		bestAccuracy = None
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
-			testLoss, testAcc, testF1 = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
+			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = test(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, device=device)
 
 			scheduler.step(testLoss)
 
@@ -251,22 +251,30 @@ if __name__ == "__main__":
 			print("epoch:", epoch)
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
+			print("trainTaskAcc:", trainTaskAcc, "%")
 			print("trainF1:", trainF1.item())
+			print("trainTaskF1:", trainTaskF1.item())
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
+			print("testTaskAcc:", testTestAcc, "%")
 			print("testF1:", testF1.item())
+			print("testTaskF1:", testTaskF1.item())
 
 			log_values = {
 				"epoch": epoch,
-				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": trainAcc,
-				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": testAcc
+				"Train Loss": trainLoss,
+				"Train XtoC Accuracy": trainAcc,
+				"Train Task Accuracy": trainTaskAcc,
+				"Test Loss": testLoss,
+				"Test XtoC Accuracy": testAcc,
+				"Test Task Accuracy": testTaskAcc
 			}
 
 			if testLoss is not None:
 				log_values["trainF1"] = trainF1.item()
 				log_values["testF1"] = testF1.item()
+				log_values["trainTaskF1"] = trainTaskF1.item()
+				log_values["testTaskF1"] = testTaskF1.item()
 
 			# Log to wandb
 			wandb.log(log_values)

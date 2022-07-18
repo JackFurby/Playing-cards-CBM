@@ -8,6 +8,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 	model.train()
 	losses = []
 	accuracy = []
+	task_acc = []
 	f1_acc = []
 	for images, labels, concepts in data_loader:
 		# Transfering images and labels to GPU if available
@@ -55,9 +56,13 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			concepts = concepts.view(concepts.size(0), -1)
 			accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
+			# accuracy for task
+			_, predicted = task_out.max(1)
+			task_acc.extend(predicted.eq(labels))
+
 			if f1 is not None:
 				f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
-			f1_acc.append(f1(task_out, labels.to(torch.int32)))
+				task_f1 = f1(task_out, labels.to(torch.int32))
 
 		else:
 			batch_losses = []
@@ -87,14 +92,17 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 	else:
 		f1_avg_acc = None
 
-	# Return the average loss and accuracy
-	return sum(losses) / len(losses), acc, f1_avg_acc
+	if mode == "joint":
+		sum(losses) / len(losses), acc, f1_avg_acc, task_f1, sum(task_acc) / len(task_acc)
+	else:
+		return sum(losses) / len(losses), acc, f1_avg_acc
 
 
 def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, device="cpu"):
 	model.eval()
 	losses = []
 	accuracy = []
+	task_acc = []
 	f1_acc = []
 	with torch.no_grad():
 		for images, labels, concepts in data_loader:
@@ -140,9 +148,13 @@ def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", att
 				concepts = concepts.view(concepts.size(0), -1)
 				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
+				# accuracy for task
+				_, predicted = task_out.max(1)
+				task_acc.extend(predicted.eq(labels))
+
 				if f1 is not None:
 					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
-				f1_acc.append(f1(task_out, labels.to(torch.int32)))
+					task_f1 = f1(task_out, labels.to(torch.int32))
 
 			else:
 				batch_losses = []
@@ -168,8 +180,10 @@ def test(model, data_loader, optimizer, criterion, f1=None, mode="standard", att
 		else:
 			f1_avg_acc = None
 
-	# Return the average loss
-	return sum(losses) / len(losses), acc, f1_avg_acc
+	if mode == "joint":
+		sum(losses) / len(losses), acc, f1_avg_acc, task_f1, sum(task_acc) / len(task_acc)
+	else:
+		return sum(losses) / len(losses), acc, f1_avg_acc
 
 
 def binary_accuracy(output, target):
