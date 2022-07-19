@@ -104,11 +104,6 @@ if __name__ == "__main__":
 		help='weight for loss by predicting attributes'
 	)
 	parser.add_argument(
-		'--has_class',
-		action='store_true',
-		help='Whether the dataset includes class labels'
-	)
-	parser.add_argument(
 		'--freeze',
 		action='store_true',
 		help='whether to freeze the bottom part of the model'
@@ -135,7 +130,6 @@ if __name__ == "__main__":
 		n_classes=args.n_classes,
 		num_images_per_output=args.num_images_per_output,
 		dataset_root=args.dataset_root,
-		has_class=args.has_class,
 		attr_loss_weight=args.attr_loss_weight,
 		weighted_loss=args.weighted_loss,
 		freeze=args.freeze
@@ -145,11 +139,11 @@ if __name__ == "__main__":
 	config = wandb.config
 
 	if args.mode == "joint" and args.num_images_per_output != 1:
-		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
-		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
+		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
+		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 	else:
-		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, resampling=True, num_workers=args.num_workers)
-		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, has_class=args.has_class, num_workers=args.num_workers)
+		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
+		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers)
 
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)

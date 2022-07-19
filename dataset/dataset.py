@@ -20,7 +20,6 @@ class PlayingCardDataset(Dataset):
 		pkl_file_path,
 		dataset_root,
 		transform=None,
-		has_class=True,
 		train=True,
 		return_orig=False,
 		return_path=False):
@@ -45,7 +44,7 @@ class PlayingCardDataset(Dataset):
 			sample = {
 				"id": dataset_split[i],
 				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
-				"class_index": dataset_split[i]["class_label"] if has_class else 0,  # class are 0 indexed
+				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
 				"concepts": dataset_split[i]["attribute_label"],
 			}
 			self.data.append(sample)
@@ -85,6 +84,7 @@ class MultiImagePlayingCardDataset(Dataset):
 		self,
 		pkl_file_path,
 		dataset_root,
+		num_concepts,
 		transform=None,
 		train=True,
 		return_orig=False):
@@ -92,6 +92,7 @@ class MultiImagePlayingCardDataset(Dataset):
 		Args:
 			pkl_file_path (string): path to pkl file for dataset split from repo root
 			dataset_root (string): path to dataset root from repo root
+			num_concepts (int): number of concepts per image
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
 			train (bool): True if dataset contains training data else False
 			return_orig (bool): If True then return the original image
@@ -137,6 +138,16 @@ class MultiImagePlayingCardDataset(Dataset):
 		card_2_index = img_data['card_2_class_index']
 		card_3_index = img_data['card_3_class_index']
 
+		# convert card classes to one hot vectors
+		card_1_concept = torch.zeros(num_concepts)
+		card_1_concept[img_data['card_1_class_index']] += 1
+		card_2_concept = torch.zeros(num_concepts)
+		card_2_concept[img_data['card_2_class_index']] += 1
+		card_3_concept = torch.zeros(num_concepts)
+		card_3_concept[img_data['card_3_class_index']] += 1
+
+		card_concepts = torch.stack([card_1_concept, card_2_concept, card_3_concept])
+
 		if self.transform is not None:
 			altered_img_1 = self.transform(img_1)
 			altered_img_2 = self.transform(img_2)
@@ -151,9 +162,9 @@ class MultiImagePlayingCardDataset(Dataset):
 			img_1 = transforms.ToTensor()(img_1)
 			img_2 = transforms.ToTensor()(img_2)
 			img_3 = transforms.ToTensor()(img_3)
-			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor([card_1_index, card_2_index, card_3_index]), torch.as_tensor(torch.stack((img_1, img_2, img_3),dim=0))
+			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor(card_concepts), torch.as_tensor(torch.stack((img_1, img_2, img_3),dim=0))
 		else:
-			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor([card_1_index, card_2_index, card_3_index])
+			return torch.as_tensor(torch.stack((altered_img_1, altered_img_2, altered_img_3),dim=0)), torch.as_tensor(class_label), torch.as_tensor(card_concepts)
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
@@ -201,7 +212,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, has_class=True, resampling=False, shuffle=None, num_workers=0, multi_image=False):
+def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, resampling=False, shuffle=None, num_workers=0, multi_image=False):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -220,9 +231,9 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 			])
 
 	if multi_image:
-		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig)
+		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, num_concepts, transform, train=is_training, return_orig=return_orig)
 	else:
-		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, has_class=has_class, train=is_training, return_orig=return_orig, return_path=return_path)
+		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path)
 	if is_training:
 		drop_last = True
 		shuffle = True if shuffle is None else shuffle
