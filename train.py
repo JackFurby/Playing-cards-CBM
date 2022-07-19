@@ -40,6 +40,10 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				concept_out = outputs[0]
 				task_out = outputs[1]
 
+				print(concept_out.size())
+				print(task_out.size())
+				print(concepts.size())
+
 				# get the number of images per task output
 				if len(concepts.size()) == 2:
 					num_input_images = 1

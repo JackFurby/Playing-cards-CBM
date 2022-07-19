@@ -101,6 +101,7 @@ class MultiImagePlayingCardDataset(Dataset):
 		self.train = train
 		self.transform = transform
 		self.return_orig = return_orig
+		self.num_concepts = num_concepts
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
@@ -139,11 +140,11 @@ class MultiImagePlayingCardDataset(Dataset):
 		card_3_index = img_data['card_3_class_index']
 
 		# convert card classes to one hot vectors
-		card_1_concept = torch.zeros(num_concepts)
+		card_1_concept = torch.zeros(self.num_concepts)
 		card_1_concept[img_data['card_1_class_index']] += 1
-		card_2_concept = torch.zeros(num_concepts)
+		card_2_concept = torch.zeros(self.num_concepts)
 		card_2_concept[img_data['card_2_class_index']] += 1
-		card_3_concept = torch.zeros(num_concepts)
+		card_3_concept = torch.zeros(self.num_concepts)
 		card_3_concept[img_data['card_3_class_index']] += 1
 
 		card_concepts = torch.stack([card_1_concept, card_2_concept, card_3_concept])

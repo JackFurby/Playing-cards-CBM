@@ -24,10 +24,12 @@ class End2EndModel(torch.nn.Module):
 
 	def forward(self, x):
 		if self.num_images_per_output != 1:
+			print(x.size())
 			# split batch into first hand card, second hand card etc.
 			# Run each card batch seperatly
-			x = torch.permute(x, (1, 0, 2, 3, 4))
-			split_images = torch.split(x, 1)
+			split_images = []
+			for image_id in range(x.size(1)):
+				split_images.append(x[:, image_id, :, : , :])
 		else:
 			split_images = [x]  # make sure input is in same format as is there are multiple inputs
 
