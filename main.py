@@ -82,6 +82,12 @@ if __name__ == "__main__":
 		help='Number of concepts/attributes in dataset'
 	)
 	parser.add_argument(
+		'--num_images_per_output',
+		type=int,
+		default=1,
+		help='number of images input for each output (only used for joint training)'
+	)
+	parser.add_argument(
 		'--dataset_root',
 		type=str,
 		help='file path to dataset root dir'
@@ -128,6 +134,7 @@ if __name__ == "__main__":
 		optimizer=args.optimizer,
 		n_concepts=args.n_concepts,
 		n_classes=args.n_classes,
+		num_images_per_output=args.num_images_per_output,
 		dataset_root=args.dataset_root,
 		has_class=args.has_class,
 		attr_loss_weight=args.attr_loss_weight,
@@ -138,7 +145,7 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
-	if args.mode == "joint":
+	if args.mode == "joint" and args.num_images_per_output != 1:
 		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 	else:
@@ -148,7 +155,7 @@ if __name__ == "__main__":
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint":
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=3, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 

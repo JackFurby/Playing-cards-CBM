@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 
 
-# def train(model, data_loader, optimizer, criterion, attr_loss_weight, device="cpu"):
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
 	if train:
 		model.train()
@@ -16,8 +15,11 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 	f1_acc = []
 	with torch.set_grad_enabled(train):
 		for images, labels, concepts in data_loader:
+			print("done")
 			# Transfering images and labels to GPU if available
 			images, labels, concepts = images.to(device), labels.to(device), concepts.to(device)
+
+			print(images.size())
 
 			if train:
 				# Zero the parameter gradients
@@ -33,29 +35,55 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				if f1 is not None:
 					f1_acc.append(f1(predicted, labels.to(torch.int32)))
 			elif mode == "joint":
-				# turn true concepts into one hot vectors and concat them
-				batch_vecs = []
-				for batch_item in concepts:
-					concept_vecs = []
-					for card_id in batch_item:
-						card_concept = torch.zeros(len(criterion) - 1)
-						card_concept[card_id.item()] += 1
-						concept_vecs.append(card_concept)  # should be size of concept vector for each image
-					batch_vecs.append(torch.stack(concept_vecs))
-
-				concepts = torch.stack(batch_vecs).to(device)
 
 				concept_out = outputs[0]
 				task_out = outputs[1]
 
-				concept_out = concept_out.view(-1, 3, 52)  # changes shape of output for criterion
+				if len(concepts.size()) == 2:
+					num_input_images = 1
+				else:
+					num_input_images = concepts.size(1)
+				# turn true concepts into one hot vectors and concat them
+				batch_vecs = []
+				for batch_item in concepts:
+					concept_vecs = []
+					if num_input_images > 1:  # if ther are multiple images for sample then len of size will be greater than 1
+						for card_id in batch_item:
+							card_concept = torch.zeros(len(criterion) - 1)
+							card_concept[card_id.item()] += 1
+							concept_vecs.append(card_concept)  # should be size of concept vector for each image
+					else:
+						concept_vecs = batch_item
+					if num_input_images > 1:
+						batch_vecs.append(torch.stack(concept_vecs))
+					else:
+						batch_vecs.append(concept_vecs)
+
+				concepts = torch.stack(batch_vecs).to(device)
+
+				# Add in extra dim of len 1 if less than 3 present.
+				if len(concepts.size()) == 2:
+					concepts = torch.unsqueeze(concepts, 0)
+					print(concepts.size())
+					concepts = torch.permute(concepts, (1, 0, 2))
+
+
+
+				# changes shape of output for criterion (concepts and concept_out have same size())
+				# [batch size, number of images per sample, concept vector length]
+				concept_out = concept_out.view(concepts.size())
 
 				batch_losses = []
-				for i in range(len(criterion) - 1):
-					concept_loss = criterion[i + 1](concept_out[:, :, i].squeeze(), concepts[:, :, i])
-					batch_losses.append((attr_loss_weight * concept_loss) + (1 - attr_loss_weight) * (criterion[0](task_out, labels)))
+				for image_concept in range(concept_out.size(1)):
+					individual_concept = concepts[:, image_concept, :]
+					individual_concept_out = concept_out[:, image_concept, :]
 
-				loss = sum(batch_losses) / len(concepts[:, :, i])
+
+					for i in range(len(criterion) - 1):
+						concept_loss = criterion[i + 1](individual_concept_out[:, i].squeeze(), individual_concept[:, i])
+						batch_losses.append((attr_loss_weight * concept_loss) + (1 - attr_loss_weight) * (criterion[0](task_out, labels)))
+
+				loss = sum(batch_losses) / len(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))
 
 				# accuracy for concepts
