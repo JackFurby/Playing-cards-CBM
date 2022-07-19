@@ -40,15 +40,15 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				concept_out = outputs[0]
 				task_out = outputs[1]
 
-				print(concept_out.size())
-				print(task_out.size())
-				print(concepts.size())
-
 				# get the number of images per task output
 				if len(concepts.size()) == 2:
 					num_input_images = 1
 				else:
 					num_input_images = concepts.size(1)
+					concept_out = concept_out.view(concepts.size())
+				
+				
+				"""
 
 				# turn true concepts into one hot vectors and concat them
 				batch_vecs = []
@@ -67,6 +67,8 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 						batch_vecs.append(concept_vecs)
 
 				concepts = torch.stack(batch_vecs).to(device)
+				
+				"""
 
 				# Add in extra dim of len 1 if less than 3 present.
 				if len(concepts.size()) == 2:

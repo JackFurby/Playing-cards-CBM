@@ -24,7 +24,6 @@ class End2EndModel(torch.nn.Module):
 
 	def forward(self, x):
 		if self.num_images_per_output != 1:
-			print(x.size())
 			# split batch into first hand card, second hand card etc.
 			# Run each card batch seperatly
 			split_images = []
