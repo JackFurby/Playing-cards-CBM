@@ -15,9 +15,8 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 	f1_acc = []
 	with torch.set_grad_enabled(train):
 		for images, labels, concepts in data_loader:
-			print("done")
 			# Transfering images and labels to GPU if available
-			images, labels, concepts = images.to(device), labels.to(device), concepts.to(device)
+			images, labels, concepts = images.to(device), labels.to(device), concepts.to(device) 
 
 			if train:
 				# Zero the parameter gradients
