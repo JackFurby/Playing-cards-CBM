@@ -32,14 +32,20 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				if f1 is not None:
 					f1_acc.append(f1(predicted, labels.to(torch.int32)))
 			elif mode == "joint":
+				"""
+				ADD WHAT IS HAPENING HERE!
+				"""
 
+				# seperate model output into task and concept predictions
 				concept_out = outputs[0]
 				task_out = outputs[1]
 
+				# get the number of images per task output
 				if len(concepts.size()) == 2:
 					num_input_images = 1
 				else:
 					num_input_images = concepts.size(1)
+
 				# turn true concepts into one hot vectors and concat them
 				batch_vecs = []
 				for batch_item in concepts:
@@ -77,7 +83,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					task_loss = criterion[0](task_out, labels)
 					for i in range(len(criterion) - 1):
 						concept_loss = criterion[i + 1](individual_concept_out[:, i].squeeze(), individual_concept[:, i])
-						batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * (task_loss)))
+						batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
 
 				loss = sum(batch_losses) / len(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))

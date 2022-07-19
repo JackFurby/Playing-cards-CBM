@@ -16,11 +16,11 @@ class End2EndModel(torch.nn.Module):
 			outputs.append(torch.cat(out, dim=1))
 
 		if self.use_sigmoid:
-			outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+			c_to_y_input = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 		else:
-			outputs = torch.cat((outputs), dim=1)
+			c_to_y_input = torch.cat((outputs), dim=1)
 
-		return (outputs, self.c_to_y_model(outputs))
+		return (torch.cat(outputs, dim=1), self.c_to_y_model(c_to_y_input))
 
 	def forward(self, x):
 		if self.num_images_per_output != 1:
