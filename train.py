@@ -19,8 +19,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			# Transfering images and labels to GPU if available
 			images, labels, concepts = images.to(device), labels.to(device), concepts.to(device)
 
-			print(images.size())
-
 			if train:
 				# Zero the parameter gradients
 				optimizer.zero_grad()
@@ -64,7 +62,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				# Add in extra dim of len 1 if less than 3 present.
 				if len(concepts.size()) == 2:
 					concepts = torch.unsqueeze(concepts, 0)
-					print(concepts.size())
 					concepts = torch.permute(concepts, (1, 0, 2))
 
 
