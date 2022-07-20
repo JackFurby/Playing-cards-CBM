@@ -40,7 +40,7 @@ class End2EndModel(torch.nn.Module):
 
 class CtoYNet(nn.Module):
 	def __init__(self, num_concept_in, num_classes):
-		super(CtoYModel, self).__init__()
+		super(CtoYNet, self).__init__()
 		self.classifier = nn.Sequential(
 			nn.Linear(num_concept_in, 128),
 			nn.ReLU(),
