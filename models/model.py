@@ -6,7 +6,7 @@ class End2EndModel(torch.nn.Module):
 	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False):
 		super(End2EndModel, self).__init__()
 		self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
-		self.c_to_y_model = nn.Linear(num_concepts*num_images_per_output, num_classes)
+		self.c_to_y_model = CtoYNet(num_concepts * num_images_per_output, num_classes)
 		self.use_sigmoid = use_sigmoid
 		self.num_images_per_output = num_images_per_output
 
@@ -37,6 +37,18 @@ class End2EndModel(torch.nn.Module):
 			outputs.append(self.x_to_c_model(image))
 		return self.forward_stage2(outputs)
 
+
+class CtoYNet(nn.Module):
+	def __init__(self, num_concept_in, num_classes):
+		super(CtoYModel, self).__init__()
+		self.classifier = nn.Sequential(
+			nn.Linear(num_concept_in, 128),
+			nn.ReLU(),
+			nn.Linear(128, num_classes)
+		)
+
+	def forward(self, x):
+		return self.classifier(x)
 
 
 class PlayingCardNet(nn.Module):

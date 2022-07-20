@@ -22,9 +22,13 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				# Zero the parameter gradients
 				optimizer.zero_grad()
 
-			outputs = model(images)
+			if mode == "CtoY":
+				concepts = concepts.view(concepts.size(0), -1)
+				outputs = model(concepts)
+			else:
+				outputs = model(images)
 
-			if mode == "standard":
+			if mode in ["standard", "CtoY"]:
 				loss = criterion(outputs, labels)
 				_, predicted = outputs.max(1)
 				accuracy.extend(predicted.eq(labels))
@@ -33,7 +37,25 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					f1_acc.append(f1(predicted, labels.to(torch.int32)))
 			elif mode == "joint":
 				"""
-				ADD WHAT IS HAPENING HERE!
+				Joint training will train both the concept vector and final classification
+				together. This works in the following way:
+				1. The model output is split into concept and task outputs
+				2. The number of input images are computed
+					2a. If only one image is in the input then an extra dimention in added
+					    as such the concept and concept_out have a size of
+					    [batch_size, number_of_input_images, number_of_concepts]
+				3. The loss is computed for concept and task. attr_loss_weight is
+				   used to balance between concept and task loss priority
+				4. Loss and accuracy measurements are computed and averaged
+
+				note:
+				* The model expects an input image in the format
+				  [batch_size, number_of_input_images, channels, width, height] or
+				  [batch_size, channels, width, height]
+
+				* The concepts should be in the format
+				  [batch_size, number_of_input_images, number_of_concepts] or
+				  [batch_size, number_of_concepts]
 				"""
 
 				# seperate model output into task and concept predictions
@@ -46,29 +68,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				else:
 					num_input_images = concepts.size(1)
 					concept_out = concept_out.view(concepts.size())
-				
-				
-				"""
-
-				# turn true concepts into one hot vectors and concat them
-				batch_vecs = []
-				for batch_item in concepts:
-					concept_vecs = []
-					if num_input_images > 1:  # if ther are multiple images for sample then len of size will be greater than 1
-						for card_id in batch_item:
-							card_concept = torch.zeros(len(criterion) - 1)
-							card_concept[card_id.item()] += 1
-							concept_vecs.append(card_concept)  # should be size of concept vector for each image
-					else:
-						concept_vecs = batch_item
-					if num_input_images > 1:
-						batch_vecs.append(torch.stack(concept_vecs))
-					else:
-						batch_vecs.append(concept_vecs)
-
-				concepts = torch.stack(batch_vecs).to(device)
-				
-				"""
 
 				# Add in extra dim of len 1 if less than 3 present.
 				if len(concepts.size()) == 2:
@@ -76,11 +75,11 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					concepts = torch.permute(concepts, (1, 0, 2))
 
 
-
 				# changes shape of output for criterion (concepts and concept_out have same size())
 				# [batch size, number of images per sample, concept vector length]
 				concept_out = concept_out.view(concepts.size())
 
+				# compute concept and task loss (following CBM joint training method)
 				batch_losses = []
 				for image_concept in range(concept_out.size(1)):
 					individual_concept = concepts[:, image_concept, :]

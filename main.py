@@ -9,7 +9,7 @@ import wandb
 import os
 
 from train import train
-from models.model import PlayingCardNet, End2EndModel
+from models.model import PlayingCardNet, End2EndModel, CtoYNet
 from dataset.dataset import load_data, find_class_imbalance
 
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint"],
+		choices=["XtoC", "standard", "joint", "CtoY"],
 		help='model to run script'
 	)
 	parser.add_argument(
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
-	if args.mode == "joint" and args.num_images_per_output != 1:
+	if args.mode in ["joint", "CtoY"] and args.num_images_per_output != 1:
 		train_loader = load_data(f"./{args.dataset_root}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 		val_loader = load_data(f"./{args.dataset_root}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
 	else:
@@ -149,6 +149,8 @@ if __name__ == "__main__":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint":
 		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
+	elif args.mode == "CtoY":
+		model =  CtoYNet(num_concept_in=args.n_concepts*args.num_images_per_output, num_classes=args.n_classes)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
@@ -282,7 +284,7 @@ if __name__ == "__main__":
 
 			for param_group in optimizer.param_groups:
 				wandb.log({"XtoC learning rate": param_group['lr']})
-	elif args.mode == "standard":
+	elif args.mode in ["standard", "CtoY"]:
 		criterion = nn.CrossEntropyLoss()
 
 		bestAccuracy = None
@@ -298,7 +300,7 @@ if __name__ == "__main__":
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
-				saveName = "./saves/playing_card_best.pth"
+				saveName = f"./saves/{args.mode}_playing_card_best.pth"
 				torch.save(model.state_dict(), saveName)
 				wandb.save(saveName)
 				print("Model saved")
