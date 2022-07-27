@@ -3,18 +3,26 @@ from torch import nn
 
 
 class End2EndModel(torch.nn.Module):
-	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False):
+	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
 		super(End2EndModel, self).__init__()
-		self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
 		self.c_to_y_model = CtoYNet(num_concepts * num_images_per_output, num_classes)
 		self.use_sigmoid = use_sigmoid
+		self.use_modulelist = use_modulelist
 		self.num_images_per_output = num_images_per_output
+
+		if self.use_modulelist:
+			self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
+		else:
+			self.x_to_c_model = PlayingCardNet(num_classes=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
 
 	def forward_stage2(self, stage_1_out):
 		outputs = []
-		for out in stage_1_out:
-			outputs.append(torch.cat(out, dim=1))
-
+		if self.use_modulelist:
+			for out in stage_1_out:
+				outputs.append(torch.cat(out, dim=1))
+		else:
+			for out in stage_1_out:
+				outputs.append(out)
 		if self.use_sigmoid:
 			c_to_y_input = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 		else:
@@ -85,7 +93,7 @@ class PlayingCardNet(nn.Module):
 			self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
 			for i in range(self.num_concepts):
 				self.all_fc.append(nn.Linear(512, 1))
-		# basic fc for standdard training
+		# basic fc for standard training
 		else:
 			self.out_fc = nn.Linear(512, num_classes)
 
