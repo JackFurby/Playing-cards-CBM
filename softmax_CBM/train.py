@@ -74,7 +74,17 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			for image_concept in range(concept_out.size(1)):
 				task_loss = criterion[0](task_out, labels)
 				for i in range(len(criterion) - 1):
-					concept_loss = criterion[i + 1](concept_out[:, image_concept, :], concepts[:, image_concept, :])
+					card_value_index = torch.argmax(concepts[:, image_concept, :13], dim=1)
+					card_suit_index = torch.argmax(concepts[:, image_concept, -4:], dim=1)
+
+					# Note: this has been hard coded for concepts to equal suitand value in two one hot vectors
+					# I need to modify training once this has been tested to remove the hard coding
+
+					# card value + task
+					concept_loss = criterion[i + 1](concept_out[:, image_concept, :13], card_value_index)
+					batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
+					# card suit + task
+					concept_loss = criterion[i + 1](concept_out[:, image_concept, -4:], card_suit_index)
 					batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
 
 			loss = sum(batch_losses) / len(batch_losses)

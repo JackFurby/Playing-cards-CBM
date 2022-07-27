@@ -139,6 +139,8 @@ class MultiImagePlayingCardDataset(Dataset):
 		card_2_index = img_data['card_2_class_index']
 		card_3_index = img_data['card_3_class_index']
 
+		# concepts set to card classes
+		"""
 		# convert card classes to one hot vectors
 		card_1_concept = torch.zeros(self.num_concepts)
 		card_1_concept[img_data['card_1_class_index']] += 1
@@ -148,6 +150,14 @@ class MultiImagePlayingCardDataset(Dataset):
 		card_3_concept[img_data['card_3_class_index']] += 1
 
 		card_concepts = torch.stack([card_1_concept, card_2_concept, card_3_concept])
+		"""
+
+		# concepts set to card suit and value
+		card_concepts = torch.stack([
+			torch.as_tensor(img_data["card_1_concepts"]),
+			torch.as_tensor(img_data["card_2_concepts"]),
+			torch.as_tensor(img_data["card_3_concepts"])
+		])
 
 		if self.transform is not None:
 			altered_img_1 = self.transform(img_1)
