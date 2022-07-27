@@ -24,7 +24,9 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 			"""
 			Joint training will train both the concept vector and final classification
-			together. This works in the following way:
+			together. This training is similar to the standartd CBM but criterion does
+			not require the concept vector to be a modulelist. Instead criterion is
+			applied to the entire concept vector together This works in the following way:
 			1. The model output is split into concept and task outputs
 			2. The number of input images are computed
 				2a. If only one image is in the input then an extra dimention in added
@@ -67,7 +69,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			# [batch size, number of images per sample, concept vector length]
 			concept_out = concept_out.view(concepts.size())
 
-			# compute concept and task loss (following CBM joint training method)
+			# compute concept and task loss (following our own CBM method without per concept loss)
 			batch_losses = []
 			for image_concept in range(concept_out.size(1)):
 				task_loss = criterion[0](task_out, labels)
@@ -90,6 +92,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 				task_f1 = f1(task_out, labels.to(torch.int32))
 
+			losses.append(loss.item())
 			if train:
 				loss.backward()
 

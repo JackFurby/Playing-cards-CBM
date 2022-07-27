@@ -150,7 +150,7 @@ if __name__ == "__main__":
 	elif args.mode == "joint":
 		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
 	elif args.mode == "CtoY":
-		model =  CtoYNet(num_concept_in=args.n_concepts*args.num_images_per_output, num_classes=args.n_classes)
+		model = CtoYNet(num_concept_in=args.n_concepts*args.num_images_per_output, num_classes=args.n_classes)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
