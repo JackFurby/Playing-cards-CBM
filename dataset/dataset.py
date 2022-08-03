@@ -45,7 +45,7 @@ class PlayingCardDataset(Dataset):
 				"id": dataset_split[i],
 				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
 				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
-				"concepts": dataset_split[i]["attribute_label"],
+				"concepts": dataset_split[i]["concept_label"],
 			}
 			self.data.append(sample)
 
@@ -58,7 +58,13 @@ class PlayingCardDataset(Dataset):
 
 		img = Image.open(img_path).convert('RGB')
 		class_index = img_data['class_index']
-		concepts = img_data['concepts']
+		#concepts = img_data['concepts']
+		
+		# temp - convert concepts to 3 hot vector
+		concepts = torch.zeros(52)
+		for i in img_data['concepts']:
+			concepts[i] = 1
+		
 
 		if self.transform is not None:
 			altered_img = self.transform(img)
@@ -201,7 +207,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 		self.weights = torch.DoubleTensor(weights)
 
 	def _get_label(self, dataset, idx):  # Note: for single attribute dataset
-		return dataset.data[idx]["id"]['attribute_label'][0]
+		return dataset.data[idx]["id"]['concept_label'][0]
 
 	def __iter__(self):
 		idx = (self.indices[i] for i in torch.multinomial(
@@ -259,7 +265,7 @@ def find_class_imbalance(pkl_file, multiple_attr=False, attr_idx=-1):
 	imbalance_ratio = []
 	data = pickle.load(open(pkl_file, 'rb'))
 	n = len(data)
-	n_attr = len(list(data.items())[0][1]['attribute_label'])
+	n_attr = len(list(data.items())[0][1]['concept_label'])
 	if attr_idx >= 0:
 		n_attr = 1
 	if multiple_attr:
@@ -269,7 +275,7 @@ def find_class_imbalance(pkl_file, multiple_attr=False, attr_idx=-1):
 		n_ones = [0]
 		total = [n * n_attr]
 	for key in data:
-		labels = data[key]['attribute_label']
+		labels = data[key]['concept_label']
 		if multiple_attr:
 			for i in range(n_attr):
 				n_ones[i] += labels[i]
