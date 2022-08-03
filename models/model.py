@@ -36,7 +36,7 @@ class End2EndModel(torch.nn.Module):
 			# Run each card batch seperatly
 			split_images = []
 			for image_id in range(x.size(1)):
-				split_images.append(x[:, image_id, :, : , :])
+				split_images.append(x[:, image_id, :, :, :])
 		else:
 			split_images = [x]  # make sure input is in same format as is there are multiple inputs
 
@@ -57,6 +57,7 @@ class CtoYNet(nn.Module):
 
 	def forward(self, x):
 		return self.classifier(x)
+
 
 # VGG 11
 class PlayingCardNet(nn.Module):
