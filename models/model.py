@@ -58,44 +58,52 @@ class CtoYNet(nn.Module):
 	def forward(self, x):
 		return self.classifier(x)
 
-
+# VGG 11
 class PlayingCardNet(nn.Module):
 	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
 		super(PlayingCardNet, self).__init__()
 		self.num_concepts = num_concepts
 		self.features = nn.Sequential(
-			nn.Conv2d(3, 64, 3),  # 3 channels; 64 is the output channel size; 3 is the kernel size;
-			nn.BatchNorm2d(64),
-			nn.ReLU(),
-			nn.MaxPool2d(2, 2),
-			nn.Conv2d(64, 64, 3),
-			nn.BatchNorm2d(64),
-			nn.ReLU(),
-			nn.MaxPool2d(2, 2),
-			nn.Conv2d(64, 128, 3),
-			nn.BatchNorm2d(128),
-			nn.ReLU(),
-			nn.MaxPool2d(2, 2),
-			nn.Conv2d(128, 128, 3),
-			nn.BatchNorm2d(128),
-			nn.ReLU()
+			nn.Conv2d(3, 64, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(64, 128, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(128, 256, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(256, 512, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2)
 		)
 		self.avgPool = nn.AdaptiveAvgPool2d((7, 7))
 		self.classifier = nn.Sequential(
-			nn.Flatten(),
+			nn.Linear(512 * 7 * 7, 4096),
+			nn.ReLU(True),
 			nn.Dropout(0.5),
-			nn.Linear(6272, 512),
-			nn.ReLU()
+			nn.Linear(4096, 4096),
+			nn.ReLU(True),
+			nn.Dropout(0.5),
 		)
 		# concept training requires a module list for loss
 		if self.num_concepts > 0:
 			# all_fc replaces fc2 from standard model
 			self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
 			for i in range(self.num_concepts):
-				self.all_fc.append(nn.Linear(512, 1))
+				self.all_fc.append(nn.Linear(4096, 1))
 		# basic fc for standard training
 		else:
-			self.out_fc = nn.Linear(512, num_classes)
+			self.out_fc = nn.Linear(4096, num_classes)
 
 		# if weights file provided, load them
 		if pretrained_weights is not None:
@@ -112,6 +120,7 @@ class PlayingCardNet(nn.Module):
 	def forward(self, x):
 		x = self.features(x)
 		x = self.avgPool(x)
+		x = torch.flatten(x, 1)
 		x = self.classifier(x)
 		if self.num_concepts > 0:
 			out = []

@@ -59,12 +59,12 @@ class PlayingCardDataset(Dataset):
 		img = Image.open(img_path).convert('RGB')
 		class_index = img_data['class_index']
 		#concepts = img_data['concepts']
-		
+
 		# temp - convert concepts to 3 hot vector
 		concepts = torch.zeros(52)
 		for i in img_data['concepts']:
 			concepts[i] = 1
-		
+
 
 		if self.transform is not None:
 			altered_img = self.transform(img)
@@ -74,7 +74,7 @@ class PlayingCardDataset(Dataset):
 		if self.return_orig:
 			# hard coded transform without normalise (can I make this better?)
 			img = transforms.ToTensor()(img)
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(img)
+			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(transforms.Resize((299, 299))(img))
 		elif self.return_path:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), img_path
 		else:
