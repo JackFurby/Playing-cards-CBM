@@ -11,3 +11,4 @@ wandb
 jupyterlab==3.4.*
 sklearn
 pandas==1.4.*
+tqdm==4.64.*
