@@ -33,7 +33,6 @@ def get_end_to_end_model(model_path, num_concepts, num_classes, num_images_per_o
 	"""
 	model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, num_images_per_output=num_images_per_output, freeze=False, use_sigmoid=True)
 	model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-	print(model)
 	return model
 
 
@@ -121,4 +120,7 @@ if __name__ == "__main__":
 	else:
 		model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts)
 		model = get_converted_model(model, num_concepts=len(model.all_fc), end_to_end=args.end_to_end)
+
+	print(model)
+
 	torch.save(model.state_dict(), args.model_out_path)
