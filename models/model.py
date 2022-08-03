@@ -59,31 +59,39 @@ class CtoYNet(nn.Module):
 		return self.classifier(x)
 
 
-# VGG 11
+# VGG 11 with Batch Norm
 class PlayingCardNet(nn.Module):
 	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
 		super(PlayingCardNet, self).__init__()
 		self.num_concepts = num_concepts
 		self.features = nn.Sequential(
 			nn.Conv2d(3, 64, kernel_size=3, padding=1),
+			nn.BatchNorm2d(64),
 			nn.ReLU(True),
 			nn.MaxPool2d(kernel_size=2, stride=2),
 			nn.Conv2d(64, 128, kernel_size=3, padding=1),
+			nn.BatchNorm2d(128),
 			nn.ReLU(True),
 			nn.MaxPool2d(kernel_size=2, stride=2),
 			nn.Conv2d(128, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
 			nn.ReLU(True),
 			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
 			nn.ReLU(True),
 			nn.MaxPool2d(kernel_size=2, stride=2),
 			nn.Conv2d(256, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
 			nn.ReLU(True),
 			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
 			nn.ReLU(True),
 			nn.MaxPool2d(kernel_size=2, stride=2),
 			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
 			nn.ReLU(True),
 			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
 			nn.ReLU(True),
 			nn.MaxPool2d(kernel_size=2, stride=2)
 		)
