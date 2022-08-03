@@ -81,12 +81,13 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					# I need to modify training once this has been tested to remove the hard coding
 
 					# card value + task
-					concept_loss = criterion[i + 1](concept_out[:, image_concept, :13], card_value_index)
-					batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
+					#concept_loss = criterion[i + 1](concept_out[:, image_concept, :13], card_value_index)
+					#concept_suit_loss = criterion[i + 1](concept_out[:, image_concept, -4:], card_suit_index)
+					concept_loss = criterion[i + 1](concept_out[:, image_concept, :13], concepts[:, image_concept, :13].float())
+					concept_suit_loss = criterion[i + 1](concept_out[:, image_concept, -4:], concepts[:, image_concept, -4:].float())
+					batch_losses.append((concept_loss) + (concept_suit_loss) + ((1 - attr_loss_weight) * task_loss))
 					# card suit + task
-					concept_loss = criterion[i + 1](concept_out[:, image_concept, -4:], card_suit_index)
-					batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
-
+					
 			loss = sum(batch_losses) / len(batch_losses)
 			sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))
 
@@ -106,7 +107,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			if train:
 				loss.backward()
 
-				# Optimizing the parameters
+				# Optimizing the parameters 
 				optimizer.step()
 
 		acc = sum(accuracy) / len(accuracy)

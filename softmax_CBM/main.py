@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
 	# one criterion per image in
 	for i in range(args.num_images_per_output):
-		attr_criterion.append(nn.CrossEntropyLoss())
+		attr_criterion.append(nn.BCEWithLogitsLoss())
 
 	bestAccuracy = None
 
