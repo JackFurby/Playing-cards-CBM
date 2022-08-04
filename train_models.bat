@@ -1,8 +1,8 @@
 @ECHO OFF
 
-python main.py --mode standard --n_classes 52 --dataset_root dataset/playing_cards
+python main.py --mode standard --n_classes 52 --dataset_root dataset/playing_cards  --num_workers 4 --batch_size 32 --epochs 50
 
-python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing_cards  --weighted_loss
+python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing_cards  --weighted_loss  --num_workers 4 --batch_size 32 --epochs 50
 
 python main.py --mode joint --n_classes 6 --n_concepts 52 --num_images_per_output 3 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 16 --attr_loss_weight 0.4
 python main.py --mode joint --n_classes 6 --n_concepts 52 --num_images_per_output 3 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 16 --attr_loss_weight 0.5
