@@ -134,5 +134,8 @@ saves/
 dataset/multi_playing_cards
 dataset/playing_cards
 dataset/three_card_poker
+softmax_CBM/dataset/individual_three_card_poker
 dataset/individual_three_card_poker
+dataset/three_card_poker_2
 mydecisiontree.png
+temp/

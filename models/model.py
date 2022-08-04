@@ -96,6 +96,7 @@ class PlayingCardNet(nn.Module):
 			nn.MaxPool2d(kernel_size=2, stride=2)
 		)
 		self.avgPool = nn.AdaptiveAvgPool2d((7, 7))
+		self.flatten = nn.Flatten()
 		self.classifier = nn.Sequential(
 			nn.Linear(512 * 7 * 7, 4096),
 			nn.ReLU(True),
@@ -129,7 +130,7 @@ class PlayingCardNet(nn.Module):
 	def forward(self, x):
 		x = self.features(x)
 		x = self.avgPool(x)
-		x = torch.flatten(x, 1)
+		x = self.flatten(x)
 		x = self.classifier(x)
 		if self.num_concepts > 0:
 			out = []
