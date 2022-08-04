@@ -219,7 +219,7 @@ if __name__ == "__main__":
 			wandb.log(log_values)
 
 			for param_group in optimizer.param_groups:
-				wandb.log({"XtoC learning rate": param_group['lr']})
+				wandb.log({"learning rate": param_group['lr']})
 
 	elif args.mode == "joint":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
@@ -283,7 +283,8 @@ if __name__ == "__main__":
 			wandb.log(log_values)
 
 			for param_group in optimizer.param_groups:
-				wandb.log({"XtoC learning rate": param_group['lr']})
+				wandb.log({"learning rate": param_group['lr']})
+
 	elif args.mode in ["standard", "CtoY"]:
 		criterion = nn.CrossEntropyLoss()
 
@@ -316,9 +317,9 @@ if __name__ == "__main__":
 			log_values = {
 				"epoch": epoch,
 				"Train Loss": trainLoss,
-				"Train Accuracy": 100 * trainAcc,
+				"Train Task Accuracy": 100 * trainAcc,
 				"Test Loss": testLoss,
-				"Test Accuracy": 100 * testAcc
+				"Test Task Accuracy": 100 * testAcc
 			}
 
 			if testLoss is not None:
