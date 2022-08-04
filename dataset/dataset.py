@@ -58,12 +58,12 @@ class PlayingCardDataset(Dataset):
 
 		img = Image.open(img_path).convert('RGB')
 		class_index = img_data['class_index']
-		#concepts = img_data['concepts']
+		concepts = img_data['concepts']
 
 		# temp - convert concepts to 3 hot vector
-		concepts = torch.zeros(52)
-		for i in img_data['concepts']:
-			concepts[i] = 1
+		#concepts = torch.zeros(52)
+		#for i in img_data['concepts']:
+		#	concepts[i] = 1
 
 
 		if self.transform is not None:

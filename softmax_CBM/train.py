@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
@@ -14,7 +15,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 	task_acc = []
 	f1_acc = []
 	with torch.set_grad_enabled(train):
-		for images, labels, concepts in data_loader:
+		for images, labels, concepts in tqdm(data_loader, unit="batch"):
 			# Transfering images and labels to GPU if available
 			images, labels, concepts = images.to(device), labels.to(device), concepts.to(device)
 

@@ -8,7 +8,7 @@ Concept Bottleneck Models, possibly using neural-symbolic AI
 
 # single card classification
 
-`python main.py --mode standard --n_classes 52 --dataset_root dataset/playing_cards --has_class`
+`python main.py --mode standard --n_classes 52 --dataset_root dataset/playing_cards`
 
 # multi card dataset
 
@@ -17,6 +17,8 @@ Concept Bottleneck Models, possibly using neural-symbolic AI
 # Joint
 
 `python main.py --mode joint --n_classes 6 --n_concepts 52 --num_images_per_output 3 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 32 --attr_loss_weight 0.5`
+
+`python main.py --mode joint --n_classes 6 --n_concepts 52 --num_images_per_output 1 --dataset_root dataset/three_card_poker_2 --num_workers 4 --batch_size 32 --attr_loss_weight 0.99`
 
 # softmax Joint
 
