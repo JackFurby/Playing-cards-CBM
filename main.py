@@ -205,10 +205,10 @@ if __name__ == "__main__":
 
 			log_values = {
 				"epoch": epoch,
-				"XtoC Train Loss": trainLoss,
-				"XtoC Train Accuracy": trainAcc,
-				"XtoC Test Loss": testLoss,
-				"XtoC Test Accuracy": testAcc
+				"Train XtoC Loss": trainLoss,
+				"Train XtoC Accuracy": trainAcc,
+				"Test XtoC Loss": testLoss,
+				"Test XtoC Accuracy": testAcc
 			}
 
 			if testLoss is not None:
