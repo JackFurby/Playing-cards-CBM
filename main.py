@@ -332,4 +332,6 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
+			if
+
 	print("Finished training!")

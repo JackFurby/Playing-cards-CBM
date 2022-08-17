@@ -227,9 +227,12 @@ def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_
 		transform = transforms.Compose([
 			transforms.Resize((299, 299)),
 			transforms.RandomHorizontalFlip(),
+			transforms.RandomVerticalFlip(),
+			transforms.ColorJitter(brightness=.3, contrast=.3, saturation=.3, hue=.3),
+			transforms.RandomGrayscale(p=0.1),
 			transforms.ToTensor(),
 			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
-			])
+		])
 	else:
 		transform = transforms.Compose([
 			transforms.Resize((299, 299)),
