@@ -175,7 +175,7 @@ if __name__ == "__main__":
 	if args.mode == "XtoC":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
-			imbalance = find_class_imbalance(f"./{args.dataset_root}/train.pkl", True)
+			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
 			print(imbalance)
 			for ratio in imbalance:
 				attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
@@ -231,7 +231,7 @@ if __name__ == "__main__":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		attr_criterion.append(nn.CrossEntropyLoss())  # criterion for c->y model out
 		if args.weighted_loss:
-			imbalance = find_class_imbalance(f"./{args.dataset_root}/train.pkl", True)
+			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
 			print(imbalance)
 			for ratio in imbalance:
 				attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
