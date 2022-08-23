@@ -8,7 +8,7 @@ Concept Bottleneck Models, possibly using neural-symbolic AI
 
 # single card classification
 
-`python main.py --mode standard --n_classes 52 --dataset_root dataset/playing_cards`
+`python main.py --mode standard --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single`
 
 # multi card dataset
 

@@ -1,0 +1,21 @@
+program: main.py
+method: bayes
+metric:
+  name: testLoss
+  goal: minimize
+parameters:
+  lr:
+    min: 0.0001
+    max: 0.1
+  optimizer:
+    values: ["adam", "sgd"]
+  lr_patience:
+    values: [3, 5, 10, 15]
+  mode:
+    value: standard
+  n_classes:
+    value: 52
+  dataset_root:
+    value: dataset/playing-cards
+  dataset_postfix:
+    value: splits/single
