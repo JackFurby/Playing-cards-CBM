@@ -1,5 +1,6 @@
 program: main.py
 method: bayes
+project: playing_cards_CBM
 metric:
   name: testLoss
   goal: minimize
