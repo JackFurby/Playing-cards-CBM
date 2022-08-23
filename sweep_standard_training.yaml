@@ -19,3 +19,5 @@ parameters:
     value: dataset/playing-cards
   dataset_postfix:
     value: splits/single
+  epochs:
+    value: 100
