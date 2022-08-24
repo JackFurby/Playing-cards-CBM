@@ -13,12 +13,6 @@ from models.model import PlayingCardNet, End2EndModel, CtoYNet
 from dataset.dataset import load_data, find_class_imbalance
 
 
-# Independent & Sequential Model
-def ModelXtoC(pretrained, freeze, num_attributes, expand_dim):
-	vgg_model = vgg_mini_bn(pretrained=pretrained, num_attributes=num_attributes, bottleneck=True, expand_dim=expand_dim)
-	return x_to_c_model(freeze=freeze, model=vgg_model)
-
-
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description='Train and test a Concept Bottleneck Model')
@@ -26,50 +20,56 @@ if __name__ == "__main__":
 		'--lr',
 		type=float,
 		default=0.001,
-		help='Starting learning rate'
+		help='Starting learning rate (default: 0.001)'
 	)
 	parser.add_argument(
 		'--lr_patience',
 		type=int,
 		default=10,
-		help='Number of epochs with no improvement after which learning rate will be reduced'
+		help='Number of epochs with no improvement after which learning rate will be reduced (default: 10)'
 	)
 	parser.add_argument(
 		'--mode',
 		type=str,
 		default="XtoC",
 		choices=["XtoC", "standard", "joint", "CtoY"],
-		help='model to run script'
+		help='Training method to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
 		'--epochs',
 		type=int,
 		default=100,
-		help='number of epochs'
+		help='Number of epochs to train a model (default: 100)'
 	)
 	parser.add_argument(
 		'--batch_size',
 		type=int,
 		default=16,
-		help='number of epochs'
+		help='Number of samples per batch (default: 16)'
+	)
+	parser.add_argument(
+		'--seed',
+		type=int,
+		default=0,
+		help='Seed set to Pytorch (default: 0)'
 	)
 	parser.add_argument(
 		'--num_workers',
 		type=int,
 		default=0,
-		help='number of workers fetching data on the dataloader'
+		help='Number of workers fetching data for the dataloader (default: 0)'
 	)
 	parser.add_argument(
 		'--optimizer',
 		type=str,
 		default='adam',
 		choices=["adam", "sgd"],
-		help='Select optimizer to use for training'
+		help='Optimizer to use for training (default: adam)'
 	)
 	parser.add_argument(
 		'--pretrained_weights',
 		type=str,
-		help='file path to pytorch weight file'
+		help='File path to pytorch weight file'
 	)
 	parser.add_argument(
 		'--n_classes',
@@ -85,44 +85,52 @@ if __name__ == "__main__":
 		'--num_images_per_output',
 		type=int,
 		default=1,
-		help='number of images input for each output (only used for joint training)'
+		help='Number of images input for each output (only used for joint training) (default: 1)'
 	)
 	parser.add_argument(
 		'--dataset_root',
 		type=str,
-		help='file path to dataset root dir'
+		help='Path to dataset root directory'
 	)
 	parser.add_argument(
 		'--dataset_postfix',
 		type=str,
 		default="",
-		help='file path to dataset from root'
+		help='Path to dataset split files from dataset root (default: "")'
 	)
 	parser.add_argument(
 		'--weighted_loss',
 		action='store_true',
-		help='Whether to use weighted loss for single attribute or multiple ones'
+		help='Whether to use weighted loss for single concept or multiple ones'
 	)
 	parser.add_argument(
 		'--attr_loss_weight',
 		type=float,
 		default=1.0,
-		help='weight for loss by predicting attributes'
+		help='Weight task loss (default: 1.0)'
 	)
 	parser.add_argument(
 		'--freeze',
 		action='store_true',
-		help='whether to freeze the bottom part of the model'
+		help='Freeze the input to layer before concept vector model part'
+	)
+	parser.add_argument(
+		'--use_cpu',
+		action='store_true',
+		help='Only use the system CPU, even if CUDA is available'
 	)
 	args = parser.parse_args()
 
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	if torch.cuda.is_available():
+	if args.use_cpu:
+		device = "cpu"
+	else:
+		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	if torch.cuda.is_available() and not args.use_cpu:
 		print("Device:", device, torch.cuda.get_device_name(0))
 	else:
 		print("Device:", device)
 
-	torch.manual_seed(0)  # reproducibility
+	torch.manual_seed(args.seed)  # reproducibility
 
 	parameters = dict(
 		batch_size=args.batch_size,

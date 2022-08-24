@@ -2,7 +2,7 @@ program: main.py
 method: bayes
 project: playing_cards_CBM
 metric:
-  name: testLoss
+  name: Test XtoC Loss
   goal: minimize
 parameters:
   lr:
@@ -13,8 +13,8 @@ parameters:
   lr_patience:
     values: [3, 5, 10, 15]
   mode:
-    value: standard
-  n_classes:
+    value: XtoC
+  n_concepts:
     value: 52
   dataset_root:
     value: dataset/playing-cards
@@ -22,3 +22,7 @@ parameters:
     value: splits/three_card_poker_card_class
   epochs:
     value: 100
+  batch_size:
+    value: 32
+  num_workers:
+    value: 4

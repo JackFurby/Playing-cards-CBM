@@ -177,7 +177,7 @@ class MultiImagePlayingCardDataset(Dataset):
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
 class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 	"""Samples elements randomly from a given list of indices for imbalanced dataset
-	Arguments:
+	Args:
 		indices (list, optional): a list of indices
 		num_samples (int, optional): number of samples to draw
 	"""

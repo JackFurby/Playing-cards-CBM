@@ -1,7 +1,8 @@
 program: main.py
 method: bayes
+project: playing_cards_CBM
 metric:
-  name: testLoss
+  name: Test Task Accuracy
   goal: minimize
 parameters:
   lr:
@@ -12,10 +13,21 @@ parameters:
   lr_patience:
     values: [3, 5, 10, 15]
   mode:
-    value: standard
+    value: joint
   n_classes:
     value: 52
+  n_concepts:
+    value: 17
+  attr_loss_weight:
+    min: 0.1
+    max: 1.0
   dataset_root:
     value: dataset/playing-cards
   dataset_postfix:
     value: splits/single
+  epochs:
+    value: 100
+  batch_size:
+    value: 32
+  num_workers:
+    value: 4

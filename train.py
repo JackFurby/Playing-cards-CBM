@@ -5,6 +5,28 @@ from tqdm import tqdm
 
 
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
+	"""
+	Training and evaluation loop.
+
+		args:
+			model (Pytorch model): Pytorch model to train / evaluate
+			data_loader (Pytorch dataloader): Pytorch dataloader with dataset Initilised
+			optimizer (torch.optim): Optimiser for updating model weights
+			criterion (pytorch loss / list of Pytorch loss): Loss method
+			f1 (Pytorch torchmetrics F1): F1 metrics object
+			mode (str): Training method
+			attr_loss_weight (float): weight between concept and task loss (joint model only)
+			train (bool): True if model is training, False if model is testing
+			device (str): Device top train / test using (e.g. cpu or cuda:0)
+
+		returns:
+			average loss: Average loss of model
+			average accuracy: Average accuracy of concepts / task (non joint)
+			average F1 score: Average F1 score of concepts / task (non joint)
+			average task F1 score (joint only): Average task F1 score
+			average task accuracy (joint only): Average task accuracy
+	"""
+
 	if train:
 		model.train()
 	else:
@@ -145,8 +167,13 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 def binary_accuracy(output, target):
 	"""
-	Computes the accuracy for multiple binary predictions
-	output and target are Torch tensors
+	Computes the accuracy for multiple binary predictions.
+
+	args:
+		output (Pytorch tensor): Model prediction
+		target (Pytorch tensor): Ground truth from dataset
+	returns:
+		acc: binary accuracy
 	"""
 	pred = output >= 0.5
 	acc = (pred.int()).eq(target.int()).sum()

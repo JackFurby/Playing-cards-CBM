@@ -1,0 +1,33 @@
+program: main.py
+method: bayes
+project: playing_cards_CBM
+metric:
+  name: Test Task Accuracy
+  goal: minimize
+parameters:
+  lr:
+    min: 0.0001
+    max: 0.1
+  optimizer:
+    values: ["adam", "sgd"]
+  lr_patience:
+    values: [3, 5, 10, 15]
+  mode:
+    value: joint
+  n_classes:
+    value: 6
+  n_concepts:
+    value: 52
+  attr_loss_weight:
+    min: 0.1
+    max: 1.0
+  dataset_root:
+    value: dataset/playing-cards
+  dataset_postfix:
+    value: splits/three_card_poker_card_class
+  epochs:
+    value: 100
+  batch_size:
+    value: 32
+  num_workers:
+    value: 4
