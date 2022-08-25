@@ -46,6 +46,7 @@ class PlayingCardDataset(Dataset):
 				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
 				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
 				"concepts": dataset_split[i]["concept_label"],
+				"card_points": dataset_split[i]["card_points"],
 			}
 			self.data.append(sample)
 

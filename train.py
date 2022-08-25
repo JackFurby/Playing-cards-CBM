@@ -112,7 +112,8 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					for i in range(len(criterion) - 1):
 						concept_loss = criterion[i + 1](individual_concept_out[:, i].squeeze(), individual_concept[:, i])
 						#batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
-						batch_losses.append(concept_loss + ((1 - attr_loss_weight) * task_loss))
+						#batch_losses.append(concept_loss + ((1 - attr_loss_weight) * task_loss))
+						batch_losses.append((attr_loss_weight * concept_loss) + task_loss)
 
 				loss = sum(batch_losses) / len(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))
