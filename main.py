@@ -151,7 +151,9 @@ if __name__ == "__main__":
 		dataset_root=f"{args.dataset_root}/{args.dataset_postfix}",
 		attr_loss_weight=args.attr_loss_weight,
 		weighted_loss=args.weighted_loss,
-		freeze=args.freeze
+		use_sig=args.use_sig,
+		freeze=args.freeze,
+		seed=args.seed,
 	)
 
 	wandb.init(project="playing_cards_CBM", config=parameters)
