@@ -161,7 +161,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			task_f1 = None
 
 	if mode == "joint":
-		return sum(losses) / len(losses), acc, f1_avg_acc, task_f1, sum(task_acc) / len(task_acc)
+		return sum(losses) / len(losses), acc, f1_avg_acc, task_f1, (sum(task_acc) / len(task_acc)).item()
 	else:
 		return sum(losses) / len(losses), acc, f1_avg_acc
 
