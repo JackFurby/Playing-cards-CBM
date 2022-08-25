@@ -56,6 +56,7 @@ options:
   --attr_loss_weight ATTR_LOSS_WEIGHT
                         Weight task loss (default: 1.0)
   --freeze              Freeze the input to layer before concept vector model part
+  --use_sig             Use sigmoid between the XtoC and the CtoY model parts
   --use_cpu             Only use the system CPU, even if CUDA is available
 ```
 

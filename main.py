@@ -115,6 +115,11 @@ if __name__ == "__main__":
 		help='Freeze the input to layer before concept vector model part'
 	)
 	parser.add_argument(
+		'--use_sig',
+		action='store_true',
+		help='Use sigmoid between the XtoC and the CtoY model parts'
+	)
+	parser.add_argument(
 		'--use_cpu',
 		action='store_true',
 		help='Only use the system CPU, even if CUDA is available'
@@ -162,7 +167,7 @@ if __name__ == "__main__":
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint":
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=True)
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=arge.use_sig)
 	elif args.mode == "CtoY":
 		model = CtoYNet(num_concept_in=args.n_concepts*args.num_images_per_output, num_classes=args.n_classes)
 	else:  # standard training
