@@ -3,7 +3,7 @@ method: bayes
 project: playing_cards_CBM
 metric:
   name: testTaskF1
-  goal: maximise
+  goal: maximize
 parameters:
   lr:
     min: 0.0001
