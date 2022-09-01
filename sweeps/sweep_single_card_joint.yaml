@@ -2,8 +2,8 @@ program: main.py
 method: bayes
 project: playing_cards_CBM
 metric:
-  name: testTaskF1
-  goal: maximize
+  name: Test Loss
+  goal: minimize
 parameters:
   lr:
     min: 0.0001
