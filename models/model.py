@@ -108,7 +108,7 @@ class PlayingCardNet(nn.Module):
 		# concept training requires a module list for loss
 		if self.num_concepts > 0:
 			# all_fc replaces fc2 from standard model
-			self.all_fc = nn.ModuleList()  #separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
+			self.all_fc = nn.ModuleList()  # separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list
 			for i in range(self.num_concepts):
 				self.all_fc.append(nn.Linear(4096, 1))
 		# basic fc for standard training

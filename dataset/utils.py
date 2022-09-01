@@ -23,7 +23,7 @@ class IndexToString(object):
 			String: String name
 		"""
 		return self.string_dict[index]
-	
+
 
 class StringToIndex(object):
 	"""Convert string to the corrisponding index

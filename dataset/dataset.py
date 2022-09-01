@@ -22,7 +22,8 @@ class PlayingCardDataset(Dataset):
 		transform=None,
 		train=True,
 		return_orig=False,
-		return_path=False):
+		return_path=False,
+		return_points=False):
 		"""
 		Args:
 			pkl_file_path (string): path to pkl file for dataset split from repo root
@@ -31,12 +32,14 @@ class PlayingCardDataset(Dataset):
 			train (bool): True if dataset contains training data else False
 			return_orig (bool): If True then return the original image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
+			return_points (bool): If True then return playing card location points (not used if return_orig or return_path is true)
 		"""
 		self.data = []
 		self.train = train
 		self.transform = transform
 		self.return_orig = return_orig
 		self.return_path = return_path
+		self.return_points = return_points
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
@@ -66,8 +69,20 @@ class PlayingCardDataset(Dataset):
 		#for i in img_data['concepts']:
 		#	concepts[i] = 1
 
+		# create lists for card points and card classes
+		# card points are adjusted for resized images
+		if self.return_points:
+			card_points = []
+			card_classes = []
+			for card in img_data['card_points']:
+				points = []
+				for point in card[0]:
+					point = (int(point[0] * (int(299)/img.width)), int(point[1] * (int(299)/img.height)))
+					points.append(point)
+				card_points.append(points)
+				card_classes.append(card[1])
 
-		if self.transform is not None:
+		if self.transform:
 			altered_img = self.transform(img)
 		else:
 			altered_img = img
@@ -78,6 +93,8 @@ class PlayingCardDataset(Dataset):
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(transforms.Resize((299, 299))(img))
 		elif self.return_path:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), img_path
+		elif self.return_points:
+			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(card_points, dtype=torch.float), torch.as_tensor(card_classes)
 		else:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
 
@@ -220,7 +237,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, resampling=False, shuffle=None, num_workers=0, multi_image=False):
+def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, multi_image=False):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -232,19 +249,19 @@ def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_
 			transforms.ColorJitter(brightness=.3, contrast=.3, saturation=.3, hue=.3),
 			transforms.RandomGrayscale(p=0.1),
 			transforms.ToTensor(),
-			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
 		])
 	else:
 		transform = transforms.Compose([
 			transforms.Resize((299, 299)),
 			transforms.ToTensor(),
-			transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
 			])
 
 	if multi_image:
-		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, num_concepts, transform, train=is_training, return_orig=return_orig)
+		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, num_concepts, transform, train=is_training, return_orig=return_orig, return_points=return_points)
 	else:
-		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path)
+		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path, return_points=return_points)
 	if is_training:
 		drop_last = True
 		shuffle = True if shuffle is None else shuffle

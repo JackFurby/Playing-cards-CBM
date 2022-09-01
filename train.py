@@ -46,7 +46,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				optimizer.zero_grad()
 
 			if mode == "CtoY":
-				concepts = concepts.view(concepts.size(0), -1)
+				concepts = concepts.view(concepts.size(0), -1)  # make sure input is vector (will not be if using multi input images)
 				outputs = model(concepts)
 			else:
 				outputs = model(images)
