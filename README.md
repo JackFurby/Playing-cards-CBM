@@ -120,4 +120,4 @@ TO DO
 
 #### XtoCtoY / end to end / XtoC and CtoY (sequential)
 
-`python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17`
+`python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --num_images_per_output 1 --end_to_end`

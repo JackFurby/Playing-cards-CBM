@@ -65,20 +65,20 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				1. The model output is split into concept and task outputs
 				2. The number of input images are computed
 					2a. If only one image is in the input then an extra dimention in added
-					    as such the concept and concept_out have a size of
-					    [batch_size, number_of_input_images, number_of_concepts]
+						as such the concept and concept_out have a size of
+						[batch_size, number_of_input_images, number_of_concepts]
 				3. The loss is computed for concept and task. attr_loss_weight is
-				   used to balance between concept and task loss priority
+					used to balance between concept and task loss priority
 				4. Loss and accuracy measurements are computed and averaged
 
 				note:
 				* The model expects an input image in the format
-				  [batch_size, number_of_input_images, channels, width, height] or
-				  [batch_size, channels, width, height]
+					[batch_size, number_of_input_images, channels, width, height] or
+					[batch_size, channels, width, height]
 
 				* The concepts should be in the format
-				  [batch_size, number_of_input_images, number_of_concepts] or
-				  [batch_size, number_of_concepts]
+					[batch_size, number_of_input_images, number_of_concepts] or
+					[batch_size, number_of_concepts]
 				"""
 
 				# seperate model output into task and concept predictions
