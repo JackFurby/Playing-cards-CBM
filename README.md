@@ -1,5 +1,4 @@
-# neuro-symbolic-Concept-Bottleneck-Models
-
+# Playing cards CBM
 ## Setup
 
 Note: These instructions were designed for Ubuntu 22.04. They should however be compatible with other operating systems with minor adjustments.
