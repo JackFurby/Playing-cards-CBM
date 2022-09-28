@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision
-from models.model import PlayingCardNet, End2EndModel
+from models.model import PlayingCardNet, End2EndModel, CtoYNet
 import argparse
 
 
@@ -19,6 +19,23 @@ def get_concept_model(model_path, num_concepts):
 	XtoC = PlayingCardNet(num_concepts=num_concepts)
 	XtoC.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return XtoC
+
+
+def get_task_model(model_path, num_concepts, num_classes):
+	"""
+	This function will load and return a concept bottleneck model C to Y part.
+
+	args:
+		model_path (string): File path to Pytorch pth file
+		num_concepts (int): number of concepts in the model to load
+		num_classes (int): number of classes in the model to load
+	returns:
+		Pytorch model
+	"""
+
+	CtoY = CtoYNet(num_concept_in=num_concepts, num_classes=num_classes)
+	CtoY.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+	return CtoY
 
 
 def get_end_to_end_model(model_path, num_concepts, num_classes, num_images_per_output):
@@ -79,13 +96,29 @@ def get_converted_model(model, num_concepts, end_to_end):
 	return new_model
 
 
+def combine_model_parts(model_1, model_2, num_classes, num_concepts, num_images_per_output):
+	"""
+	"""
+
+	end_to_end_model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, num_images_per_output=num_images_per_output, freeze=False, use_sigmoid=True)
+	end_to_end_model.x_to_c_model = model_1
+	end_to_end_model.c_to_y_model = model_2
+	return end_to_end_model
+
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Replace the ModuleList layer in a concept bottleneck model with a linear layer')
 
 	parser.add_argument(
 		'--model_path',
 		type=str,
-		help='model path'
+		help='model path for X to C or end to end models'
+	)
+	parser.add_argument(
+		'--model_2_path',
+		type=str,
+		default=None,
+		help='model path for C to Y model'
 	)
 	parser.add_argument(
 		'--model_out_path',
@@ -120,6 +153,9 @@ if __name__ == "__main__":
 	else:
 		model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts)
 		model = get_converted_model(model, num_concepts=len(model.all_fc), end_to_end=args.end_to_end)
+		if args.model_2_path is not None:  # X to C and C to Y
+			model_2 = get_task_model(model_path=args.model_2_path, num_concepts=args.num_concepts*args.num_images_per_output, num_classes=args.num_classes)
+			model = combine_model_parts(model, model_2, args.num_classes, args.num_concepts, args.num_images_per_output)
 
 	print(model)
 
