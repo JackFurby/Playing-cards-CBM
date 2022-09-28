@@ -1,7 +1,5 @@
 # neuro-symbolic-Concept-Bottleneck-Models
 
-Concept Bottleneck Models, possibly using neural-symbolic AI
-
 ## Setup
 
 Note: These instructions were designed for Ubuntu 22.04. They should however be compatible with other operating systems with minor adjustments.
