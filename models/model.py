@@ -3,12 +3,11 @@ from torch import nn
 
 
 class End2EndModel(torch.nn.Module):
-	def __init__(self, num_classes=6, num_concepts=52, num_images_per_output=3, pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
+	def __init__(self, num_classes=6, num_concepts=52, pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
 		super(End2EndModel, self).__init__()
-		self.c_to_y_model = CtoYNet(num_concepts * num_images_per_output, num_classes)
+		self.c_to_y_model = CtoYNet(num_concepts, num_classes)
 		self.use_sigmoid = use_sigmoid
-		self.use_modulelist = use_modulelist
-		self.num_images_per_output = num_images_per_output
+		self.use_modulelist = use_modulelist  # modulelist used for training but may be converted to linear layer after
 
 		if self.use_modulelist:
 			self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
@@ -16,34 +15,15 @@ class End2EndModel(torch.nn.Module):
 			self.x_to_c_model = PlayingCardNet(num_classes=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
 
 	def forward_stage2(self, stage_1_out):
-		outputs = []
-		if self.use_modulelist:
-			for out in stage_1_out:
-				outputs.append(torch.cat(out, dim=1))
-		else:
-			for out in stage_1_out:
-				outputs.append(out)
 		if self.use_sigmoid:
-			c_to_y_input = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+			c_to_y_input = torch.nn.Sigmoid()(torch.cat(stage_1_out, dim=1))
 		else:
-			c_to_y_input = torch.cat((outputs), dim=1)
+			c_to_y_input = torch.cat((stage_1_out), dim=1)
 
-		return (torch.cat(outputs, dim=1), self.c_to_y_model(c_to_y_input))
+		return (torch.cat(stage_1_out, dim=1), self.c_to_y_model(c_to_y_input))
 
 	def forward(self, x):
-		if self.num_images_per_output != 1:
-			# split batch into first hand card, second hand card etc.
-			# Run each card batch seperatly
-			split_images = []
-			for image_id in range(x.size(1)):
-				split_images.append(x[:, image_id, :, :, :])
-		else:
-			split_images = [x]  # make sure input is in same format as is there are multiple inputs
-
-		outputs = []
-		for image in split_images:
-			outputs.append(self.x_to_c_model(image))
-		return self.forward_stage2(outputs)
+		return self.forward_stage2(self.x_to_c_model(x))
 
 
 class CtoYNet(nn.Module):
@@ -105,7 +85,7 @@ class PlayingCardNet(nn.Module):
 			nn.ReLU(True),
 			nn.Dropout(0.5),
 		)
-		# concept training requires a module list for loss
+		# concept training requires a modulelist for loss
 		if self.num_concepts > 0:
 			# all_fc replaces fc2 from standard model
 			self.all_fc = nn.ModuleList()  # separate fc layer for each prediction task. If main task is involved, it's always the first fc in the list

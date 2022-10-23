@@ -43,8 +43,6 @@ options:
                         Number of classes in dataset
   --n_concepts N_CONCEPTS
                         Number of concepts/attributes in dataset
-  --num_images_per_output NUM_IMAGES_PER_OUTPUT
-                        Number of images input for each output (only used for joint training) (default: 1)
   --dataset_root DATASET_ROOT
                         Path to dataset root directory
   --dataset_postfix DATASET_POSTFIX
@@ -72,14 +70,14 @@ This repository includes training methods for the main CBM training methods.
 
 #### XtoC training
 
-`python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing_cards  --dataset_postfix splits/single  --weighted_loss`
+`python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing-cards  --dataset_postfix splits/single  --weighted_loss`
 
-`python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing_cards  --dataset_postfix splits/three_card_class  --weighted_loss`
+`python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three_card_class  --weighted_loss`
 
 
 #### Independent CtoY training
 
-`python main.py --mode CtoY --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_card_class`
+`python main.py --mode CtoY --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker`
 
 
 #### Sequential CtoY training
@@ -89,15 +87,9 @@ TO DO
 
 #### Joint training
 
-`python main.py --mode joint --n_classes 6 --n_concepts 52 --num_images_per_output 3 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 32 --attr_loss_weight 0.5`  Note: This training configuration is not supported with the current dataset
+`python main.py --mode joint --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --num_workers 4 --batch_size 32 --attr_loss_weight 0.5`
 
-`python main.py --mode joint --n_classes 52 --n_concepts 17 --num_images_per_output 1 --dataset_root dataset/playing-cards --dataset_postfix splits/single  --num_workers 4 --batch_size 32 --attr_loss_weight 0.99`
-
-
-#### softmax Joint
-
-`python softmax_CBM/main.py --n_classes 6 --n_concepts 52 --num_images_per_output 3 --dataset_root dataset/individual_three_card_poker --num_workers 4 --batch_size 8 --attr_loss_weight 0.5`  Note: This training configuration is not supported with the current dataset
-
+`python main.py --mode joint --n_classes 52 --n_concepts 17 --dataset_root dataset/playing-cards --dataset_postfix splits/single  --num_workers 4 --batch_size 32 --attr_loss_weight 0.99`
 
 ## Model conversion
 

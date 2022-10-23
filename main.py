@@ -82,12 +82,6 @@ if __name__ == "__main__":
 		help='Number of concepts/attributes in dataset'
 	)
 	parser.add_argument(
-		'--num_images_per_output',
-		type=int,
-		default=1,
-		help='Number of images input for each output (only used for joint training) (default: 1)'
-	)
-	parser.add_argument(
 		'--dataset_root',
 		type=str,
 		help='Path to dataset root directory'
@@ -147,7 +141,6 @@ if __name__ == "__main__":
 		optimizer=args.optimizer,
 		n_concepts=args.n_concepts,
 		n_classes=args.n_classes,
-		num_images_per_output=args.num_images_per_output,
 		dataset_root=f"{args.dataset_root}/{args.dataset_postfix}",
 		attr_loss_weight=args.attr_loss_weight,
 		weighted_loss=args.weighted_loss,
@@ -159,19 +152,15 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
-	if args.mode in ["joint", "CtoY"] and args.num_images_per_output != 1:
-		train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
-		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers, multi_image=True)
-	else:
-		train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
-		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers)
 
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint":
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, num_images_per_output=args.num_images_per_output, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
 	elif args.mode == "CtoY":
-		model = CtoYNet(num_concept_in=args.n_concepts*args.num_images_per_output, num_classes=args.n_classes)
+		model = CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 

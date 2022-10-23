@@ -63,21 +63,15 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				Joint training will train both the concept vector and final classification
 				together. This works in the following way:
 				1. The model output is split into concept and task outputs
-				2. The number of input images are computed
-					2a. If only one image is in the input then an extra dimention in added
-						as such the concept and concept_out have a size of
-						[batch_size, number_of_input_images, number_of_concepts]
 				3. The loss is computed for concept and task. attr_loss_weight is
 					used to balance between concept and task loss priority
 				4. Loss and accuracy measurements are computed and averaged
 
 				note:
 				* The model expects an input image in the format
-					[batch_size, number_of_input_images, channels, width, height] or
 					[batch_size, channels, width, height]
 
 				* The concepts should be in the format
-					[batch_size, number_of_input_images, number_of_concepts] or
 					[batch_size, number_of_concepts]
 				"""
 
@@ -85,35 +79,15 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				concept_out = outputs[0]
 				task_out = outputs[1]
 
-				# get the number of images per task output
-				if len(concepts.size()) == 2:
-					num_input_images = 1
-				else:
-					num_input_images = concepts.size(1)
-					concept_out = concept_out.view(concepts.size())
-
-				# Add in extra dim of len 1 if less than 3 present.
-				if len(concepts.size()) == 2:
-					concepts = torch.unsqueeze(concepts, 0)
-					concepts = torch.permute(concepts, (1, 0, 2))
-
-
-				# changes shape of output for criterion (concepts and concept_out have same size())
-				# [batch size, number of images per sample, concept vector length]
-				concept_out = concept_out.view(concepts.size())
-
 				# compute concept and task loss (following CBM joint training method)
 				batch_losses = []
-				for image_concept in range(concept_out.size(1)):
-					individual_concept = concepts[:, image_concept, :]
-					individual_concept_out = concept_out[:, image_concept, :]
 
-					task_loss = criterion[0](task_out, labels)
-					for i in range(len(criterion) - 1):
-						concept_loss = criterion[i + 1](individual_concept_out[:, i].squeeze(), individual_concept[:, i])
-						#batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
-						batch_losses.append(concept_loss + ((1 - attr_loss_weight) * task_loss))
-						#batch_losses.append((attr_loss_weight * concept_loss) + task_loss)
+				task_loss = criterion[0](task_out, labels)
+				for i in range(len(criterion) - 1):
+					concept_loss = criterion[i + 1](concept_out[:, i].squeeze(), concepts[:, i])
+					#batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
+					batch_losses.append(concept_loss + ((1 - attr_loss_weight) * task_loss))
+					#batch_losses.append((attr_loss_weight * concept_loss) + task_loss)
 
 				loss = sum(batch_losses) / len(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(concept_out.view(concept_out.size(0), -1))

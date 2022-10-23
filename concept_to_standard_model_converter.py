@@ -159,4 +159,4 @@ if __name__ == "__main__":
 
 	print(model)
 
-	torch.save(model.state_dict(), args.model_out_path)
+	torch.save(model.state_dict(), args.model_out_path, _use_new_zipfile_serialization=True)

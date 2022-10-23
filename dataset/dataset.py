@@ -237,7 +237,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, multi_image=False):
+def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -258,10 +258,8 @@ def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_
 			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
 			])
 
-	if multi_image:
-		dataset = MultiImagePlayingCardDataset(pkl_path, dataset_root, num_concepts, transform, train=is_training, return_orig=return_orig, return_points=return_points)
-	else:
-		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path, return_points=return_points)
+
+	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path, return_points=return_points)
 	if is_training:
 		drop_last = True
 		shuffle = True if shuffle is None else shuffle
