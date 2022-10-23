@@ -27,7 +27,7 @@ options:
   --lr LR               Starting learning rate (default: 0.001)
   --lr_patience LR_PATIENCE
                         Number of epochs with no improvement after which learning rate will be reduced (default: 10)
-  --mode {XtoC,standard,joint,CtoY}
+  --mode {XtoC,standard,joint,CtoY,sequential}
                         Training method to use for training a model (default: XtoC)
   --epochs EPOCHS       Number of epochs to train a model (default: 100)
   --batch_size BATCH_SIZE
