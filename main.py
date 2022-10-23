@@ -120,10 +120,7 @@ if __name__ == "__main__":
 	)
 	args = parser.parse_args()
 
-	if args.use_cpu:
-		device = "cpu"
-	else:
-		device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+	device = torch.device("cuda:0" if (torch.cuda.is_available() and not args.use_cpu) else "cpu")
 	if torch.cuda.is_available() and not args.use_cpu:
 		print("Device:", device, torch.cuda.get_device_name(0))
 	else:
