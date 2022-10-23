@@ -51,7 +51,11 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			else:
 				outputs = model(images)
 
-			if mode in ["standard", "CtoY"]:
+			# discard concept layer output as we are not training the XtoC model part
+			if mode == "sequential":
+				outputs = outputs[1]
+
+			if mode in ["standard", "CtoY", "sequential"]:
 				loss = criterion(outputs, labels)
 				_, predicted = outputs.max(1)
 				accuracy.extend(predicted.eq(labels))
@@ -104,7 +108,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 					task_f1 = f1(task_out, labels.to(torch.int32))
 
-			else:
+			else:  # XtoC
 				batch_losses = []
 				for i in range(len(criterion)):
 					loss = criterion[i](outputs[i].squeeze(), concepts[:, i])

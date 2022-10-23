@@ -10,9 +10,15 @@ class End2EndModel(torch.nn.Module):
 		self.use_modulelist = use_modulelist  # modulelist used for training but may be converted to linear layer after
 
 		if self.use_modulelist:
-			self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
+			self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
-			self.x_to_c_model = PlayingCardNet(num_classes=num_concepts, pretrained_weights=pretrained_weights, freeze=freeze)
+			self.x_to_c_model = PlayingCardNet(num_classes=num_concepts, pretrained_weights=pretrained_weights)
+
+		# if freeze == true then freeze all layers in x_to_c_model
+		if freeze:  # only finetune c_to_y_model
+			for name, param in self.x_to_c_model.named_parameters():
+				param.requires_grad = False
+			print("frozen layers in x_to_c_model")
 
 	def forward_stage2(self, stage_1_out):
 		if self.use_sigmoid:
@@ -101,7 +107,7 @@ class PlayingCardNet(nn.Module):
 			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all but fc layers
-		if freeze:  # only finetune fc layer
+		if freeze:  # only finetune fc layers
 			for name, param in self.named_parameters():
 				if 'fc' not in name:
 					param.requires_grad = False

@@ -32,7 +32,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint", "CtoY"],
+		choices=["XtoC", "standard", "joint", "CtoY", "sequential"],
 		help='Training method to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-	elif args.mode == "joint":
+	elif args.mode == "joint" or args.mode == "sequential":
 		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
 	elif args.mode == "CtoY":
 		model = CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
@@ -295,7 +295,7 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
-	elif args.mode in ["standard", "CtoY"]:
+	elif args.mode in ["standard", "CtoY", "sequential"]:
 		criterion = nn.CrossEntropyLoss()
 
 		bestAccuracy = None

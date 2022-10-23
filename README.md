@@ -82,8 +82,9 @@ This repository includes training methods for the main CBM training methods.
 
 #### Sequential CtoY training
 
-TO DO
+`python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --num_workers 4 --batch_size 32 --pretrained_weights saves/XtoC_best_three.pth --freeze`
 
+*Note: This training method requires pretrained_weights to be passes an XtoC model with a modulelist concept vector*
 
 #### Joint training
 
@@ -109,4 +110,4 @@ TO DO
 
 #### XtoCtoY / end to end / XtoC and CtoY (sequential)
 
-`python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --num_images_per_output 1 --end_to_end`
+`python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end`
