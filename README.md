@@ -53,6 +53,9 @@ options:
   --freeze              Freeze the input to layer before concept vector model part
   --use_sig             Use sigmoid between the XtoC and the CtoY model parts
   --use_cpu             Only use the system CPU, even if CUDA is available
+  --save_name SAVE_NAME
+                        Name to save model file. If left as default a systematic file name will be used (default: "")
+
 ```
 
 ## Model training

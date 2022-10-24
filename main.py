@@ -118,6 +118,12 @@ if __name__ == "__main__":
 		action='store_true',
 		help='Only use the system CPU, even if CUDA is available'
 	)
+	parser.add_argument(
+		'--save_name',
+		type=str,
+		default="",
+		help='Name to save model file. If left as default a systematic file name will be used (default: "")'
+	)
 	args = parser.parse_args()
 
 	device = torch.device("cuda:0" if (torch.cuda.is_available() and not args.use_cpu) else "cpu")
@@ -127,6 +133,13 @@ if __name__ == "__main__":
 		print("Device:", device)
 
 	torch.manual_seed(args.seed)  # reproducibility
+
+	# set name of model file to save
+	if args.save_name == "":
+		sig_string = "_sig" if args.use_sig else ""
+		save_name = f"{args.mode}_{args.seed}{sig_string}.pth"
+	else:
+		save_name = f"{args.save_name}.pth"
 
 	parameters = dict(
 		batch_size=args.batch_size,
@@ -144,6 +157,7 @@ if __name__ == "__main__":
 		use_sig=args.use_sig,
 		freeze=args.freeze,
 		seed=args.seed,
+		device=device
 	)
 
 	wandb.init(project="playing_cards_CBM", config=parameters)
@@ -197,7 +211,7 @@ if __name__ == "__main__":
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
-				saveName = "./saves/XtoC_best.pth"
+				saveName = f"./saves/{save_name}"
 				torch.save(model.state_dict(), saveName)
 				wandb.save(saveName)
 				print("Model saved")
@@ -253,7 +267,7 @@ if __name__ == "__main__":
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
-				saveName = "./saves/XtoCtoY_best.pth"
+				saveName = f"./saves/{save_name}"
 				torch.save(model.state_dict(), saveName)
 				wandb.save(saveName)
 				print("Model saved")
@@ -308,7 +322,7 @@ if __name__ == "__main__":
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
-				saveName = f"./saves/{args.mode}_playing_card_best.pth"
+				saveName = f"./saves/{save_name}"
 				torch.save(model.state_dict(), saveName)
 				wandb.save(saveName)
 				print("Model saved")
