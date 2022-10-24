@@ -23,6 +23,6 @@ parameters:
   epochs:
     value: 100
   batch_size:
-    value: 16
+    value: 32
   num_workers:
     value: 4
