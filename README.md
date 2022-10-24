@@ -68,7 +68,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode standard --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single`
 
-`python main.py --mode standard --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_card_class`
+`python main.py --mode standard --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker`
 
 
 #### XtoC training

@@ -1,6 +1,12 @@
 program: main.py
 method: bayes
 project: playing_cards_CBM
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args}
+  - --weighted_loss
 metric:
   name: Test XtoC Loss
   goal: minimize
@@ -19,7 +25,7 @@ parameters:
   dataset_root:
     value: dataset/playing-cards
   dataset_postfix:
-    value: splits/three_card_poker_card_class
+    value: splits/three_card_poker
   epochs:
     value: 100
   batch_size:
