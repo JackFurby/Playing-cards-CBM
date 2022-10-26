@@ -19,7 +19,7 @@ parameters:
   n_concepts:
     value: 17
   attr_loss_weight:
-    min: 0.0
+    min: 0.5
     max: 1.0
   dataset_root:
     value: dataset/playing-cards
