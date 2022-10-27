@@ -24,7 +24,7 @@ parameters:
   dataset_root:
     value: dataset/playing-cards
   dataset_postfix:
-    value: splits/three_card_poker_card_class
+    value: splits/three_card_poker
   epochs:
     value: 100
   batch_size:
