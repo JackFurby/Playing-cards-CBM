@@ -10,6 +10,8 @@ import os
 
 from train import train
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
+from models.cem import End2EndModel as CEM
+from models.cem2 import ConceptEmbeddingModel
 from dataset.dataset import load_data, find_class_imbalance
 
 
@@ -32,8 +34,8 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint", "CtoY", "sequential"],
-		help='Training method to use for training a model (default: XtoC)'
+		choices=["XtoC", "standard", "joint", "CtoY", "sequential", "cem", "cem_paper"],
+		help='Training method / model to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
 		'--epochs',
@@ -172,6 +174,10 @@ if __name__ == "__main__":
 		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
 	elif args.mode == "CtoY":
 		model = CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
+	elif args.mode =="cem":
+		model = CEM(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, sigmoidal_embedding=args.use_sig, sigmoidal_prob=args.use_sig)
+	elif args.mode =="cem_paper":
+		model = ConceptEmbeddingModel(args.n_concepts, args.n_classes, False, emb_size=128)
 	else:  # standard training
 		model = PlayingCardNet(num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
@@ -242,7 +248,7 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
-	elif args.mode == "joint":
+	elif args.mode in ["joint", "cem"]:
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		attr_criterion.append(nn.CrossEntropyLoss())  # criterion for c->y model out
 		if args.weighted_loss:
@@ -346,6 +352,73 @@ if __name__ == "__main__":
 			if testLoss is not None:
 				log_values["trainF1"] = trainF1.item()
 				log_values["testF1"] = testF1.item()
+
+			# Log to wandb
+			wandb.log(log_values)
+
+			for param_group in optimizer.param_groups:
+				wandb.log({"learning rate": param_group['lr']})
+
+
+
+
+	elif args.mode in ["cem_paper"]:
+		attr_criterion = []  # separate criterion (loss function) for each attribute
+		attr_criterion.append(nn.CrossEntropyLoss())  # criterion for c->y model out
+		if args.weighted_loss:
+			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
+			print(imbalance)
+			for ratio in imbalance:
+				attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
+		else:
+			for i in range(args.n_concepts):
+				attr_criterion.append(nn.CrossEntropyLoss())
+
+		bestAccuracy = None
+
+		for epoch in range(parameters['epochs']):
+			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
+
+			scheduler.step(testLoss)
+
+			if (bestAccuracy is None) or (bestAccuracy < testAcc):
+				bestAccuracy = testAcc
+
+				if not os.path.exists("./saves"):
+					os.makedirs("./saves")
+				saveName = f"./saves/{save_name}"
+				torch.save(model.state_dict(), saveName)
+				wandb.save(saveName)
+				print("Model saved")
+
+			print("epoch:", epoch)
+			print("trainLoss:", trainLoss)
+			print("trainAcc:", trainAcc, "%")
+			print("trainTaskAcc:", 100 * trainTaskAcc, "%")
+			print("trainF1:", trainF1.item())
+			print("trainTaskF1:", trainTaskF1.item())
+			print("testLoss:", testLoss)
+			print("testAcc:", testAcc, "%")
+			print("testTaskAcc:", 100 * testTaskAcc, "%")
+			print("testF1:", testF1.item())
+			print("testTaskF1:", testTaskF1.item())
+
+			log_values = {
+				"epoch": epoch,
+				"Train Loss": trainLoss,
+				"Train XtoC Accuracy": trainAcc,
+				"Train Task Accuracy": 100 * trainTaskAcc,
+				"Test Loss": testLoss,
+				"Test XtoC Accuracy": testAcc,
+				"Test Task Accuracy": 100 * testTaskAcc
+			}
+
+			if testLoss is not None:
+				log_values["trainF1"] = trainF1.item()
+				log_values["testF1"] = testF1.item()
+				log_values["trainTaskF1"] = trainTaskF1.item()
+				log_values["testTaskF1"] = testTaskF1.item()
 
 			# Log to wandb
 			wandb.log(log_values)
