@@ -195,7 +195,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			f1_avg_acc = None
 			task_f1 = None
 
-	if mode in ["joint", "cem", "cep_paper"]:
+	if mode in ["joint", "cem", "cem_paper"]:
 		return sum(losses) / len(losses), acc, f1_avg_acc, task_f1, (sum(task_acc) / len(task_acc)).item()
 	else:
 		return sum(losses) / len(losses), acc, f1_avg_acc
