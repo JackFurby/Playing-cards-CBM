@@ -211,7 +211,27 @@ def binary_accuracy(output, target):
 	returns:
 		acc: binary accuracy
 	"""
+	"""
 	pred = output >= 0.5
 	acc = (pred.int()).eq(target.int()).sum()
 	acc = acc * 100 / np.prod(np.array(target.size()))
 	return acc
+	"""
+
+	y_probs = output.reshape(-1).cpu().detach()
+	y_pred = y_probs > 0.5
+	y_true = target.reshape(-1).cpu().detach()
+	y_accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
+	try:
+		y_auc = sklearn.metrics.roc_auc_score(
+			y_true,
+			y_probs,
+			multi_class='ovo',
+		)
+	except:
+		y_auc = 0
+	try:
+		y_f1 = sklearn.metrics.f1_score(y_true, y_pred, average='macro')
+	except:
+		y_f1 = 0
+	return y_accuracy
