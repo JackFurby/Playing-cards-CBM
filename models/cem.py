@@ -36,7 +36,7 @@ class End2EndModel(torch.nn.Module):
 class XtoCNet(nn.Module):
 	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False):
 		super(XtoCNet, self).__init__()
-		self.pre_concept_model = PlayingCardNet(out_size=emb_size, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
 
 		self.concept_context_generators = torch.nn.ModuleList()
 		self.shared_prob_gen = shared_prob_gen
