@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-
+import sklearn
 
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
 	"""
