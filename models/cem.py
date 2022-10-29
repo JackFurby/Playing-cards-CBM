@@ -50,7 +50,7 @@ class XtoCNet(nn.Module):
 		for i in range(num_concepts):
 			self.concept_context_generators.append(
 				torch.nn.Sequential(*[
-					torch.nn.Linear(emb_size, 2 * emb_size),  # positive and negative embedding parts
+					torch.nn.Linear(num_concepts, 2 * emb_size),  # positive and negative embedding parts
 					torch.nn.LeakyReLU(),
 				])
 			)
