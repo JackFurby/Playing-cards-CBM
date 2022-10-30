@@ -10,7 +10,7 @@ import os
 
 from train import train
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
-from models.cem import End2EndModel as CEM
+from models.cem3 import ConceptEmbeddingModel as CEM
 from models.cem2 import ConceptEmbeddingModel
 from dataset.dataset import load_data, find_class_imbalance
 
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 	elif args.mode == "CtoY":
 		model = CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	elif args.mode =="cem":
-		model = CEM(num_classes=args.n_classes, num_concepts=args.n_concepts, emb_size=128)
+		model = CEM(args.n_concepts, args.n_classes, False, emb_size=128)
 	elif args.mode =="cem_paper":
 		model = ConceptEmbeddingModel(args.n_concepts, args.n_classes, False, emb_size=128)
 	else:  # standard training
