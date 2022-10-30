@@ -51,7 +51,7 @@ class ConceptEmbeddingModel(ConceptBottleneckModel):
 		**kwargs
 	):
 		super(ConceptEmbeddingModel, self, **kwargs).__init__(n_concepts=n_concepts, n_tasks=n_tasks, bool=bool, **kwargs)
-		self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = PlayingCardNet(out_size=n_concepts, pretrained_weights=pretrained_weights)
 		self.training_intervention_prob = training_intervention_prob
 		if self.training_intervention_prob != 0:
 			self.ones = torch.ones(n_concepts)
