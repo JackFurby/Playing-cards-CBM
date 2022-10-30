@@ -56,7 +56,10 @@ class XtoCNet(nn.Module):
 			)
 
 		if self.shared_prob_gen:
-			self.concept_prob_generators = torch.nn.Linear(2 * emb_size, 1)
+			self.concept_prob_generators = torch.nn.ModuleList()
+				self.concept_prob_generators.append(
+					torch.nn.Linear(2 * emb_size, 1)
+				)
 		else:
 			self.concept_prob_generators = torch.nn.ModuleList()
 			for i in range(num_concepts):
@@ -97,7 +100,7 @@ class XtoCNet(nn.Module):
 		sem_probs = []
 		for i, context_gen in enumerate(self.concept_context_generators):
 			if self.shared_prob_gen:
-				prob_gen = self.concept_prob_generators
+				prob_gen = self.concept_prob_generators[0]
 			else:
 				prob_gen = self.concept_prob_generators[i]
 
