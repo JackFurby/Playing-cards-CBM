@@ -7,7 +7,7 @@ class End2EndModel(torch.nn.Module):
 		self,
 		num_classes=6,
 		num_concepts=52,
-		emb_size=128,
+		emb_size=16,
 		pretrained_weights=None,
 		freeze=False,
 		sigmoidal_embedding=False,
@@ -56,7 +56,6 @@ class XtoCNet(nn.Module):
 			)
 
 		if self.shared_prob_gen:
-			self.concept_prob_generators = torch.nn.ModuleList()
 			self.concept_prob_generators.append(
 				torch.nn.Linear(2 * emb_size, 1)
 			)
@@ -100,7 +99,7 @@ class XtoCNet(nn.Module):
 		sem_probs = []
 		for i, context_gen in enumerate(self.concept_context_generators):
 			if self.shared_prob_gen:
-				prob_gen = self.concept_prob_generators[0]
+				prob_gen = self.concept_prob_generators
 			else:
 				prob_gen = self.concept_prob_generators[i]
 

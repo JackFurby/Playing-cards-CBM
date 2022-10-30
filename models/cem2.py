@@ -247,4 +247,4 @@ class ConceptEmbeddingModel(ConceptBottleneckModel):
         c_sem = torch.cat(sem_probs, axis=-1)
         c_pred = torch.cat(full_vectors, axis=-1)
         y = self.c2y_model(c_pred)
-        return c_sem, c_pred,
+        return c_sem, c_pred, y
