@@ -57,9 +57,9 @@ class XtoCNet(nn.Module):
 
 		if self.shared_prob_gen:
 			self.concept_prob_generators = torch.nn.ModuleList()
-				self.concept_prob_generators.append(
-					torch.nn.Linear(2 * emb_size, 1)
-				)
+			self.concept_prob_generators.append(
+				torch.nn.Linear(2 * emb_size, 1)
+			)
 		else:
 			self.concept_prob_generators = torch.nn.ModuleList()
 			for i in range(num_concepts):
