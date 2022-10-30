@@ -1,7 +1,7 @@
 import torch
 from models.cbm2 import ConceptBottleneckModel
 
-from torchvision.models import resnet50
+from torchvision.models import vgg11_bn
 
 ################################################################################
 ## HELPER LAYERS
@@ -36,7 +36,7 @@ class ConceptEmbeddingModel(ConceptBottleneckModel):
         weight_loss=None,
         normalize_loss=False,
         pretrain_model=True,
-        c_extractor_arch=resnet50,
+        c_extractor_arch=vgg11_bn,
         optimizer="adam",
         shared_prob_gen=True, #False,
         top_k_accuracy=2,

@@ -15,8 +15,8 @@ class End2EndModel(torch.nn.Module):
 		shared_prob_gen=True
 	):
 		super(End2EndModel, self).__init__()
-		self.c_to_y_model = CtoYNet(num_concepts*emb_size, num_classes)
 		self.x_to_c_model = XtoCNet(num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob)
+		self.c_to_y_model = CtoYNet(num_concepts*emb_size, num_classes)
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model
