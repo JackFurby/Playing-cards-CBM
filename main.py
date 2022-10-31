@@ -165,6 +165,8 @@ if __name__ == "__main__":
 	wandb.init(project="playing_cards_CBM", config=parameters)
 	config = wandb.config
 
+	print(args)
+
 	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, num_concepts=args.n_concepts, dataset_root=args.dataset_root, num_workers=args.num_workers)
 
