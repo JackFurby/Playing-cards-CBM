@@ -5,12 +5,37 @@ from models.cbm2 import ConceptBottleneckModel
 from torchvision.models import vgg11_bn
 
 
-################################################################################
-## OUR MODEL
-################################################################################
-
-
 class End2EndModel(torch.nn.Module):
+	def __init__(
+		self,
+		num_classes=6,
+		num_concepts=52,
+		emb_size=16,
+		pretrained_weights=None,
+		freeze=False,
+		concat_prob=False
+	):
+		super(End2EndModel, self).__init__()
+		self.x_to_c_model = XtoCNet(num_concepts, num_classes, emb_size=emb_size)
+		self.c_to_y_model = CtoYNet(num_concepts * (emb_size + int(concat_prob)), num_classes)
+
+		# if freeze == true then freeze all layers in x_to_c_model
+		if freeze:  # only finetune c_to_y_model
+			for name, param in self.x_to_c_model.named_parameters():
+				param.requires_grad = False
+			print("frozen layers in x_to_c_model")
+
+	def forward_stage2(self, stage_1_out):
+		c_sem, c_pred = stage_1_out
+		y = self.c_to_y_model(c_pred)
+
+		return c_sem, y
+
+	def forward(self, x, train=False):
+		return self.forward_stage2(self.x_to_c_model(x, train=train))
+
+
+class XtoCNet(torch.nn.Module):
     def __init__(
         self,
         n_concepts,
@@ -28,7 +53,7 @@ class End2EndModel(torch.nn.Module):
         embeding_activation="leakyrelu", # None
         concat_prob=False
     ):
-        super(End2EndModel, self).__init__()
+        super(XtoCNet, self).__init__()
         try:
             self.pre_concept_model = c_extractor_arch(
                 pretrained=pretrain_model
@@ -121,12 +146,6 @@ class End2EndModel(torch.nn.Module):
                         1,
                     )
                 )
-        self.c2y_model = torch.nn.Sequential(*[
-            torch.nn.Linear(
-                n_concepts * (emb_size + int(concat_prob)),
-                n_tasks,
-            ),
-        ])
         self.sig = torch.nn.Sigmoid()
 
         self.loss_task = (
@@ -214,8 +233,20 @@ class End2EndModel(torch.nn.Module):
                 full_vectors.append(context)
         c_sem = torch.cat(sem_probs, axis=-1)
         c_pred = torch.cat(full_vectors, axis=-1)
-        y = self.c2y_model(c_pred)
-        return c_sem, c_pred, y
+        return c_sem, c_pred
+
+
+class CtoYNet(nn.Module):
+	def __init__(self, num_concept_in, num_classes):
+		super(CtoYNet, self).__init__()
+		self.classifier = nn.Sequential(
+			nn.Linear(num_concept_in, 128),
+			nn.ReLU(),
+			nn.Linear(128, num_classes)
+		)
+
+	def forward(self, x):
+		return self.classifier(x)
 
 
 
