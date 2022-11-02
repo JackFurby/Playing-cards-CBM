@@ -27,30 +27,18 @@ class End2EndModel(torch.nn.Module):
         self,
         n_concepts,
         n_tasks,
-        bool,
         emb_size=16,
-        concept_loss_weight=1,
-        task_loss_weight=1,
-        momentum=0.9,
-        learning_rate=0.01,
-        weight_decay=4e-05,
-        weight_loss=None,
-        normalize_loss=False,
         pretrain_model=True,
         c_extractor_arch=vgg11_bn,
-        optimizer="adam",
         shared_prob_gen=True, #False,
-        top_k_accuracy=2,
         intervention_idxs=None,
         sigmoidal_prob=True, #False,
         sigmoidal_embedding=False,
-        adversarial_intervention=False,
         training_intervention_prob=0.25, #0.0,
         active_intervention_values=None,
         inactive_intervention_values=None,
         embeding_activation="leakyrelu", # None
-        concat_prob=False,
-        gpu=int(torch.cuda.is_available()),
+        concat_prob=False
     ):
         super(End2EndModel, self).__init__()
         try:
@@ -82,13 +70,10 @@ class End2EndModel(torch.nn.Module):
                 -5.0 if not sigmoidal_prob else 0.0
             )
         self.concat_prob = concat_prob
-        self.task_loss_weight = task_loss_weight
         self.concept_context_generators = torch.nn.ModuleList()
         self.concept_prob_generators = torch.nn.ModuleList()
         self.shared_prob_gen = shared_prob_gen
-        self.top_k_accuracy = top_k_accuracy
         self.intervention_idxs = intervention_idxs
-        self.adversarial_intervention = adversarial_intervention
         for i in range(n_concepts):
             if embeding_activation is None:
                 self.concept_context_generators.append(
@@ -156,17 +141,10 @@ class End2EndModel(torch.nn.Module):
         ])
         self.sig = torch.nn.Sigmoid()
 
-        self.loss_concept = torch.nn.BCELoss(weight=weight_loss)
         self.loss_task = (
             torch.nn.CrossEntropyLoss()
             if n_tasks > 1 else torch.nn.BCEWithLogitsLoss()
         )
-        self.concept_loss_weight = concept_loss_weight
-        self.momentum = momentum
-        self.learning_rate = learning_rate
-        self.weight_decay = weight_decay
-        self.normalize_loss = normalize_loss
-        self.optimizer_name = optimizer
         self.n_tasks = n_tasks
         self.sigmoidal_prob = sigmoidal_prob
         self.sigmoidal_embedding = sigmoidal_embedding
