@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from torchvision.models import vgg11_bn
+
 
 class End2EndModel(torch.nn.Module):
 	def __init__(
@@ -26,7 +28,7 @@ class End2EndModel(torch.nn.Module):
 		c_sem, c_pred = stage_1_out
 		y = self.c_to_y_model(c_pred)
 
-		return c_sem, c_pred, y
+		return c_sem, y
 
 	def forward(self, x, train=False):
 		return self.forward_stage2(self.x_to_c_model(x, train=train))
@@ -46,14 +48,16 @@ class XtoCNet(torch.nn.Module):
 		active_intervention_values=None,
 		inactive_intervention_values=None,
 		embeding_activation="leakyrelu", # None
-		concat_prob=False
+		concat_prob=False,
+		adversarial_intervention=False
 	):
 		super(XtoCNet, self).__init__()
-		self.pre_concept_model = PlayingCardNet(out_size=n_concepts, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = PlayingCardNet(out_size=128, pretrained_weights=pretrained_weights)
+		out_size = list(self.pre_concept_model.modules())[-1].out_features
+
 		self.training_intervention_prob = training_intervention_prob
 		self.concat_prob = concat_prob
 		self.concept_context_generators = torch.nn.ModuleList()
-		self.concept_prob_generators = torch.nn.ModuleList()
 		self.shared_prob_gen = shared_prob_gen
 		self.intervention_idxs = intervention_idxs
 		self.sigmoidal_prob = sigmoidal_prob
@@ -76,24 +80,18 @@ class XtoCNet(torch.nn.Module):
 			if embeding_activation is None:
 				self.concept_context_generators.append(
 					torch.nn.Linear(
-						list(
-							self.pre_concept_model.modules()
-						)[-1].out_features,
 						# Two as each concept will have a positive and a
 						# negative embedding portion which are later mixed
-						2 * emb_size,
+						out_size, 2 * emb_size
 					)
 				)
 			elif embeding_activation == "leakyrelu":
 				self.concept_context_generators.append(
 					torch.nn.Sequential(*[
 						torch.nn.Linear(
-							list(
-								self.pre_concept_model.modules()
-							)[-1].out_features,
 							# Two as each concept will have a positive and a
 							# negative embedding portion which are later mixed
-							2 * emb_size,
+							out_size, 2 * emb_size
 						),
 						torch.nn.LeakyReLU(),
 					])
@@ -102,35 +100,37 @@ class XtoCNet(torch.nn.Module):
 				self.concept_context_generators.append(
 					torch.nn.Sequential(*[
 						torch.nn.Linear(
-							list(
-								self.pre_concept_model.modules()
-							)[-1].out_features,
 							# Two as each concept will have a positive and a
 							# negative embedding portion which are later mixed
-							2 * emb_size,
+							out_size, 2 * emb_size
 						),
 						torch.nn.ReLU(),
 					])
 				)
-			if self.shared_prob_gen and (len(self.concept_prob_generators) == 0):
-				# Then we will use one and only one probability generator which
-				# will be shared among all concepts. This will force concept
-				# embedding vectors to be pushed into the same latent space
+
+		# probability generator shared
+		if self.shared_prob_gen:
+			self.concept_prob_generators = torch.nn.Linear(2 * emb_size, 1)
+		# one probability generator for each concept
+		else:
+			self.concept_prob_generators = torch.nn.ModuleList()
+			for i in range(n_concepts):
 				self.concept_prob_generators.append(torch.nn.Linear(2 * emb_size, 1))
-			elif not self.shared_prob_gen:
-				self.concept_prob_generators.append(torch.nn.Linear(2 * emb_size, 1))
+
+	def _switch_concepts(self, c):
+		if self.adversarial_intervention:
+			return (c == 0.0).type_as(c)
+		return c
 
 	def _after_interventions(
 		self,
 		prob,
 		concept_idx,
 		intervention_idxs=None,
-		c_true=None,
+		c_true=None,  # true concept
 		train=False,
 	):
-		if train and (self.training_intervention_prob != 0) and (
-			intervention_idxs is None
-		):
+		if train and (self.training_intervention_prob != 0) and (intervention_idxs is None):
 			# Then we will probabilistically intervene in some concepts
 			mask = torch.bernoulli(self.ones * self.training_intervention_prob)
 			intervention_idxs = torch.nonzero(mask).reshape(-1)
@@ -160,7 +160,7 @@ class XtoCNet(torch.nn.Module):
 		sem_probs = []
 		for i, context_gen in enumerate(self.concept_context_generators):
 			if self.shared_prob_gen:
-				prob_gen = self.concept_prob_generators[0]
+				prob_gen = self.concept_prob_generators
 			else:
 				prob_gen = self.concept_prob_generators[i]
 			context = context_gen(pre_c)
@@ -171,7 +171,7 @@ class XtoCNet(torch.nn.Module):
 			sem_probs.append(torch.nn.Sigmoid()(prob))
 			if self.sigmoidal_prob:
 				prob = torch.nn.Sigmoid()(prob)
-			prob = self._after_interventions(
+			prob = self._after_interventions(            #<---------How does this work?
 				prob,
 				concept_idx=i,
 				intervention_idxs=intervention_idxs,
@@ -194,8 +194,8 @@ class XtoCNet(torch.nn.Module):
 			else:
 				# Otherwise, let's completely ignore the probability bit
 				full_vectors.append(context)
-		c_sem = torch.cat(sem_probs, axis=-1)
-		c_pred = torch.cat(full_vectors, axis=-1)
+		c_sem = torch.cat(sem_probs, axis=-1)  # concept semantics (concept predictions)
+		c_pred = torch.cat(full_vectors, axis=-1)  # concept prediction (c_to_y input)
 		return c_sem, c_pred
 
 

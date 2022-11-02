@@ -1,6 +1,6 @@
 import sklearn.metrics
 import torch
-from torchvision.models import resnet50, densenet121
+from torchvision.models import vgg11_bn, densenet121
 
 
 ################################################################################
@@ -96,7 +96,7 @@ class ConceptBottleneckModel(torch.nn.Module):
         weight_loss=None,
         normalize_loss=False,
         pretrain_model=True,
-        c_extractor_arch=resnet50,
+        c_extractor_arch=vgg11_bn,
         optimizer="adam",
         extra_dims=0,
         top_k_accuracy=None,
