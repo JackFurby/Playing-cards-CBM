@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 
-from torchvision.models import vgg11_bn
-
 
 class End2EndModel(torch.nn.Module):
 	def __init__(
@@ -52,8 +50,7 @@ class XtoCNet(torch.nn.Module):
 		adversarial_intervention=False
 	):
 		super(XtoCNet, self).__init__()
-		#self.pre_concept_model = PlayingCardNet(out_size=128, pretrained_weights=pretrained_weights)
-		self.pre_concept_model = vgg11_bn(pretrained=True)
+		self.pre_concept_model = PlayingCardNet(out_size=1000, pretrained_weights=pretrained_weights)
 		out_size = list(self.pre_concept_model.modules())[-1].out_features
 
 		self.training_intervention_prob = training_intervention_prob

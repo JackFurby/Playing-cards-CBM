@@ -188,7 +188,7 @@ class XtoCNet(torch.nn.Module):
                 -self.inactive_intervention_values[concept_idx]
             )
         )
-        return result
+        return result 
 
     def forward(self, x, intervention_idxs=None, c=None, train=False):
         pre_c = self.pre_concept_model(x)
