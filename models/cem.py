@@ -40,7 +40,7 @@ class XtoCNet(nn.Module):
 	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False):
 		super(XtoCNet, self).__init__()
 		#self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
-		self.pre_concept_model = vgg11_bn(pretrained=pretrain_model)
+		self.pre_concept_model = vgg11_bn(pretrained=True)
 		pre_c_out_size = list(self.pre_concept_model.modules())[-1].out_features
 
 		self.concept_context_generators = torch.nn.ModuleList()
