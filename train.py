@@ -49,7 +49,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				concepts = concepts.view(concepts.size(0), -1)  # make sure input is vector (will not be if using multi input images)
 				outputs = model(concepts)
 			else:
-				outputs = model(images)
+				outputs = model(images, train=train)
 
 			# discard concept layer output as we are not training the XtoC model part
 			if mode == "sequential":
