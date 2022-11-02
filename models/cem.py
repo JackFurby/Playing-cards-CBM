@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from torchvision.models import vgg11_bn
+
 
 class End2EndModel(torch.nn.Module):
 	def __init__(
@@ -25,18 +27,21 @@ class End2EndModel(torch.nn.Module):
 			print("frozen layers in x_to_c_model")
 
 	def forward_stage2(self, stage_1_out):
-		c_to_y_input = stage_1_out[1]
+		c_sem, c_pred = stage_1_out
+		y = self.c_to_y_model(c_pred)
 
-		return (stage_1_out[0], self.c_to_y_model(c_to_y_input))
+		return c_sem, y
 
-	def forward(self, x, train=False):
-		return self.forward_stage2(self.x_to_c_model(x, train=train))
+	def forward(self, x):
+		return self.forward_stage2(self.x_to_c_model(x))
 
 
 class XtoCNet(nn.Module):
 	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False):
 		super(XtoCNet, self).__init__()
-		self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
+		#self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = c_extractor_arch(pretrained=pretrain_model)
+		pre_c_out_size = list(self.pre_concept_model.modules())[-1].out_features
 
 		self.concept_context_generators = torch.nn.ModuleList()
 		self.shared_prob_gen = shared_prob_gen
@@ -50,7 +55,7 @@ class XtoCNet(nn.Module):
 		for i in range(num_concepts):
 			self.concept_context_generators.append(
 				torch.nn.Sequential(*[
-					torch.nn.Linear(num_concepts, 2 * emb_size),  # positive and negative embedding parts
+					torch.nn.Linear(pre_c_out_size, 2 * emb_size),  # positive and negative embedding parts
 					torch.nn.ReLU(),
 				])
 			)
@@ -64,33 +69,7 @@ class XtoCNet(nn.Module):
 					torch.nn.Linear(2 * emb_size, 1)
 				)
 
-	def _after_interventions(self, prob, concept_idx, intervention_idxs=None, c_true=None, train=False,):
-		if train and (self.training_intervention_prob != 0) and (
-			intervention_idxs is None
-		):
-			# Then we will probabilistically intervene in some concepts
-			mask = torch.bernoulli(self.ones * self.training_intervention_prob)
-			intervention_idxs = torch.nonzero(mask).reshape(-1)
-		if (c_true is None) or (intervention_idxs is None):
-			return prob
-		if concept_idx not in intervention_idxs:
-			return prob
-		c_true = self._switch_concepts(c_true)
-		if self.sigmoidal_prob:
-			return c_true[:, concept_idx:concept_idx+1]
-		result = (
-			(
-				c_true[:, concept_idx:concept_idx+1] *
-				self.active_intervention_values[concept_idx]
-			) +
-			(
-				(c_true[:, concept_idx:concept_idx+1] - 1) *
-				-self.inactive_intervention_values[concept_idx]
-			)
-		)
-		return result
-
-	def forward(self, x, intervention_idxs=None, c=None, train=False):
+	def forward(self, x):
 		h = self.pre_concept_model(x)
 		probs = []
 		full_vectors = []
@@ -109,7 +88,6 @@ class XtoCNet(nn.Module):
 			sem_probs.append(torch.nn.Sigmoid()(prob))
 			if self.sigmoidal_prob:
 				prob = torch.nn.Sigmoid()(prob)
-			prob = self._after_interventions(prob, concept_idx=i, intervention_idxs=intervention_idxs, c_true=c, train=train)
 			probs.append(prob)
 
 			context_pos = context[:, :self.emb_size]
