@@ -52,7 +52,8 @@ class XtoCNet(torch.nn.Module):
 		adversarial_intervention=False
 	):
 		super(XtoCNet, self).__init__()
-		self.pre_concept_model = PlayingCardNet(out_size=128, pretrained_weights=pretrained_weights)
+		#self.pre_concept_model = PlayingCardNet(out_size=128, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = vgg11_bn(pretrained=True)
 		out_size = list(self.pre_concept_model.modules())[-1].out_features
 
 		self.training_intervention_prob = training_intervention_prob

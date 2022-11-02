@@ -10,7 +10,7 @@ import os
 
 from train import train
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
-from models.cem import End2EndModel as CEM
+from models.cem3 import End2EndModel as CEM
 from models.cem2 import ConceptEmbeddingModel
 from dataset.dataset import load_data, find_class_imbalance
 
