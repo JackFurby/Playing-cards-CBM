@@ -22,7 +22,7 @@ class LambdaLayer(torch.nn.Module):
 ################################################################################
 
 
-class End2EndModel(ConceptBottleneckModel):
+class End2EndModel(torch.nn.Module):
     def __init__(
         self,
         n_concepts,
@@ -51,9 +51,8 @@ class End2EndModel(ConceptBottleneckModel):
         embeding_activation="leakyrelu", # None
         concat_prob=False,
         gpu=int(torch.cuda.is_available()),
-        **kwargs
     ):
-        super(End2EndModel, self, **kwargs).__init__(n_concepts=n_concepts, n_tasks=n_tasks, bool=bool, **kwargs)
+        super(End2EndModel, self).__init__()
         try:
             self.pre_concept_model = c_extractor_arch(
                 pretrained=pretrain_model
@@ -206,7 +205,7 @@ class End2EndModel(ConceptBottleneckModel):
         )
         return result
 
-    def _forward(self, x, intervention_idxs=None, c=None, train=False):
+    def forward(self, x, intervention_idxs=None, c=None, train=False):
         pre_c = self.pre_concept_model(x)
         probs = []
         full_vectors = []
