@@ -21,7 +21,7 @@ parameters:
     value: CtoY
   n_concepts:
     value: 52
-  N_classes:
+  n_classes:
     value: 6
   dataset_root:
     value: dataset/playing-cards
