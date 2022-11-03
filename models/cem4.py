@@ -17,7 +17,9 @@ class End2EndModel(torch.nn.Module):
 	):
 		super(End2EndModel, self).__init__()
 		self.x_to_c_model = XtoCNet(num_concepts, num_classes, emb_size=emb_size)
-		self.c_to_y_model = CtoYNet(num_concepts * (emb_size + int(concat_prob)), num_classes)
+		#self.c_to_y_model = CtoYNet(num_concepts * (emb_size + int(concat_prob)), num_classes)
+
+		self.c_to_y_model =torch.nn.Linear(num_concepts * (emb_size + int(concat_prob)), num_classes)
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model
