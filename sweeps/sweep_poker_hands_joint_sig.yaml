@@ -7,6 +7,7 @@ command:
   - ${program}
   - ${args}
   - --use_sig
+  - --weighted_loss
 metric:
   name: Test Loss
   goal: minimize
