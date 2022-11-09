@@ -11,6 +11,7 @@ import os
 from train import train
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
 from models.cem4 import End2EndModel as CEM
+from models.cem4 import XtoCNet as CEM_XtoCNet
 from models.cem2 import ConceptEmbeddingModel
 from dataset.dataset import load_data, find_class_imbalance
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint", "CtoY", "sequential", "cem", "cem_paper"],
+		choices=["XtoC", "standard", "joint", "CtoY", "sequential", "cem", "cem_paper", "cem_XtoC"],
 		help='Training method / model to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
@@ -179,6 +180,8 @@ if __name__ == "__main__":
 	elif args.mode =="cem":
 		model = CEM(num_classes=args.n_classes, num_concepts=args.n_concepts, emb_size=128)
 		#model = CEM(args.n_concepts, args.n_classes, emb_size=128)
+	elif args.mode == "cem_XtoC":
+		model = CEM_XtoCNet(args.n_concepts, emb_size=128)
 	elif args.mode =="cem_paper":
 		model = ConceptEmbeddingModel(args.n_concepts, args.n_classes, False, emb_size=128)
 	else:  # standard training
@@ -196,7 +199,7 @@ if __name__ == "__main__":
 
 	f1 = F1Score().to(device)
 
-	if args.mode == "XtoC":
+	if args.mode in ["XtoC", "cem_XtoC"]:
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)

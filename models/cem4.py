@@ -16,7 +16,7 @@ class End2EndModel(torch.nn.Module):
 		concat_prob=False
 	):
 		super(End2EndModel, self).__init__()
-		self.x_to_c_model = XtoCNet(num_concepts, num_classes, emb_size=emb_size)
+		self.x_to_c_model = XtoCNet(num_concepts, emb_size=emb_size)
 		self.c_to_y_model = CtoYNet(num_concepts * (emb_size + int(concat_prob)), num_classes)
 
 		# if freeze == true then freeze all layers in x_to_c_model
@@ -39,7 +39,6 @@ class XtoCNet(torch.nn.Module):
 	def __init__(
 		self,
 		n_concepts,
-		n_tasks,
 		emb_size=16,
 		pretrain_model=True,
 		c_extractor_arch=vgg11_bn,
@@ -138,11 +137,6 @@ class XtoCNet(torch.nn.Module):
 				self.concept_prob_generators.append(torch.nn.Linear(2 * emb_size, 1))
 		self.sig = torch.nn.Sigmoid()
 
-		self.loss_task = (
-			torch.nn.CrossEntropyLoss()
-			if n_tasks > 1 else torch.nn.BCEWithLogitsLoss()
-		)
-		self.n_tasks = n_tasks
 		self.sigmoidal_prob = sigmoidal_prob
 		self.sigmoidal_embedding = sigmoidal_embedding
 		self.emb_size = emb_size
@@ -221,7 +215,8 @@ class XtoCNet(torch.nn.Module):
 			else:
 				# Otherwise, let's completely ignore the probability bit
 				full_vectors.append(context)
-		c_sem = torch.cat(sem_probs, axis=-1)
+		#c_sem = torch.cat(sem_probs, axis=-1)
+		c_sem = sem_probs
 		c_pred = torch.cat(full_vectors, axis=-1)
 		return c_sem, c_pred
 
