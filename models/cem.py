@@ -48,15 +48,13 @@ class XtoCNet(nn.Module):
 		self.sigmoidal_prob = sigmoidal_prob
 		self.emb_size = emb_size
 		self.concat_prob = concat_prob
-		self.training_intervention_prob = 0.25
-		self.ones = torch.ones(num_concepts)
 
 		for i in range(num_concepts):
 			self.concept_context_generators.append(
-				torch.nn.Sequential(*[
+				torch.nn.Sequential(
 					torch.nn.Linear(pre_c_out_size, 2 * emb_size),  # positive and negative embedding parts
 					torch.nn.ReLU(),
-				])
+				)
 			)
 
 		if self.shared_prob_gen:
@@ -84,16 +82,15 @@ class XtoCNet(nn.Module):
 				context = torch.nn.Sigmoid()(context)
 
 			prob = prob_gen(context)
-			sem_probs.append(torch.nn.Sigmoid()(prob))
 			if self.sigmoidal_prob:
 				prob = torch.nn.Sigmoid()(prob)
+			sem_probs.append(prob)
 			probs.append(prob)
 
 			context_pos = context[:, :self.emb_size]
 			context_neg = context[:, self.emb_size:]
-			mask = prob if self.sigmoidal_prob else torch.nn.Sigmoid()(prob)
 
-			context = context_pos * mask + context_neg * (1 - mask)
+			context = context_pos * prob + context_neg * (1 - prob)
 			if self.concat_prob:
 				# Then the probability bit will be added
 				# as part of the bottleneck
