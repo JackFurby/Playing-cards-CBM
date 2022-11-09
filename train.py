@@ -52,7 +52,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			elif mode == "cem_XtoC":
 				outputs, c_pred = model(images, train=train)
 			else:
-				outputs = model(images, train=train)
+				outputs = model(images)
 
 			# discard concept layer output as we are not training the XtoC model part
 			if mode == "sequential":
