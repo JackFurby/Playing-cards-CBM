@@ -167,10 +167,10 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
 				# accuracy for concepts
-				accuracy.append(binary_accuracy(torch.cat(sigmoid_outputs, dim=1), concepts).item())
+				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
 				if f1 is not None:
-					f1_acc.append(f1(torch.cat(sigmoid_outputs, dim=1), concepts.to(torch.int32)))
+					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 
 			else:  # XtoC
 				batch_losses = []
