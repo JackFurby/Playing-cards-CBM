@@ -77,18 +77,13 @@ class XtoCNet(nn.Module):
 			else:
 				prob_gen = self.concept_prob_generators[i]
 
-			"""
 			context = context_gen(h)
 			if self.sigmoidal_embedding:
 				context = torch.nn.Sigmoid()(context)
-			"""
 
-			#prob = prob_gen(context)
-			prob = prob_gen(h)
+			prob = prob_gen(context)
 			sem_probs.append(prob)
 			probs.append(prob)
-
-			"""
 
 			context_pos = context[:, :self.emb_size]
 			context_neg = context[:, self.emb_size:]
@@ -105,11 +100,9 @@ class XtoCNet(nn.Module):
 				# Otherwise, let's completely ignore the probability bit
 				full_vectors.append(context)
 
-			"""
-
 		#c_sem = torch.cat(sem_probs, axis=-1)
 		c_sem = sem_probs
-		c_pred = sem_probs
+		c_pred = torch.cat(full_vectors, axis=-1)
 		return c_sem, c_pred
 
 
