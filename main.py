@@ -182,7 +182,7 @@ if __name__ == "__main__":
 		#model = CEM(args.n_concepts, args.n_classes, emb_size=128)
 	elif args.mode == "cem_XtoC":
 		#model = CEM_XtoCNet(args.n_concepts, emb_size=128)
-		model = CEM_XtoCNet(args.n_concepts, emb_size=16, shared_prob_gen=True, sigmoidal_embedding=False, sigmoidal_prob=True)
+		model = CEM_XtoCNet(args.n_concepts, emb_size=16, shared_prob_gen=False, sigmoidal_embedding=False, sigmoidal_prob=True)
 	elif args.mode =="cem_paper":
 		model = ConceptEmbeddingModel(args.n_concepts, args.n_classes, False, emb_size=128)
 	else:  # standard training

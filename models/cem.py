@@ -77,13 +77,14 @@ class XtoCNet(nn.Module):
 			else:
 				prob_gen = self.concept_prob_generators[i]
 
+			"""
 			context = context_gen(h)
 			if self.sigmoidal_embedding:
 				context = torch.nn.Sigmoid()(context)
+			"""
 
-			prob = prob_gen(context)
-			if self.sigmoidal_prob:
-				prob = torch.nn.Sigmoid()(prob)
+			#prob = prob_gen(context)
+			prob = prob_gen(h)
 			sem_probs.append(prob)
 			probs.append(prob)
 
