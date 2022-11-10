@@ -63,7 +63,7 @@ class XtoCNet(nn.Module):
 			self.concept_prob_generators = torch.nn.ModuleList()
 			for i in range(num_concepts):
 				self.concept_prob_generators.append(
-					torch.nn.Linear(pre_c_out_size, 1)
+					torch.nn.Linear(2 * emb_size, 1)
 				)
 
 	def forward(self, x):
