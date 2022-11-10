@@ -63,7 +63,7 @@ class XtoCNet(nn.Module):
 			self.concept_prob_generators = torch.nn.ModuleList()
 			for i in range(num_concepts):
 				self.concept_prob_generators.append(
-					torch.nn.Linear(2 * emb_size, 1)
+					torch.nn.Linear(pre_c_out_size, 1)
 				)
 
 	def forward(self, x):
@@ -88,6 +88,8 @@ class XtoCNet(nn.Module):
 			sem_probs.append(prob)
 			probs.append(prob)
 
+			"""
+
 			context_pos = context[:, :self.emb_size]
 			context_neg = context[:, self.emb_size:]
 
@@ -103,9 +105,11 @@ class XtoCNet(nn.Module):
 				# Otherwise, let's completely ignore the probability bit
 				full_vectors.append(context)
 
+			"""
+
 		#c_sem = torch.cat(sem_probs, axis=-1)
 		c_sem = sem_probs
-		c_pred = torch.cat(full_vectors, axis=-1)
+		c_pred = sem_probs
 		return c_sem, c_pred
 
 
