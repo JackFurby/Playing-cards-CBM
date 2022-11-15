@@ -10,8 +10,8 @@ import os
 
 from train import train
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
-from models.cem4 import End2EndModel as CEM
 from models.cem import XtoCNet as CEM_XtoCNet
+from models.cem import End2EndModel as CEM
 from models.cem2 import ConceptEmbeddingModel
 from dataset.dataset import load_data, find_class_imbalance
 
@@ -178,7 +178,7 @@ if __name__ == "__main__":
 	elif args.mode == "CtoY":
 		model = CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	elif args.mode =="cem":
-		model = CEM(num_classes=args.n_classes, num_concepts=args.n_concepts, emb_size=128)
+		model = CEM(num_classes=args.n_classes, num_concepts=args.n_concepts, emb_size=16, shared_prob_gen=False, sigmoidal_embedding=False, sigmoidal_prob=True)
 		#model = CEM(args.n_concepts, args.n_classes, emb_size=128)
 	elif args.mode == "cem_XtoC":
 		#model = CEM_XtoCNet(args.n_concepts, emb_size=128)
@@ -365,8 +365,6 @@ if __name__ == "__main__":
 
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
-
-
 
 
 	elif args.mode in ["cem_paper"]:

@@ -137,30 +137,28 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 				task_loss = criterion[0](task_out, labels)
 				for i in range(len(criterion) - 1):
-					concept_loss = criterion[i + 1](concept_out[:, i].squeeze(), concepts[:, i])
+					concept_loss = criterion[i + 1](concept_out[i].squeeze(), concepts[:, i])
 					batch_losses.append((attr_loss_weight * concept_loss) + task_loss)
 
 				loss = sum(batch_losses) / len(batch_losses)
+				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat((concept_out), dim=1))
 
 				# accuracy for concepts
-				accuracy.append(binary_accuracy(concept_out, concepts).item())
+				concepts = concepts.view(concepts.size(0), -1)
+				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
 				# accuracy for task
 				_, predicted = task_out.max(1)
 				task_acc.extend(predicted.eq(labels))
 
 				if f1 is not None:
-					f1_acc.append(f1(concept_out, concepts.to(torch.int32)))
+					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 					task_f1 = f1(task_out, labels.to(torch.int32))
 
 			elif mode in ["cem_XtoC"]:
 				batch_losses = []
 				for i in range(len(criterion)):
-					#print(outputs.size())
-					#print(len(outputs))
-					#print(outputs[:, i], concepts[:, i])
 					loss = criterion[i](outputs[i].squeeze(), concepts[:, i])
-					#loss = criterion[i](outputs[i].squeeze(), concepts[:, i])
 					batch_losses.append(attr_loss_weight * loss)
 
 				loss = sum(batch_losses) / len(concepts[:, i])
