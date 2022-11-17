@@ -28,7 +28,6 @@ class End2EndModel(torch.nn.Module):
 
 	def forward_stage2(self, stage_1_out):
 		c_sem, c_pred = stage_1_out
-		#c_sem = torch.cat((c_sem), dim=1)
 		y = self.c_to_y_model(c_pred)
 
 		return c_sem, y

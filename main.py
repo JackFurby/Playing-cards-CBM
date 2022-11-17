@@ -65,7 +65,7 @@ if __name__ == "__main__":
 	parser.add_argument(
 		'--optimizer',
 		type=str,
-		default='adam',
+		default='sgd',
 		choices=["adam", "sgd"],
 		help='Optimizer to use for training (default: adam)'
 	)
