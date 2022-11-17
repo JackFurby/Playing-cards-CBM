@@ -89,7 +89,13 @@ class XtoCNet(nn.Module):
 			context_pos = context[:, :self.emb_size]
 			context_neg = context[:, self.emb_size:]
 
-			context = context_pos * prob + context_neg * (1 - prob)
+			if self.sigmoidal_prob:
+				mask = torch.nn.Sigmoid()(prob)
+			else:
+				mask = prob
+
+
+			context = context_pos * mask + context_neg * (1 - mask)
 			if self.concat_prob:
 				# Then the probability bit will be added
 				# as part of the bottleneck
@@ -110,9 +116,9 @@ class CtoYNet(nn.Module):
 	def __init__(self, num_concept_in, num_classes):
 		super(CtoYNet, self).__init__()
 		self.classifier = nn.Sequential(
-			nn.Linear(num_concept_in, 128),
+			nn.Linear(num_concept_in, 512),
 			nn.ReLU(),
-			nn.Linear(128, num_classes)
+			nn.Linear(512, num_classes)
 		)
 
 	def forward(self, x):
