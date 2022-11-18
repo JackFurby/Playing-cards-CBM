@@ -1,0 +1,37 @@
+program: main.py
+method: bayes
+project: playing_cards_CBM
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args}
+metric:
+  name: Test Loss
+  goal: minimize
+parameters:
+  lr:
+    min: 0.0001
+    max: 0.1
+  optimizer:
+    values: ["adam", "sgd"]
+  lr_patience:
+    values: [3, 5, 10, 15]
+  mode:
+    value: sequential
+  n_concepts:
+    value: 17
+  n_classes:
+    value: 52
+  dataset_root:
+    value: dataset/playing-cards
+  dataset_postfix:
+    value: splits/single
+  epochs:
+    value: 100
+  batch_size:
+    value: 32
+  num_workers:
+    value: 4
+  pretrained_weights:
+    value: ./saves/independent-XtoC-single-seed-819.pth
