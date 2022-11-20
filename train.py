@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import sklearn
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score
 
 
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
@@ -228,9 +228,9 @@ def binary_accuracy(output, target):
 	y_probs = output.reshape(-1).cpu().detach()
 	y_pred = y_probs > 0.5
 	y_true = target.reshape(-1).cpu().detach()
-	y_accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
+	y_accuracy = accuracy_score(y_true, y_pred)
 	try:
-		y_auc = sklearn.metrics.roc_auc_score(
+		y_auc = roc_auc_score(
 			y_true,
 			y_probs,
 			multi_class='ovo',
@@ -238,7 +238,7 @@ def binary_accuracy(output, target):
 	except:
 		y_auc = 0
 	try:
-		y_f1 = sklearn.metrics.f1_score(y_true, y_pred, average='macro')
+		y_f1 = f1_score(y_true, y_pred, average='macro')
 	except:
 		y_f1 = 0
 	return y_accuracy
