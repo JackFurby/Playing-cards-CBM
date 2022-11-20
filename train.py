@@ -50,7 +50,9 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				concepts = concepts.view(concepts.size(0), -1)  # make sure input is vector (will not be if using multi input images)
 				outputs = model(concepts)
 			elif mode == "cem_XtoC":
-				outputs, c_pred = model(images)
+				outputs, c_pred = model(images, train=train)
+			elif model == "cem":
+				outputs = model(images, train=train)
 			else:
 				outputs = model(images)
 

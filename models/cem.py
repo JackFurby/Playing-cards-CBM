@@ -32,12 +32,12 @@ class End2EndModel(torch.nn.Module):
 
 		return c_sem, y
 
-	def forward(self, x):
-		return self.forward_stage2(self.x_to_c_model(x))
+	def forward(self, x, train=False):
+		return self.forward_stage2(self.x_to_c_model(x, train=train))
 
 
 class XtoCNet(nn.Module):
-	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False):
+	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False, training_intervention_prob=0.25):
 		super(XtoCNet, self).__init__()
 		self.pre_concept_model = PlayingCardNet(out_size=num_concepts, pretrained_weights=pretrained_weights)
 		pre_c_out_size = list(self.pre_concept_model.modules())[-1].out_features
@@ -48,6 +48,9 @@ class XtoCNet(nn.Module):
 		self.sigmoidal_prob = sigmoidal_prob
 		self.emb_size = emb_size
 		self.concat_prob = concat_prob
+		self.training_intervention_prob=training_intervention_prob
+		if self.training_intervention_prob != 0:
+			self.ones = torch.ones(num_concepts)
 
 		for i in range(num_concepts):
 			self.concept_context_generators.append(
@@ -66,11 +69,21 @@ class XtoCNet(nn.Module):
 					torch.nn.Linear(2 * emb_size, 1)
 				)
 
-	def forward(self, x):
+	def _after_interventions(self, prob, train):
+		if train and (self.training_intervention_prob != 0):
+			# Then we will probabilistically set some concepts to 0
+			ones = torch.ones(prob.size())
+			mask = torch.bernoulli(ones * self.training_intervention_prob)
+			prob = prob * mask
+		return prob
+
+	def forward(self, x, train=False, return="all"):
 		h = self.pre_concept_model(x)
-		probs = []
-		full_vectors = []
-		sem_probs = []
+		probs = []  # concept probabilitie predictions, may be modified with interventions
+		full_vectors = []  # bottleneck vectors
+		sem_probs = []  # true concept probability predictions
+
+		# for each concept predict the probibility and concept vector (using probability and context)
 		for i, context_gen in enumerate(self.concept_context_generators):
 			if self.shared_prob_gen:
 				prob_gen = self.concept_prob_generators
@@ -83,6 +96,8 @@ class XtoCNet(nn.Module):
 
 			prob = prob_gen(context)
 			sem_probs.append(prob)
+
+			prob = self._after_interventions(prob, train=train)
 			probs.append(prob)
 
 			context_pos = context[:, :self.emb_size]
@@ -106,9 +121,15 @@ class XtoCNet(nn.Module):
 				# Otherwise, let's completely ignore the probability bit
 				full_vectors.append(context)
 
-		c_sem = sem_probs
-		c_pred = torch.cat(full_vectors, axis=-1)
-		return c_sem, c_pred
+		c_sem = sem_probs  # concept probability predictions
+		c_pred = torch.cat(full_vectors, axis=-1)  # bottleneck vectors
+
+		if return == "probs":
+			return c_sem
+		if return == "concepts":
+			return c_pred
+		else:
+			return c_sem, c_pred
 
 
 class CtoYNet(nn.Module):
