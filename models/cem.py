@@ -77,7 +77,7 @@ class XtoCNet(nn.Module):
 			prob = prob * mask
 		return prob
 
-	def forward(self, x, train=False, return="all"):
+	def forward(self, x, train=False, return_type="all"):
 		h = self.pre_concept_model(x)
 		probs = []  # concept probabilitie predictions, may be modified with interventions
 		full_vectors = []  # bottleneck vectors
@@ -124,9 +124,9 @@ class XtoCNet(nn.Module):
 		c_sem = sem_probs  # concept probability predictions
 		c_pred = torch.cat(full_vectors, axis=-1)  # bottleneck vectors
 
-		if return == "probs":
+		if return_type == "probs":
 			return c_sem
-		if return == "concepts":
+		if return_type == "concepts":
 			return c_pred
 		else:
 			return c_sem, c_pred
