@@ -125,7 +125,7 @@ class XtoCNet(nn.Module):
 		c_pred = torch.cat(full_vectors, axis=-1)  # bottleneck vectors
 
 		if return_type == "probs":
-			return c_sem
+			return torch.cat(c_sem, dim=1)
 		if return_type == "concepts":
 			return c_pred
 		else:
