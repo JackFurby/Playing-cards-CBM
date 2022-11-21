@@ -6,6 +6,7 @@ command:
   - ${interpreter}
   - ${program}
   - ${args}
+  - --freeze
 metric:
   name: Test Loss
   goal: minimize
