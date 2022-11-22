@@ -23,7 +23,7 @@ for i in 1 2 3 4 5
 do
   RAN_NUM=$(shuf -i 0-1000 -n1)
   python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing-cards --dataset_postfix splits/single --save_name "sequential-XtoC-single-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 10 --lr 0.02 --epochs 200 --weighted_loss --seed $RAN_NUM
-  python main.py --mode sequential --n_concepts 17 --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single --save_name "sequential-CtoY-single-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 3 --lr 0.0057 --epochs 100 --pretrained_weights "./saves/sequential-XtoC-single-seed-$RAN_NUM.pth" --freeze --seed $RAN_NUM
+  python main.py --mode sequential --n_concepts 17 --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single --save_name "sequential-CtoY-single-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 3 --lr 0.0025 --epochs 100 --pretrained_weights "./saves/sequential-XtoC-single-seed-$RAN_NUM.pth" --freeze --seed $RAN_NUM
 done
 
 # # Joint training (no sig)
