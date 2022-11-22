@@ -4,6 +4,12 @@ project: playing_cards_CBM
 metric:
   name: Test Loss
   goal: minimize
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args}
+  - --weighted_loss
 parameters:
   lr:
     min: 0.0001
