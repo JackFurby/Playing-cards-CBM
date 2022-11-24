@@ -113,7 +113,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 					task_f1 = f1(task_out, labels.to(torch.int32))
 
-			elif mode in ["cem", "cem_paper"]:
+			elif mode in ["cem"]:
 				"""
 				Joint training will train both the concept vector and final classification
 				together. This works in the following way:
@@ -202,7 +202,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			f1_avg_acc = None
 			task_f1 = None
 
-	if mode in ["joint", "cem", "cem_paper"]:
+	if mode in ["joint", "cem"]:
 		return sum(losses) / len(losses), acc, f1_avg_acc, task_f1, (sum(task_acc) / len(task_acc)).item()
 	else:
 		return sum(losses) / len(losses), acc, f1_avg_acc
