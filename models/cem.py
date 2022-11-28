@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from torchvision.models import vgg11_bn
+from torchvision.models import vgg16_bn
 
 
 class End2EndModel(torch.nn.Module):
@@ -39,7 +39,8 @@ class End2EndModel(torch.nn.Module):
 class XtoCNet(nn.Module):
 	def __init__(self, num_concepts, emb_size, shared_prob_gen, sigmoidal_embedding, sigmoidal_prob, pretrained_weights=None, concat_prob=False, training_intervention_prob=0.25, h_size=1000):
 		super(XtoCNet, self).__init__()
-		self.pre_concept_model = PlayingCardNet(out_size=h_size, pretrained_weights=pretrained_weights)
+		#self.pre_concept_model = PlayingCardNet(out_size=h_size, pretrained_weights=pretrained_weights)
+		self.pre_concept_model = vgg16_bn(pretrained=True)
 		pre_c_out_size = list(self.pre_concept_model.modules())[-1].out_features
 
 		self.concept_context_generators = torch.nn.ModuleList()
