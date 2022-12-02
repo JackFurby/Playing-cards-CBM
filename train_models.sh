@@ -98,5 +98,5 @@ for i in 1 2 3 4 5
 do
   RAN_NUM=$(shuf -i 0-1000 -n1)
   python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three --save_name "sequential-XtoC-three-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.03 --epochs 200 --weighted_loss --seed $RAN_NUM
-  python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "sequential-CtoY-three-seed-$RAN_NUM"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.01 --epochs 200 --pretrained_weights "./saves/sequential-XtoC-three-seed-$RAN_NUM.pth" --freeze --seed $RAN_NUM
+  python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "sequential-CtoY-three-seed-$RAN_NUM"  --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.01 --epochs 200 --pretrained_weights "./saves/sequential-XtoC-three-seed-$RAN_NUM.pth" --freeze --seed $RAN_NUM
 done
