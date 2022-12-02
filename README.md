@@ -15,7 +15,11 @@ Note: These instructions were designed for Ubuntu 22.04. They should however be 
 
     `pip install -r requirements.txt`  
 
-4. Download and configure dataset
+4. Install repo as a package
+
+    `pip install -e .`  
+
+5. Download and configure dataset
 
     a. Clone the playing cards dataset from https://huggingface.co/datasets/JackFurby/playing-cards into the directory `project_root/datasets/playing-cards`
 
