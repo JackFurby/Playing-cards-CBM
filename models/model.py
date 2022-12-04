@@ -21,12 +21,14 @@ class End2EndModel(torch.nn.Module):
 			print("frozen layers in x_to_c_model")
 
 	def forward_stage2(self, stage_1_out):
+		if self.use_modulelist:
+			stage_1_out = torch.cat(stage_1_out, dim=1)
 		if self.use_sigmoid:
-			c_to_y_input = torch.nn.Sigmoid()(torch.cat(stage_1_out, dim=1))
+			c_to_y_input = torch.nn.Sigmoid()(stage_1_out)
 		else:
-			c_to_y_input = torch.cat((stage_1_out), dim=1)
+			c_to_y_input = stage_1_out
 
-		return (torch.cat(stage_1_out, dim=1), self.c_to_y_model(c_to_y_input))
+		return stage_1_out, self.c_to_y_model(c_to_y_input)
 
 	def forward(self, x):
 		return self.forward_stage2(self.x_to_c_model(x))

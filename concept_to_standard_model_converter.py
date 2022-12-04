@@ -38,7 +38,7 @@ def get_task_model(model_path, num_concepts, num_classes):
 	return CtoY
 
 
-def get_end_to_end_model(model_path, num_concepts, num_classes, num_images_per_output):
+def get_end_to_end_model(model_path, num_concepts, num_classes):
 	"""
 	This function will load and return a concept bottleneck model (end to end / joint).
 
@@ -48,7 +48,7 @@ def get_end_to_end_model(model_path, num_concepts, num_classes, num_images_per_o
 	returns:
 		Pytorch model
 	"""
-	model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, num_images_per_output=num_images_per_output, freeze=False, use_sigmoid=True)
+	model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True)
 	model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return model
 
@@ -96,11 +96,11 @@ def get_converted_model(model, num_concepts, end_to_end):
 	return new_model
 
 
-def combine_model_parts(model_1, model_2, num_classes, num_concepts, num_images_per_output):
+def combine_model_parts(model_1, model_2, num_classes, num_concepts):
 	"""
 	"""
 
-	end_to_end_model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, num_images_per_output=num_images_per_output, freeze=False, use_sigmoid=True)
+	end_to_end_model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True)
 	end_to_end_model.x_to_c_model = model_1
 	end_to_end_model.c_to_y_model = model_2
 	return end_to_end_model
@@ -140,22 +140,17 @@ if __name__ == "__main__":
 		type=int,
 		help='Number of classes in dataset'
 	)
-	parser.add_argument(
-		'--num_images_per_output',
-		type=int,
-		help='Number of images per model ouput'
-	)
 	args = parser.parse_args()
 
 	if args.end_to_end:
-		model = get_end_to_end_model(model_path=args.model_path, num_concepts=args.num_concepts, num_classes=args.num_classes, num_images_per_output=args.num_images_per_output)
+		model = get_end_to_end_model(model_path=args.model_path, num_concepts=args.num_concepts, num_classes=args.num_classes)
 		model = get_converted_model(model, num_concepts=len(model.x_to_c_model.all_fc), end_to_end=args.end_to_end)
 	else:
 		model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts)
 		model = get_converted_model(model, num_concepts=len(model.all_fc), end_to_end=args.end_to_end)
 		if args.model_2_path is not None:  # X to C and C to Y
-			model_2 = get_task_model(model_path=args.model_2_path, num_concepts=args.num_concepts*args.num_images_per_output, num_classes=args.num_classes)
-			model = combine_model_parts(model, model_2, args.num_classes, args.num_concepts, args.num_images_per_output)
+			model_2 = get_task_model(model_path=args.model_2_path, num_concepts=args.num_concepts, num_classes=args.num_classes)
+			model = combine_model_parts(model, model_2, args.num_classes, args.num_concepts)
 
 	print(model)
 

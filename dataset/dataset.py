@@ -237,7 +237,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, num_concepts, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
