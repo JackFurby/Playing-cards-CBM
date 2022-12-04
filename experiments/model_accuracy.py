@@ -63,7 +63,7 @@ def eval(model, data_loader, f1=None, device="cpu"):
 		f1_avg_acc = None
 		task_f1 = None
 
-	return acc, f1_avg_acc, task_f1.item(), (sum(task_acc).item() / len(task_acc)).item()
+	return acc, f1_avg_acc.item(), task_f1.item(), (sum(task_acc).item() / len(task_acc))
 
 
 def binary_accuracy(output, target):
@@ -159,5 +159,6 @@ if __name__ == "__main__":
 
 			all_acc.append((file, concept_acc, concept_F1, task_F1, task_acc))
 
-		print(all_acc)
 		pickle.dump(all_acc, open(f"./experiments/all_acc.pkl", "wb"))
+
+	print(all_acc)
