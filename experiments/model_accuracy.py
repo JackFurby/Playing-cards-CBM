@@ -63,7 +63,7 @@ def eval(model, data_loader, f1=None, device="cpu"):
 		f1_avg_acc = None
 		task_f1 = None
 
-	return acc, f1_avg_acc, task_f1, (sum(task_acc) / len(task_acc)).item()
+	return acc, f1_avg_acc, task_f1.item(), (sum(task_acc).item() / len(task_acc)).item()
 
 
 def binary_accuracy(output, target):
