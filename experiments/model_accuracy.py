@@ -7,6 +7,7 @@ from models.model import End2EndModel
 from tqdm import tqdm
 import os
 import pickle
+import matplotlib.pyplot as plt
 
 
 def eval(model, data_loader, f1=None, device="cpu"):
@@ -63,7 +64,7 @@ def eval(model, data_loader, f1=None, device="cpu"):
 		f1_avg_acc = None
 		task_f1 = None
 
-	return acc, f1_avg_acc.item(), task_f1.item(), (sum(task_acc).item() / len(task_acc))
+	return acc, f1_avg_acc.item(), task_f1.item(), (sum(task_acc).item() / len(task_acc)) * 100
 
 
 def binary_accuracy(output, target):
@@ -161,4 +162,69 @@ if __name__ == "__main__":
 
 		pickle.dump(all_acc, open(f"./experiments/all_acc.pkl", "wb"))
 
-	print(all_acc)
+	independent_poker = []
+	independent_three = []
+	independent_single = []
+	joint_single = []
+	joint_sig_poker = []
+	joint_poker = []
+
+	for i in all_acc:
+		if "independent-poker" in i[0]:
+			independent_poker.append(i)
+		elif "independent-three" in i[0]:
+			independent_three.append(i)
+		elif "independent-single" in i[0]:
+			independent_single.append(i)
+		elif "joint-single" in i[0]:
+			joint_single.append(i)
+		elif "joint_sig-poker" in i[0]:
+			joint_sig_poker.append(i)
+		elif "joint-poker" in i[0]:
+			joint_poker.append(i)
+
+	for idx, type in enumerate(["concept accuracy", "concept F1", "task F1", "task accuracy"]):
+
+		inde_poker_vals = np.array([i[idx + 1] for i in independent_poker])
+		inde_three_vals = np.array([i[idx + 1] for i in independent_three])
+		inde_single_vals = np.array([i[idx + 1] for i in independent_single])
+		joint_single_vals = np.array([i[idx + 1] for i in joint_single])
+		joint_sig_poker_vals = np.array([i[idx + 1] for i in joint_sig_poker])
+		joint_poker_vals = np.array([i[idx + 1] for i in joint_poker])
+
+		mean_inde_poker = np.mean(inde_poker_vals)
+		mean_inde_three = np.mean(inde_three_vals)
+		mean_inde_single = np.mean(inde_single_vals)
+		mean_joint_single = np.mean(joint_single_vals)
+		mean_joint_sig_poker = np.mean(joint_sig_poker_vals)
+		mean_joint_poker = np.mean(joint_poker_vals)
+
+		std_inde_poker = np.std(inde_poker_vals)
+		std_inde_three = np.std(inde_three_vals)
+		std_inde_single = np.std(inde_single_vals)
+		std_joint_single = np.std(joint_single_vals)
+		std_joint_sig_poker = np.std(joint_sig_poker_vals)
+		std_joint_poker = np.std(joint_poker_vals)
+
+		models = ["independent_poker", "independent_three", "independent_single", "joint_poker", "joint_sig_poker", "joint_single"]
+		x_pos = np.arange(len(models))
+		model_means = [mean_inde_poker, mean_inde_three, mean_inde_single, mean_joint_poker, mean_joint_sig_poker, mean_joint_single]
+		errors = [std_inde_poker, std_inde_three, std_inde_single, std_joint_poker, std_joint_sig_poker, std_joint_single]
+
+		for idx, i in enumerate(model_means):
+			print(i, errors[idx])
+
+		# Build the plot
+		fig, ax = plt.subplots()
+		fig.set_size_inches(12.5, 8.5)
+		ax.bar(x_pos, model_means, yerr=errors, align='center', alpha=0.5, ecolor='black', capsize=10, color=['blue', 'red', 'green', 'deepskyblue', 'cyan', 'limegreen'])
+		ax.set_ylabel(f"Model {type}")
+		ax.set_xticks(x_pos)
+		ax.set_xticklabels(models)
+		ax.set_title("Training method")
+		ax.yaxis.grid(True)
+
+		# Save the figure and show
+		plt.tight_layout()
+		plt.savefig(f"model {type}.png")
+		plt.show()
