@@ -22,5 +22,6 @@ setuptools.setup(
 		"jupyterlab>=3.4.5",
 		"pandas>=1.4.3",
 		"tqdm>=4.64.0",
+		"opencv-python>=4.6.0.66",
 	],
 )

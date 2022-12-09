@@ -12,3 +12,4 @@ jupyterlab==3.4.*
 sklearn
 pandas==1.4.*
 tqdm==4.64.*
+opencv-python==4.6.0.*

@@ -118,3 +118,13 @@ TO DO
 #### XtoCtoY / end to end / XtoC and CtoY (sequential)
 
 `python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end`
+
+## Experiments
+
+### Model accuracies
+
+`python experiments/model_accuracy.py --weights_dir ./saves/paper_weights --dataset_root dataset/playing-cards`
+
+### Average saliency maps
+
+`python experiments/average_card_relevance.py --pretrained_weights ./saves/paper_weights/independent-single-seed-557.pth --dataset_root dataset/playing-cards --dataset_postfix splits/single --n_classes 52 --n_concepts 17`
