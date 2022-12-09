@@ -8,6 +8,14 @@ do
   python main.py --mode standard --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single --save_name "standard-single-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.05 --epochs 200 --seed $RAN_NUM
 done
 
+# # Standard training (same architecture as CBMs)
+
+for i in 1 2 3 4 5
+do
+  RAN_NUM=$(shuf -i 0-1000 -n1)
+  python main.py --mode joint --n_classes 52 --n_concepts 17 --dataset_root dataset/playing-cards --dataset_postfix splits/single --save_name "joint-single-seed-$RAN_NUM" --lr 0.01 --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --weighted_loss --attr_loss_weight 0 --epochs 200 --seed $RAN_NUM
+done
+
 # # Independent training
 
 for i in 1 2 3 4 5
@@ -44,6 +52,14 @@ for i in 1 2 3 4 5
 do
   RAN_NUM=$(shuf -i 0-1000 -n1)
   python main.py --mode standard --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "standard-poker-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 10 --lr 0.05 --epochs 200 --seed $RAN_NUM
+done
+
+# # Standard training (same architecture as CBMs)
+
+for i in 1 2 3 4 5
+do
+  RAN_NUM=$(shuf -i 0-1000 -n1)
+  python main.py --mode joint --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "joint-poker-seed-$RAN_NUM" --lr 0.025 --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 15 --weighted_loss --attr_loss_weight 0 --epochs 300 --seed $RAN_NUM
 done
 
 # # Independent training
