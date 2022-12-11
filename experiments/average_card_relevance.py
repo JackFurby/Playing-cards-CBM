@@ -84,29 +84,39 @@ def extract_card(image_gradient, card_cord):
 	return torch.from_numpy(output).permute(2, 0, 1).unsqueeze(0)# compute the angle between the eye centroids
 
 
-
-def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, device="cpu", model_name="model"):
+def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, device="cpu", model_name="model", target_concept=None):
+	"""
+	model_parts: List of pytorch models
+	rules: List of LRP rules
+	data_loader: Pytorch dataloader
+	concept_index_to_string: IndexToString object
+	device: string pytorch device
+	model_name: name of model (used for saving results to a recognisable file path)
+	target_concept: None if results are for entire samples, int of concept index if averaging concept saliency maps
+	"""
 	sample_num = 0
 	concept_saliency = []
-	for i in range(len(concept_index_to_string.string_dict)):
-		concept_saliency.append([])
 	for images, labels, concepts, card_points, card_classes in tqdm(data_loader, unit="batch"):
 		for image_index in range(images.size(0)):
-			if sample_num < 75:
-				image = images[image_index].to(device)
-				image = image.unsqueeze(0)
-				image.requires_grad_(True)
-				image.grad = None  # Reset gradient
+			image = images[image_index].to(device)
+			image = image.unsqueeze(0)
+			image.requires_grad_(True)
+			image.grad = None  # Reset gradient
 
-				save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
-				if not os.path.exists(f"{save_dir}"):
-					os.makedirs(f"{save_dir}")
+			save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
+			if not os.path.exists(f"{save_dir}"):
+				os.makedirs(f"{save_dir}")
 
-				pred_concepts = image
-				for idx, model_part in enumerate(model_parts):
-					pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
+			pred_concepts = image
+			for idx, model_part in enumerate(model_parts):
+				pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
 
-				for i in range(pred_concepts.size(1)):
+			for i in range(pred_concepts.size(1)):
+				concept_pred_present = torch.nn.Sigmoid()(pred_concepts[0][i]).item() > 0.5  # only avg cards predicted as present
+				current_concept_target = i == target_concept  # only avg target concepts
+				true_concept_present = concepts[image_index][i].item() == 1  # only avg concepts present in concept labels
+				# only continue if generating saliency map for entire sample or if target concept if correctly predicted as present
+				if (target_concept == None) or (concept_pred_present and current_concept_target and true_concept_present):
 					filter_out = torch.zeros_like(pred_concepts)
 					filter_out[:,i] += 1
 
@@ -117,67 +127,39 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 						grad_outputs=filter_out,
 						retain_graph=True)[0]
 
-					attr = heatmap(image_gradient, cmap_name='seismic')
+					if target_concept == None:
 
-					AX.clear()
-					AX.set_axis_off()
-					AX.imshow(attr.squeeze(), cmap='seismic')
-					FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
+						attr = heatmap(image_gradient, cmap_name='seismic')
 
-					# We only want to average concepts that sould be present
-					if concepts[image_index][i].item() == 1:
+						AX.clear()
+						AX.set_axis_off()
+						AX.imshow(attr.squeeze(), cmap='seismic')
+						FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
+
+					else:
+
 						if card_classes[image_index].size(0) == 1:  # single playing card in image
 							card_cord = card_points[image_index][0]
 						else:  # multiple playing cards in image, concepts match card_classes
 							for concept in range(card_classes[image_index].size(0)):
-								if card_classes[image_index][concept].item() == i:
+								if card_classes[image_index][concept].item() == i:  # true if card in image matches i
 									card_cord = card_points[image_index][concept]
 
 						image_gradient = extract_card(image_gradient, card_cord)
 
-						concept_saliency[i].append(image_gradient)
-
-						#if len(concept_saliency[i]) == 0:
-						#	concept_saliency[i].append(image_gradient)
-						#	concept_saliency[i].append(0)  # count for num of saliency maps
-						#else:
-						#	concept_saliency[i][0] = torch.add(concept_saliency[i][0], image_gradient)
-						#	concept_saliency[i][0] += 1
+						concept_saliency.append(image_gradient)
 
 			sample_num += 1
 
-	for idx, i in enumerate(concept_saliency):
-		if len(i) > 0:
-			#avg_gradient = torch.div(i[0], i[1])
-			avg_gradient = torch.mean(torch.cat(i), 0)
-			avg_gradient = avg_gradient.unsqueeze(0)
-			attr = heatmap(avg_gradient, cmap_name='seismic')
+	if len(concept_saliency) > 0:
+		avg_gradient = torch.mean(torch.cat(concept_saliency), 0)
+		avg_gradient = avg_gradient.unsqueeze(0)
+		attr = heatmap(avg_gradient, cmap_name='seismic')
 
-			# center 0 for min and max values on figure
-			#if abs(np.amax(attr)) > abs(np.amin(attr)):
-			#	vmin = 0 - abs(np.amax(attr))
-			#	vmax = abs(np.amax(attr))
-			#else:
-			#	vmin = 0 - abs(np.amin(attr))
-			#	vmax = abs(np.amin(attr))
-
-			AX.clear()
-			AX.set_axis_off()
-			AX.imshow(attr.squeeze(), cmap='seismic')
-			FIG.savefig(f'results/lrp/{model_name}/average_{concept_index_to_string(idx)}.png', bbox_inches='tight', pad_inches = 0)
-
-			# center 0 for min and max values on figure
-			if abs(np.amax(attr)) > abs(np.amin(attr)):
-				vmin = 0 - abs(np.amax(attr))
-				vmax = abs(np.amax(attr))
-			else:
-				vmin = 0 - abs(np.amin(attr))
-				vmax = abs(np.amin(attr))
-
-			AX.clear()
-			AX.set_axis_off()
-			AX.imshow(attr.squeeze(), cmap='seismic', vmin=vmin, vmax=vmax)
-			FIG.savefig(f'results/lrp/{model_name}/minmax_average_{concept_index_to_string(idx)}.png', bbox_inches='tight', pad_inches = 0)
+		AX.clear()
+		AX.set_axis_off()
+		AX.imshow(attr.squeeze(), cmap='seismic')
+		FIG.savefig(f'results/lrp/{model_name}/average_{concept_index_to_string(target_concept)}.png', bbox_inches='tight', pad_inches = 0)
 
 
 if __name__ == "__main__":
@@ -268,4 +250,9 @@ if __name__ == "__main__":
 	XtoC_model_2.to(device)
 	XtoC_model_3.to(device)
 
-	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name)
+	# gen saliency maps for full samples
+	#gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
+
+	# gen average saliency maps for concepts
+	for i in range(len(concept_index_to_string.string_dict)):
+		gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)

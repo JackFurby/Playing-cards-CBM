@@ -128,3 +128,5 @@ TO DO
 ### Average saliency maps
 
 `python experiments/average_card_relevance.py --pretrained_weights ./saves/paper_weights/independent-single-seed-557.pth --dataset_root dataset/playing-cards --dataset_postfix splits/single --n_classes 52 --n_concepts 17`
+
+`python experiments/average_card_relevance.py --pretrained_weights ./saves/paper_weights/independent-three-seed-776.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52`
