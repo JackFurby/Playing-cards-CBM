@@ -112,12 +112,14 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### XtoC and CtoY (independent)
 
-TO DO
+`python concept_to_standard_model_converter.py --model_path ./saves/independent-XtoC-single.pth --model_2_path ./saves/independent-CtoY-single.pth --model_out_path ./saves/independent-single.pth --num_concepts 17 --num_classes 52`
 
 
 #### XtoCtoY / end to end / XtoC and CtoY (sequential)
 
 `python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end`
+
+''
 
 ## Experiments
 

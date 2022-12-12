@@ -251,7 +251,7 @@ if __name__ == "__main__":
 	XtoC_model_3.to(device)
 
 	# gen saliency maps for full samples
-	#gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
+	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
 
 	# gen average saliency maps for concepts
 	for i in range(len(concept_index_to_string.string_dict)):
