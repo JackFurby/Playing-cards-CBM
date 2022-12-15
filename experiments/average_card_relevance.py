@@ -34,9 +34,6 @@ def extract_card(image_gradient, card_cord):
 
 	height, width = card_saliency.shape[:2]
 
-	out_width = 346
-	out_height = 519
-
 	# compute the slope at the top of the card (top left and top right coords)
 	dY = card_cord[0][1] - card_cord[1][1]
 	dX = card_cord[0][0] - card_cord[1][0]
@@ -46,8 +43,7 @@ def extract_card(image_gradient, card_cord):
 	# the ratio of the distance between top points in the current
 	# image to the ratio of desired distance
 	dist = np.sqrt((dX ** 2) + (dY ** 2))
-	desiredDist = out_width
-	scale = (desiredDist / dist).item()
+	scale = 1
 
 	# compute the point to rotate the card round - center of top edge
 	rotateCenter = ((card_cord[0][0].item() + card_cord[1][0].item()) // 2,
@@ -79,9 +75,17 @@ def extract_card(image_gradient, card_cord):
 	# transform points
 	card_cord = M.dot(points_ones.T).T.astype(int)
 
-	output = output[card_cord[0][1]:card_cord[0][1] + out_height, card_cord[0][0]:card_cord[0][0] + out_width, :]
+	output = output[card_cord[0][1]:card_cord[2][1], card_cord[0][0]:card_cord[1][0], :]  # top left (x):bottom left (x), top left (y):top right (y)
 
-	return torch.from_numpy(output).permute(2, 0, 1).unsqueeze(0)# compute the angle between the eye centroids
+	# get card positive and negative relevance (cannot do after scale)
+	neg = np.sum(output.clip(max=0))  # sum card negative relevance
+	pos = np.sum(output.clip(min=0))  # sum card positive relevance
+
+	output = cv2.resize(output, (346, 519), interpolation=cv2.INTER_AREA)
+
+	output = torch.from_numpy(output).permute(2, 0, 1).unsqueeze(0)
+
+	return output, pos, neg
 
 
 def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, device="cpu", model_name="model", target_concept=None):
@@ -95,7 +99,7 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 	target_concept: None if results are for entire samples, int of concept index if averaging concept saliency maps
 	"""
 	sample_num = 0
-	concept_saliency = []
+	concept_saliency, card_relevance, all_relevance, all_cards_relevance = [], [], [], []
 	for images, labels, concepts, card_points, card_classes in tqdm(data_loader, unit="batch"):
 		for image_index in range(images.size(0)):
 			image = images[image_index].to(device)
@@ -145,9 +149,19 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 								if card_classes[image_index][concept].item() == i:  # true if card in image matches i
 									card_cord = card_points[image_index][concept]
 
-						image_gradient = extract_card(image_gradient, card_cord)
+						all_card_relevance = []
+						for i in range(card_classes[image_index].size(0)):
+							card_gradient, card_pos, card_neg = extract_card(image_gradient, card_points[image_index][i])
+						all_card_relevance.append((card_pos, card_neg))
 
-						concept_saliency.append(image_gradient)
+						card_gradient, card_pos, card_neg = extract_card(image_gradient, card_cord)
+
+						all_pos = torch.clip(image_gradient, min=0)  # all image positive relevance
+						all_neg = torch.clip(image_gradient, max=0)  # all image negative relevance
+
+						concept_saliency.append(card_gradient)
+						card_relevance.append((card_pos, card_neg))
+						all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
 
 			sample_num += 1
 
@@ -160,6 +174,22 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		AX.set_axis_off()
 		AX.imshow(attr.squeeze(), cmap='seismic')
 		FIG.savefig(f'results/lrp/{model_name}/average_{concept_index_to_string(target_concept)}.png', bbox_inches='tight', pad_inches = 0)
+
+	# work out the proportion of positive and negative relevance for the concept from the total relevance
+	concept_pos = [x[0] for x  in card_relevance]
+	concept_neg = [x[1] for x  in card_relevance]
+	all_pos = [x[0] for x  in all_relevance]
+	all_neg = [x[1] for x  in all_relevance]
+	cards_pos = [x[0] for x  in all_card_relevance]
+	cards_neg = [x[1] for x  in all_card_relevance]
+
+	concept_all_pos_prop = (sum(concept_pos) / len(concept_pos)) / (sum(all_pos) / len(all_pos))
+	concept_all_neg_prop = (sum(concept_neg) / len(concept_neg)) / (sum(all_neg) / len(all_neg))
+
+	concept_cards_pos_prop = (sum(concept_pos) / len(concept_pos)) / (sum(cards_pos) / len(cards_pos))
+	concept_cards_neg_prop = (sum(concept_neg) / len(concept_neg)) / (sum(cards_neg) / len(cards_neg))
+
+	return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop
 
 
 if __name__ == "__main__":
@@ -251,8 +281,17 @@ if __name__ == "__main__":
 	XtoC_model_3.to(device)
 
 	# gen saliency maps for full samples
-	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
+	#gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
 
+	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
 	# gen average saliency maps for concepts
 	for i in range(len(concept_index_to_string.string_dict)):
-		gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
+		concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop = gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
+		concept_relevance_prop.append((concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop))
+
+	# open file in write mode
+	with open(f"results/lrp/{model_name}/concept_props.txt", "w") as fp:
+		fp.write(f"concept ID, concept string, positive propotion to entire image, negative propotion to entire image, positive propotion to all cards, negative propotion to all cards\n")
+		for idx, item in enumerate(concept_relevance_prop):
+			# write each item on a new line
+			fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
