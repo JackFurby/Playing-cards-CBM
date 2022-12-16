@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def get_device():
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+def get_device(cpu=False):
+	device = torch.device("cuda:0" if (torch.cuda.is_available() and not cpu) else "cpu")
 	if torch.cuda.is_available():
 		print("Device:", device, torch.cuda.get_device_name(0))
 	else:
@@ -14,21 +14,21 @@ def get_device():
 	return device
 
 
-def get_dataset(split):
+def get_dataset(split, return_points=False, return_orig=False, return_path=False, shuffle=True):
 	if split == "single":
 		n_concepts = 17
 		n_classes = 52
-		val_loader = load_data("../dataset/playing-cards/splits/single/val.pkl", 16, num_concepts=n_concepts, dataset_root="../dataset/playing-cards/", return_points=True, shuffle=True)
+		val_loader = load_data("../dataset/playing-cards/splits/single/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/single/concepts.txt")
 	elif split == "three":
 		n_concepts = 52
 		n_classes = 1
-		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, num_concepts=n_concepts, dataset_root="../dataset/playing-cards/", has_class=False, return_orig=True)
+		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, dataset_root="../dataset/playing-cards/", has_class=False, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three/concepts.txt")
 	elif split == "poker":
 		n_concepts = 52
 		n_classes = 6
-		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, num_concepts=n_concepts, dataset_root="../dataset/playing-cards/", return_points=True, shuffle=True)
+		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three_card_poker/concepts.txt")
 	
 	return n_concepts, n_classes, val_loader, concept_index_to_string
