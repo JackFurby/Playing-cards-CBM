@@ -13,7 +13,7 @@ setuptools.setup(
 		"torch>=1.13.1",
 		"torchaudio>=0.13.1",
 		"torchvision>=0.14.1",
-		"torchmetrics>=0.11.0",
+		"torchmetrics>=0.10.3",
 		"matplotlib>=3.6.2",
 		"numpy>=1.24.0",
 		"Pillow>=9.3.0",
