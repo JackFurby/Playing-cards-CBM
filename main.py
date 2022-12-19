@@ -200,7 +200,8 @@ if __name__ == "__main__":
 			for i in range(args.n_concepts):
 				attr_criterion.append(nn.CrossEntropyLoss())
 
-		bestAccuracy = None
+		bestLoss = None
+		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
@@ -208,8 +209,9 @@ if __name__ == "__main__":
 
 			scheduler.step(testLoss)
 
-			if (bestAccuracy is None) or (bestAccuracy < testAcc):
-				bestAccuracy = testAcc
+			if (bestLoss is None) or (bestLoss > testLoss):
+				bestLoss = testAcc
+				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -256,7 +258,8 @@ if __name__ == "__main__":
 			for i in range(args.n_concepts):
 				attr_criterion.append(nn.CrossEntropyLoss())
 
-		bestAccuracy = None
+		bestLoss = None
+		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
@@ -264,8 +267,9 @@ if __name__ == "__main__":
 
 			scheduler.step(testLoss)
 
-			if (bestAccuracy is None) or (bestAccuracy < testAcc):
-				bestAccuracy = testAcc
+			if (bestLoss is None) or (bestLoss > testLoss):
+				bestLoss = testLoss
+				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -311,7 +315,8 @@ if __name__ == "__main__":
 	elif args.mode in ["standard", "CtoY", "sequential"]:
 		criterion = nn.CrossEntropyLoss()
 
-		bestAccuracy = None
+		bestLoss = None
+		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
@@ -319,8 +324,9 @@ if __name__ == "__main__":
 
 			scheduler.step(testLoss)
 
-			if (bestAccuracy is None) or (bestAccuracy < testAcc):
-				bestAccuracy = testAcc
+			if (bestLoss is None) or (bestLoss > testLoss):
+				bestLoss = testAcc
+				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -355,4 +361,4 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
-	print("Finished training!")
+	print(f"Finished training! Best epoch: {bestEpoch}")

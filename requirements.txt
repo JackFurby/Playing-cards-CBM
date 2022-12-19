@@ -1,15 +1,15 @@
 -f https://download.pytorch.org/whl/torch_stable.html
-torch==1.12.1+cu113
-torchaudio==0.12.1+cu113
-torchvision==0.13.1+cu113
-torchmetrics==0.9.*
-matplotlib==3.5.*
-numpy==1.23.*
+torch==1.13.1+cu116
+torchaudio==0.13.1+cu116
+torchvision==0.14.1+cu116
+torchmetrics==0.11.*
+matplotlib==3.6.*
+numpy==1.24.*
 Pillow==9.3.*
-scikit-learn==1.1.*
+scikit-learn==1.2.*
 wandb
-jupyterlab==3.4.*
+jupyterlab==3.5.*
 sklearn
-pandas==1.4.*
+pandas==1.5.*
 tqdm==4.64.*
 opencv-python==4.6.0.*
