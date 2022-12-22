@@ -210,7 +210,7 @@ if __name__ == "__main__":
 			scheduler.step(testLoss)
 
 			if (bestLoss is None) or (bestLoss > testLoss):
-				bestLoss = testAcc
+				bestLoss = testLoss
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
@@ -325,7 +325,7 @@ if __name__ == "__main__":
 			scheduler.step(testLoss)
 
 			if (bestLoss is None) or (bestLoss > testLoss):
-				bestLoss = testAcc
+				bestLoss = testLoss
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
