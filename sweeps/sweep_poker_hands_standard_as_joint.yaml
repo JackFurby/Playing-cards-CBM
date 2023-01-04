@@ -8,8 +8,8 @@ command:
   - ${args}
   - --weighted_loss
 metric:
-  name: Test Loss
-  goal: minimize
+  name: Test Task Accuracy
+  goal: maximise
 parameters:
   lr:
     min: 0.0001
