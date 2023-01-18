@@ -131,9 +131,13 @@ if __name__ == "__main__":
 		all_acc = []
 
 		for file in os.listdir(args.weights_dir):
-			if "sig" in file or "joint" not in file:
+			if "sig" in file:  # joint with sig
 				use_sig = True
-			else:
+			elif "standard" in file:  # standard as joint
+				use_sig = False
+			elif "joint" not in file:  # independent and sequential
+				use_sig = True
+			else:  # joint without sig
 				use_sig = False
 			if "single" in file:
 				num_concepts = 17
