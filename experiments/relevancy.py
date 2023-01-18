@@ -100,7 +100,10 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 	"""
 	sample_num = 0
 	concept_saliency, card_relevance, all_relevance, all_cards_relevance = [], [], [], []
-	for images, labels, concepts, card_points, card_classes in tqdm(data_loader, unit="batch"):
+	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
+		card_points = extra["points"]
+		card_classes = extra["card_classes"]
+		orig_image = extra["orig_img"]
 		for image_index in range(images.size(0)):
 			image = images[image_index].to(device)
 			image = image.unsqueeze(0)
@@ -114,6 +117,31 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 			pred_concepts = image
 			for idx, model_part in enumerate(model_parts):
 				pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
+
+			# Save input image
+			AX.clear()
+			AX.set_axis_off()
+			AX.imshow(orig_image[image_index].squeeze().permute(1, 2, 0))
+			FIG.savefig(f'{save_dir}/input.png', bbox_inches='tight', pad_inches = 0)
+
+			# Write true concepts to file
+			with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
+				f.write("True concepts for sample\n")
+				f.write("========================\n")
+				for idy, concept in enumerate(concepts[idx]):
+					f.write(f"{idy}: {concept_index_to_string(idy)}, concept value: {concept.item()}\n")
+
+			# Write concept predictions to file (sorted by concept value)
+			pred_concepts_readable = torch.nn.Sigmoid()(pred_concepts)
+			pred_list = []
+			for idx, i in enumerate(pred_concepts_readable[0]):
+				pred_list.append((idx, i.item()))
+			pred_concepts_readable = sorted(pred_list, key=lambda x: -x[1])
+			with open(f'{save_dir}/concept-pred.txt', mode='wt', encoding='utf-8') as f:
+				f.write("Predicted concepts (with Sigmoid)\n")
+				f.write("=================================\n")
+				for item in pred_concepts_readable:
+					f.write(f"{item[0]}: {concept_index_to_string(item[0])}, Sig value: {item[1]}\n")
 
 			for i in range(pred_concepts.size(1)):
 				concept_pred_present = torch.nn.Sigmoid()(pred_concepts[0][i]).item() > 0.5  # only avg cards predicted as present
@@ -131,15 +159,18 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 						grad_outputs=filter_out,
 						retain_graph=True)[0]
 
+					# generating saliency map for entire sample
 					if target_concept == None:
 
 						attr = heatmap(image_gradient, cmap_name='seismic')
 
+						# Save concept saliency map
 						AX.clear()
 						AX.set_axis_off()
 						AX.imshow(attr.squeeze(), cmap='seismic')
 						FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
 
+					# computing relevancy in and outside of concepts
 					else:
 
 						if card_classes[image_index].size(0) == 1:  # single playing card in image
@@ -149,19 +180,18 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 								if card_classes[image_index][concept].item() == i:  # true if card in image matches i
 									card_cord = card_points[image_index][concept]
 
-						all_card_relevance = []
 						for i in range(card_classes[image_index].size(0)):
 							card_gradient, card_pos, card_neg = extract_card(image_gradient, card_points[image_index][i])
-						all_card_relevance.append((card_pos, card_neg))
+							all_cards_relevance.append((card_pos, card_neg))
 
 						card_gradient, card_pos, card_neg = extract_card(image_gradient, card_cord)
+						card_relevance.append((card_pos, card_neg))
 
 						all_pos = torch.clip(image_gradient, min=0)  # all image positive relevance
 						all_neg = torch.clip(image_gradient, max=0)  # all image negative relevance
+						all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
 
 						concept_saliency.append(card_gradient)
-						card_relevance.append((card_pos, card_neg))
-						all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
 
 			sample_num += 1
 
@@ -176,18 +206,18 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		FIG.savefig(f'results/lrp/{model_name}/average_{concept_index_to_string(target_concept)}.png', bbox_inches='tight', pad_inches = 0)
 
 	# work out the proportion of positive and negative relevance for the concept from the total relevance
-	concept_pos = [x[0] for x  in card_relevance]
-	concept_neg = [x[1] for x  in card_relevance]
-	all_pos = [x[0] for x  in all_relevance]
-	all_neg = [x[1] for x  in all_relevance]
-	cards_pos = [x[0] for x  in all_card_relevance]
-	cards_neg = [x[1] for x  in all_card_relevance]
+	concept_pos = [x[0] for x in card_relevance]
+	concept_neg = [x[1] for x in card_relevance]
+	all_pos = [x[0] for x in all_relevance]
+	all_neg = [x[1] for x in all_relevance]
+	cards_pos = [x[0] for x in all_cards_relevance]
+	cards_neg = [x[1] for x in all_cards_relevance]
 
-	concept_all_pos_prop = (sum(concept_pos) / len(concept_pos)) / (sum(all_pos) / len(all_pos))
-	concept_all_neg_prop = (sum(concept_neg) / len(concept_neg)) / (sum(all_neg) / len(all_neg))
+	concept_all_pos_prop = sum(concept_pos) / sum(all_pos)
+	concept_all_neg_prop = sum(concept_neg) / sum(all_neg)
 
-	concept_cards_pos_prop = (sum(concept_pos) / len(concept_pos)) / (sum(cards_pos) / len(cards_pos))
-	concept_cards_neg_prop = (sum(concept_neg) / len(concept_neg)) / (sum(cards_neg) / len(cards_neg))
+	concept_cards_pos_prop = sum(concept_pos) / sum(cards_pos)
+	concept_cards_neg_prop = sum(concept_neg) / sum(cards_neg)
 
 	return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop
 
@@ -250,8 +280,7 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_points=True)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_points=True, return_orig=True)
 	concept_index_to_string = IndexToString(f"./{args.dataset_root}/{args.dataset_postfix}/concepts.txt")
 
 	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
@@ -291,7 +320,7 @@ if __name__ == "__main__":
 
 	# open file in write mode
 	with open(f"results/lrp/{model_name}/concept_props.txt", "w") as fp:
-		fp.write(f"concept ID, concept string, positive propotion to entire image, negative propotion to entire image, positive propotion to all cards, negative propotion to all cards\n")
+		fp.write(f"concept ID, concept string, positive proportion to entire image (%), negative proportion to entire image (%), positive proportion to all cards (%), negative proportion to all cards (%)\n")
 		for idx, item in enumerate(concept_relevance_prop):
 			# write each item on a new line
 			fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")

@@ -3,6 +3,7 @@ import torch.nn as nn
 import torchvision
 from models.model import PlayingCardNet, End2EndModel, CtoYNet
 import argparse
+import os
 
 
 def get_concept_model(model_path, num_concepts):
@@ -154,4 +155,6 @@ if __name__ == "__main__":
 
 	print(model)
 
+	if not os.path.exists("/".join(args.model_out_path.split("/")[:-1])):
+		os.makedirs("/".join(args.model_out_path.split("/")[:-1]))
 	torch.save(model.state_dict(), args.model_out_path, _use_new_zipfile_serialization=True)

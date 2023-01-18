@@ -87,14 +87,18 @@ class PlayingCardDataset(Dataset):
 		else:
 			altered_img = img
 
-		if self.return_orig:
-			# hard coded transform without normalise (can I make this better?)
-			img = transforms.ToTensor()(img)
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(transforms.Resize((299, 299))(img))
-		elif self.return_path:
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), img_path
-		elif self.return_points:
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), torch.as_tensor(card_points, dtype=torch.float), torch.as_tensor(card_classes)
+		if self.return_orig or self.return_path or self.return_points:
+			extra = {}
+			if self.return_orig:
+				img = transforms.ToTensor()(img)
+				extra["orig_img"] = torch.as_tensor(transforms.Resize((299, 299))(img))
+			if self.return_path:
+				extra["path"] = img_path
+			if self.return_points:
+				extra["points"] = torch.as_tensor(card_points, dtype=torch.float)
+				extra["card_classes"] = torch.as_tensor(card_classes)
+
+			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
 		else:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
 
