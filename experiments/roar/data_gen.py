@@ -7,6 +7,14 @@ import random
 import os
 from dataset.dataset import load_data
 from torchvision.utils import save_image
+from models.model import End2EndModel
+from models.lrp_converter import convert
+import lrp
+from experiments.utils import heatmap
+
+import time
+
+FIG, AX = plt.subplots()
 
 
 def gen_random(data_loader, threshold, save_path, device="cpu"):
@@ -36,6 +44,86 @@ def gen_random(data_loader, threshold, save_path, device="cpu"):
 			if not os.path.exists(f'{save_path}/random_{threshold}/imgs'):
 				os.makedirs(f'{save_path}/random_{threshold}/imgs')
 			save_image(image, f'{save_path}/random_{threshold}/imgs/{path.split("/")[-1][:-4]}.png')
+
+
+def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu"):
+	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
+		paths = extra["path"]
+		orig_imgs = extra["orig_img"]
+		for image_index in range(images.size(0)):
+			image = images[image_index].to(device)
+			image = image.unsqueeze(0)
+			image.requires_grad_(True)
+			image.grad = None  # Reset gradient
+
+			pred_concepts = image
+			for idx, model_part in enumerate(model_parts):
+				pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
+
+			sorted_concept, indices = torch.sort(pred_concepts, descending=True)
+
+			concept_saliency = []
+			for i in range(3):
+
+				filter_out = torch.zeros_like(pred_concepts)
+				filter_out[:,indices[0][i].item()] += 1
+
+				# Get the gradient of each input
+				image_gradient = torch.autograd.grad(
+					pred_concepts,
+					image,
+					grad_outputs=filter_out,
+					retain_graph=True)[0]
+
+				concept_saliency.append(image_gradient)
+
+				attr = heatmap(image_gradient, cmap_name='seismic')
+
+				print(indices[0][i].item())
+
+				AX.clear()
+				AX.set_axis_off()
+				AX.imshow(attr.squeeze(), cmap='seismic')
+				FIG.savefig(f'tempppppp_{i}.png', bbox_inches='tight', pad_inches = 0)
+
+			sum_gradient = torch.sum(torch.cat(concept_saliency), 0)
+			sum_gradient = sum_gradient.unsqueeze(0)
+			attr = heatmap(sum_gradient, cmap_name='seismic')
+
+			AX.clear()
+			AX.set_axis_off()
+			AX.imshow(attr.squeeze(), cmap='seismic')
+			FIG.savefig(f'tempppppp.png', bbox_inches='tight', pad_inches = 0)
+
+			time.sleep(10)
+
+	# get top 3 predicted concepts saliency maps
+
+	# combine saliency maps
+
+	# order relevance
+
+	# remove features
+
+	# save modified image
+	pass
+
+
+def gen_sg_sq(data_loader, threshold, save_path, device="cpu"):
+	# get top 3 predicted concepts saliency maps
+
+	# combine saliency maps
+
+	# order relevance
+
+	# remove features
+
+	# save modified image
+	pass
+
+
+def gen_concept_removal(data_loader, threshold, save_path, device="cpu"):
+	pass
 
 
 if __name__ == "__main__":
@@ -96,8 +184,34 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1, return_path=True, return_orig=True, resize_orig=False)
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False)
+
+	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
+	model_name = args.pretrained_weights.split("/")[-1][:-4]
+
+	XtoC = convert(model.x_to_c_model)
+
+	XtoC_model_1 = []
+	XtoC_model_2 = []
+	XtoC_model_3 = []
+
+	for idx, m in enumerate(XtoC.children()):
+		if idx < 15:
+			XtoC_model_1.append(m)
+		elif idx < 29:
+			XtoC_model_2.append(m)
+		else:
+			XtoC_model_3.append(m)
+
+	XtoC_model_1 = lrp.Sequential(*XtoC_model_1)
+	XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
+	XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
+
+	XtoC_model_1.to(device).eval()
+	XtoC_model_2.to(device).eval()
+	XtoC_model_3.to(device).eval()
 
 	# Generate dataset versions
 
@@ -105,6 +219,7 @@ if __name__ == "__main__":
 
 	## random
 
+	"""
 	for threshold in thresholds:
 		if not os.path.exists(f'dataset/roar/random_{threshold}/imgs'):
 			print(f'Generating images for threshold {threshold}')
@@ -114,13 +229,21 @@ if __name__ == "__main__":
 			print(f'Images for threshold {threshold} already exist')
 
 	print("Completed random features")
+	"""
 
 	## LPR
+
+	for threshold in thresholds:
+		save_path = f'dataset/roar/lrp/{model_name}/{threshold}/imgs'
+		if not os.path.exists(save_path):
+			print(f'Generating images for threshold {threshold}')
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, device=device)
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], train_loader, threshold, save_path=save_path, device=device)
+		else:
+			print(f'Images for threshold {threshold} already exist')
+
+	print("Completed LRP features")
 
 	## SG_SQ
 
 	## concept_removal
-
-	# train models
-
-	# save test accuracies to file

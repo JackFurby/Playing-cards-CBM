@@ -20,7 +20,6 @@ class PlayingCardDataset(Dataset):
 		pkl_file_path,
 		dataset_root,
 		transform=None,
-		train=True,
 		return_orig=False,
 		resize_orig=True,
 		return_path=False,
@@ -30,14 +29,12 @@ class PlayingCardDataset(Dataset):
 			pkl_file_path (string): path to pkl file for dataset split from repo root
 			dataset_root (string): path to dataset root from repo root
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
-			train (bool): True if dataset contains training data else False
 			return_orig (bool): If True then return the original image
 			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
 			return_points (bool): If True then return playing card location points (not used if return_orig or return_path is true)
 		"""
 		self.data = []
-		self.train = train
 		self.transform = transform
 		self.return_orig = return_orig
 		self.resize_orig = resize_orig
@@ -247,7 +244,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, drop_last=None):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -269,12 +266,12 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 			])
 
 
-	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
+	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	if is_training:
-		drop_last = True
+		drop_last = True if drop_last is None else drop_last
 		shuffle = True if shuffle is None else shuffle
 	else:
-		drop_last = False
+		drop_last = False if drop_last is None else drop_last
 		shuffle = False if shuffle is None else shuffle
 	if resampling:
 		sampler = BatchSampler(ImbalancedDatasetSampler(dataset), batch_size=batch_size, drop_last=drop_last)
