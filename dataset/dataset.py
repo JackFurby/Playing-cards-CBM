@@ -22,6 +22,7 @@ class PlayingCardDataset(Dataset):
 		transform=None,
 		train=True,
 		return_orig=False,
+		resize_orig=True,
 		return_path=False,
 		return_points=False):
 		"""
@@ -31,6 +32,7 @@ class PlayingCardDataset(Dataset):
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
 			train (bool): True if dataset contains training data else False
 			return_orig (bool): If True then return the original image
+			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
 			return_points (bool): If True then return playing card location points (not used if return_orig or return_path is true)
 		"""
@@ -38,6 +40,7 @@ class PlayingCardDataset(Dataset):
 		self.train = train
 		self.transform = transform
 		self.return_orig = return_orig
+		self.resize_orig = resize_orig
 		self.return_path = return_path
 		self.return_points = return_points
 
@@ -91,7 +94,10 @@ class PlayingCardDataset(Dataset):
 			extra = {}
 			if self.return_orig:
 				img = transforms.ToTensor()(img)
-				extra["orig_img"] = torch.as_tensor(transforms.Resize((299, 299))(img))
+				if self.resize_orig:
+					extra["orig_img"] = torch.as_tensor(transforms.Resize((299, 299))(img))
+				else:
+					extra["orig_img"] = torch.as_tensor(img)
 			if self.return_path:
 				extra["path"] = img_path
 			if self.return_points:
@@ -241,7 +247,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0):
 	"""
 	"""
 	is_training = True if 'train.pkl' in pkl_path else False
@@ -263,7 +269,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', return
 			])
 
 
-	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, return_path=return_path, return_points=return_points)
+	dataset = PlayingCardDataset(pkl_path, dataset_root, transform, train=is_training, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	if is_training:
 		drop_last = True
 		shuffle = True if shuffle is None else shuffle

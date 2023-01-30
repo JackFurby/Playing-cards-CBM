@@ -13,13 +13,9 @@ import lrp
 from models.lrp_converter import convert
 import cv2
 
-from matplotlib.patches import Circle
-
 
 # A single figure is defined as putting this in a loop quickly uses up all system memory.
 # This figure is reused for all plots
-#FIG = plt.figure()
-#AX = FIG.add_subplot(111)
 FIG, AX = plt.subplots()
 
 
