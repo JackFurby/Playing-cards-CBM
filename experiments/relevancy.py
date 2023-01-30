@@ -301,9 +301,9 @@ if __name__ == "__main__":
 	XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
 	XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
 
-	XtoC_model_1.to(device)
-	XtoC_model_2.to(device)
-	XtoC_model_3.to(device)
+	XtoC_model_1.to(device).eval()
+	XtoC_model_2.to(device).eval()
+	XtoC_model_3.to(device).eval()
 
 	# gen saliency maps for full samples
 	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
