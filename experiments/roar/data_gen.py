@@ -40,7 +40,7 @@ def combine_and_order(saliency_maps):
 	"""
 	"""
 	# combine saliency maps
-	sum_gradient = torch.sum(torch.cat(concept_saliency), 0)
+	sum_gradient = torch.sum(torch.cat(saliency_maps), 0)
 	sum_gradient = sum_gradient.unsqueeze(0)  # resize to orginal image size
 	attr = heatmap(sum_gradient, cmap_name='seismic', reduce=True)
 	attr = cv2.resize(attr.squeeze(), dsize=(700, 700), interpolation=cv2.INTER_AREA)
