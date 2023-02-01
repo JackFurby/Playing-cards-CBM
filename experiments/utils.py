@@ -30,11 +30,16 @@ def get_dataset(split, return_points=False, return_orig=False, return_path=False
 		n_classes = 6
 		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three_card_poker/concepts.txt")
-	
+
 	return n_concepts, n_classes, val_loader, concept_index_to_string
 
 ##### https://github.com/fhvilshoj/TorchLRP/blob/74253a1be05f0be0b7c535736023408670443b6e/examples/visualization.py#L60
-def heatmap(X, cmap_name="seismic"):
+def heatmap(X, cmap_name="seismic", reduce=False):
+	"""
+	X: input
+	cmap_name: Matplotlib cmap
+	reduce: If True reduce dimensions to 1 x W x H, else keep dimentions the same
+	"""
 	cmap = plt.cm.get_cmap(cmap_name)
 
 	if X.shape[1] in [1, 3]:  # move channel index to end + convert to np array
@@ -44,6 +49,9 @@ def heatmap(X, cmap_name="seismic"):
 
 	shape = X.shape
 	tmp = X.sum(axis=-1) # Reduce channel axis
+
+	if reduce:
+		return tmp.astype(np.float32)
 
 	tmp = project(tmp, output_range=(0, 255)).astype(int)
 	tmp = cmap(tmp.flatten())[:, :3].T

@@ -11,10 +11,46 @@ from models.model import End2EndModel
 from models.lrp_converter import convert
 import lrp
 from experiments.utils import heatmap
+import cv2
+from captum.attr import IntegratedGradients, NoiseTunnel
 
 import time
+import numpy as np
 
-FIG, AX = plt.subplots()
+
+def replace_fetures(img, coords):
+	"""
+	"""
+
+	# get image pixel values
+	mean_0 = img[0].mean()
+	mean_1 = img[1].mean()
+	mean_2 = img[2].mean()
+
+	# replace pixels with mean
+	for coord in coords:
+		img[0][coord[0]][coord[1]] = mean_0
+		img[1][coord[0]][coord[1]] = mean_1
+		img[2][coord[0]][coord[1]] = mean_2
+
+	return img
+
+
+def combine_and_order(saliency_maps):
+	"""
+	"""
+	# combine saliency maps
+	sum_gradient = torch.sum(torch.cat(concept_saliency), 0)
+	sum_gradient = sum_gradient.unsqueeze(0)  # resize to orginal image size
+	attr = heatmap(sum_gradient, cmap_name='seismic', reduce=True)
+	attr = cv2.resize(attr.squeeze(), dsize=(700, 700), interpolation=cv2.INTER_AREA)
+
+
+	# order relevance
+	attr_sort = (-attr).argsort(axis=None, kind='mergesort')
+	all_cords = np.unravel_index(attr_sort, attr.shape)
+	all_cords = np.vstack(all_cords).T
+	return all_cords
 
 
 def gen_random(data_loader, threshold, save_path, device="cpu"):
@@ -31,19 +67,11 @@ def gen_random(data_loader, threshold, save_path, device="cpu"):
 			random.shuffle(all_cords)
 
 			replace_num = int(len(all_cords) * threshold)
+			image = replace_fetures(image, all_cords[:replace_num])
 
-			mean_0 = image[0].mean()
-			mean_1 = image[1].mean()
-			mean_2 = image[2].mean()
-
-			for coord in all_cords[:replace_num]:
-				image[0][coord[0]][coord[1]] = mean_0
-				image[1][coord[0]][coord[1]] = mean_1
-				image[2][coord[0]][coord[1]] = mean_2
-
-			if not os.path.exists(f'{save_path}/random_{threshold}/imgs'):
-				os.makedirs(f'{save_path}/random_{threshold}/imgs')
-			save_image(image, f'{save_path}/random_{threshold}/imgs/{path.split("/")[-1][:-4]}.png')
+			if not os.path.exists(f'{save_path}'):
+				os.makedirs(f'{save_path}')
+			save_image(image, f'{save_path}/{path.split("/")[-1][:-4]}.png')
 
 
 def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu"):
@@ -51,6 +79,8 @@ def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu")
 		paths = extra["path"]
 		orig_imgs = extra["orig_img"]
 		for image_index in range(images.size(0)):
+			orig_img = orig_imgs[image_index].to(device)
+			path = paths[image_index]
 			image = images[image_index].to(device)
 			image = image.unsqueeze(0)
 			image.requires_grad_(True)
@@ -62,11 +92,12 @@ def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu")
 
 			sorted_concept, indices = torch.sort(pred_concepts, descending=True)
 
+			# get top 3 predicted concepts saliency maps
 			concept_saliency = []
 			for i in range(3):
 
 				filter_out = torch.zeros_like(pred_concepts)
-				filter_out[:,indices[0][i].item()] += 1
+				filter_out[:, indices[0][i].item()] += 1
 
 				# Get the gradient of each input
 				image_gradient = torch.autograd.grad(
@@ -77,49 +108,64 @@ def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu")
 
 				concept_saliency.append(image_gradient)
 
-				attr = heatmap(image_gradient, cmap_name='seismic')
+			all_cords = combine_and_order(concept_saliency)
 
-				print(indices[0][i].item())
+			# remove features
+			replace_num = int((700 * 700) * threshold)
+			orig_img = replace_fetures(orig_img, all_cords[:replace_num])
 
-				AX.clear()
-				AX.set_axis_off()
-				AX.imshow(attr.squeeze(), cmap='seismic')
-				FIG.savefig(f'tempppppp_{i}.png', bbox_inches='tight', pad_inches = 0)
-
-			sum_gradient = torch.sum(torch.cat(concept_saliency), 0)
-			sum_gradient = sum_gradient.unsqueeze(0)
-			attr = heatmap(sum_gradient, cmap_name='seismic')
-
-			AX.clear()
-			AX.set_axis_off()
-			AX.imshow(attr.squeeze(), cmap='seismic')
-			FIG.savefig(f'tempppppp.png', bbox_inches='tight', pad_inches = 0)
-
-			time.sleep(10)
-
-	# get top 3 predicted concepts saliency maps
-
-	# combine saliency maps
-
-	# order relevance
-
-	# remove features
-
-	# save modified image
-	pass
+			# save modified image
+			if not os.path.exists(f'{save_path}'):
+				os.makedirs(f'{save_path}')
+			save_image(orig_img, f'{save_path}/{path.split("/")[-1][:-4]}.png')
 
 
-def gen_sg_sq(data_loader, threshold, save_path, device="cpu"):
-	# get top 3 predicted concepts saliency maps
+def gen_sg_sq(model, data_loader, threshold, save_path, device="cpu"):
+	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
+		paths = extra["path"]
+		orig_imgs = extra["orig_img"]
+		for image_index in range(images.size(0)):
+			orig_img = orig_imgs[image_index].to(device)
+			path = paths[image_index]
+			image = images[image_index].to(device)
+			image = image.unsqueeze(0)
+			image.requires_grad_(True)
+			image.grad = None  # Reset gradient
+			baselines = image * 0
 
-	# combine saliency maps
+			pred_concepts = model(image)
 
-	# order relevance
+			sorted_concept, indices = torch.sort(pred_concepts, descending=True)
 
-	# remove features
+			ig = IntegratedGradients(model)
+			nt = NoiseTunnel(ig)
 
-	# save modified image
-	pass
+			# get top 3 predicted concepts saliency maps
+			concept_saliency = []
+			for i in range(3):
+
+				attributions_ig = nt.attribute(
+					image,
+					target=indices[0][i],
+					baselines=baselines,
+					nt_type='smoothgrad_sq',
+					nt_samples=25,
+					internal_batch_size=25,
+					stdevs=0.2
+				)
+
+				concept_saliency.append(attributions_ig)
+
+			all_cords = combine_and_order(concept_saliency)
+
+			# remove features
+			replace_num = int((700 * 700) * threshold)
+			orig_img = replace_fetures(orig_img, all_cords[:replace_num])
+
+			# save modified image
+			if not os.path.exists(f'{save_path}'):
+				os.makedirs(f'{save_path}')
+			save_image(orig_img, f'{save_path}/{path.split("/")[-1][:-4]}.png')
 
 
 def gen_concept_removal(data_loader, threshold, save_path, device="cpu"):
@@ -219,17 +265,16 @@ if __name__ == "__main__":
 
 	## random
 
-	"""
 	for threshold in thresholds:
-		if not os.path.exists(f'dataset/roar/random_{threshold}/imgs'):
+		save_path = f'dataset/roar/random/{threshold}/imgs'
+		if not os.path.exists(save_path):
 			print(f'Generating images for threshold {threshold}')
-			gen_random(train_loader, threshold, save_path="dataset/roar/", device=device)
-			gen_random(val_loader, threshold, save_path="dataset/roar/", device=device)
+			gen_random(train_loader, threshold, save_path=save_path, device=device)
+			gen_random(val_loader, threshold, save_path=save_path, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
 
 	print("Completed random features")
-	"""
 
 	## LPR
 
@@ -237,13 +282,26 @@ if __name__ == "__main__":
 		save_path = f'dataset/roar/lrp/{model_name}/{threshold}/imgs'
 		if not os.path.exists(save_path):
 			print(f'Generating images for threshold {threshold}')
-			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, device=device)
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], train_loader, threshold, save_path=save_path, device=device)
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
 
 	print("Completed LRP features")
 
 	## SG_SQ
+
+	XtoC_model = model.x_to_c_model.to(device).eval()
+
+	for threshold in thresholds:
+		save_path = f'dataset/roar/sg_sq/{model_name}/{threshold}/imgs'
+		if not os.path.exists(save_path):
+			print(f'Generating images for threshold {threshold}')
+			gen_sg_sq(XtoC_model, train_loader, threshold, save_path=save_path, device=device)
+			gen_sg_sq(XtoC_model, val_loader, threshold, save_path=save_path, device=device)
+		else:
+			print(f'Images for threshold {threshold} already exist')
+
+	print("Completed smoothgrad squared features")
 
 	## concept_removal
