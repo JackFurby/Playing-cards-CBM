@@ -28,10 +28,8 @@ def replace_fetures(img, coords):
 	mean_2 = img[2].mean()
 
 	# replace pixels with mean
-	for coord in coords:
-		img[0][coord[0]][coord[1]] = mean_0
-		img[1][coord[0]][coord[1]] = mean_1
-		img[2][coord[0]][coord[1]] = mean_2
+	I,J = np.transpose(coords)
+	img[:,torch.from_numpy(I),torch.from_numpy(J)] = torch.reshape(torch.tensor([mean_0, mean_1, mean_2]), (3,1)).expand(3, len(coords))
 
 	return img
 
@@ -230,8 +228,8 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False)
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False, train_transform=False)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False, train_transform=False)
 
 	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
