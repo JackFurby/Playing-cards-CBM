@@ -18,7 +18,7 @@ import time
 import numpy as np
 
 
-def replace_fetures(img, coords):
+def replace_fetures(img, coords, device="cpu"):
 	"""
 	"""
 
@@ -29,7 +29,7 @@ def replace_fetures(img, coords):
 
 	# replace pixels with mean
 	I,J = np.transpose(coords)
-	img[:,torch.from_numpy(I),torch.from_numpy(J)] = torch.reshape(torch.tensor([mean_0, mean_1, mean_2]), (3,1)).expand(3, len(coords))
+	img[:, torch.from_numpy(I).to(device), torch.from_numpy(J).to(device)] = torch.reshape(torch.tensor([mean_0, mean_1, mean_2]).to(device), (3,1)).expand(3, len(coords))
 
 	return img
 
@@ -65,7 +65,7 @@ def gen_random(data_loader, threshold, save_path, device="cpu"):
 			random.shuffle(all_cords)
 
 			replace_num = int(len(all_cords) * threshold)
-			image = replace_fetures(image, all_cords[:replace_num])
+			image = replace_fetures(image, all_cords[:replace_num], device=device)
 
 			if not os.path.exists(f'{save_path}'):
 				os.makedirs(f'{save_path}')
@@ -110,7 +110,7 @@ def gen_lrp(model_parts, rules, data_loader, threshold, save_path, device="cpu")
 
 			# remove features
 			replace_num = int((700 * 700) * threshold)
-			orig_img = replace_fetures(orig_img, all_cords[:replace_num])
+			orig_img = replace_fetures(orig_img, all_cords[:replace_num], device=device)
 
 			# save modified image
 			if not os.path.exists(f'{save_path}'):
@@ -158,7 +158,7 @@ def gen_sg_sq(model, data_loader, threshold, save_path, device="cpu"):
 
 			# remove features
 			replace_num = int((700 * 700) * threshold)
-			orig_img = replace_fetures(orig_img, all_cords[:replace_num])
+			orig_img = replace_fetures(orig_img, all_cords[:replace_num], device=device)
 
 			# save modified image
 			if not os.path.exists(f'{save_path}'):
