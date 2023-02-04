@@ -196,6 +196,11 @@ if __name__ == "__main__":
 		help='Path to dataset split files from dataset root (default: "")'
 	)
 	parser.add_argument(
+		'--dataset_split',
+		type=str,
+		help='Name of the dataset version to save'
+	)
+	parser.add_argument(
 		'--pretrained_weights',
 		type=str,
 		help='File path to pytorch weight file'
@@ -264,7 +269,7 @@ if __name__ == "__main__":
 	## random
 
 	for threshold in thresholds:
-		save_path = f'dataset/roar/random/{threshold}/imgs'
+		save_path = f'dataset/roar/random/{threshold}/imgs/{args.dataset_split}'
 		if not os.path.exists(save_path):
 			print(f'Generating images for threshold {threshold}')
 			gen_random(train_loader, threshold, save_path=save_path, device=device)
@@ -277,7 +282,7 @@ if __name__ == "__main__":
 	## LPR
 
 	for threshold in thresholds:
-		save_path = f'dataset/roar/lrp/{model_name}/{threshold}/imgs'
+		save_path = f'dataset/roar/lrp/{model_name}/{threshold}/imgs/{args.dataset_split}'
 		if not os.path.exists(save_path):
 			print(f'Generating images for threshold {threshold}')
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], train_loader, threshold, save_path=save_path, device=device)
