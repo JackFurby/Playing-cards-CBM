@@ -137,3 +137,5 @@ With a trained model the architecture will contain a modlule list layer containi
 
 
 **Random:** `python experiments/roar/data_gen.py --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --dataset_split three_card_poker --n_classes 6 --n_concepts 52 --pretrained_weights saves/converted/independent-three-seed-950.pth`
+
+`sh roar.sh`
