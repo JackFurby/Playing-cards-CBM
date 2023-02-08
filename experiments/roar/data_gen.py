@@ -233,7 +233,7 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False, train_transform=False)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False, train_transform=False)
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_path=True, return_orig=True, resize_orig=False, drop_last=False, train_transform=False)
 
 	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
