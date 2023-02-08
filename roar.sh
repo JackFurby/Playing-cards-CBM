@@ -3,13 +3,12 @@
 MODEL_PATH=./saves/converted/independent-three-seed-950.pth
 MODEL_NAME=independent-three-seed-950
 DATA_ROOT=dataset/playing-cards
-DATA_POST=splits/three_card_poker
-DATA_SPLIT=three_card_poker
+DATA_POST=splits/three
+DATA_SPLIT=three
 
 # generate dataset
 
 python experiments/roar/data_gen.py --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --dataset_split $DATA_SPLIT --n_classes 6 --n_concepts 52 --pretrained_weights $MODEL_PATH
-
 
 # # Sequential training
 
