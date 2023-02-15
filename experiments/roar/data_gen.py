@@ -475,6 +475,7 @@ if __name__ == "__main__":
 
 	## SG_SQ
 
+	"""
 	XtoC_model = model.x_to_c_model.to(device).eval()
 
 	for threshold in thresholds:
@@ -487,6 +488,7 @@ if __name__ == "__main__":
 			print(f'Images for threshold {threshold} already exist')
 
 	print("Completed smoothgrad squared features")
+	"""
 
 	## concept_removal
 
