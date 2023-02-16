@@ -280,7 +280,7 @@ def gen_lrp(model_parts, rules, data_loader, threshold, save_path, concept_only=
 
 			# only get coordinates inside concept areas
 			if concept_only:
-				all_cords = combine_and_order(concept_saliency, concept_points, image=orig_img)
+				all_cords = combine_and_order(concept_saliency, concept_points)
 			# get coordinates over entire input
 			else:
 				all_cords = combine_and_order(concept_saliency, None)
