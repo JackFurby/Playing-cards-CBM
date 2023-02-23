@@ -50,7 +50,7 @@ def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, f1=None
 				# Zero the parameter gradients
 				optimizer.zero_grad()
 
-			one_hot = nn.functional.one_hot(torch.arange(0, ground_concepts.size(1)), num_classes=ground_concepts.size(1))
+			one_hot = nn.functional.one_hot(torch.arange(0, ground_concepts.size(1)), num_classes=ground_concepts.size(1)).to(device)
 
 			pred_concepts = x_to_c_model(images)
 
@@ -235,7 +235,7 @@ if __name__ == "__main__":
 	model.eval()
 	model.to(device)
 
-	purity_model = PurityModel(num_concepts=model.x_to_c_model.out_fc.out_features)
+	purity_model = PurityModel(num_concepts=model.x_to_c_model.out_fc.out_features).to(device)
 
 	attr_criterion = []  # separate criterion (loss function) for each attribute
 	if args.weighted_loss:
