@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
 	for epoch in range(25):
 		train_loss, train_acc = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, train=True, device=device)
-		test_loss, test_acc = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, train=False, device=device)
+		test_loss, test_acc = train(model.x_to_c_model, purity_model, val_loader, optimizer, attr_criterion, train=False, device=device)
 
 		if (best_loss is None) or (best_loss > test_loss):
 			best_loss = test_loss
