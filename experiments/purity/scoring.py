@@ -246,8 +246,7 @@ if __name__ == "__main__":
 
 			if not os.path.exists("./saves"):
 				os.makedirs("./saves")
-			save_name = f"./saves/{save_name}"
-			torch.save(purity_model.state_dict(), save_name)
+			torch.save(purity_model.state_dict(), f"./saves/{save_name}")
 			print("Model saved")
 
 		print("epoch:", epoch)
