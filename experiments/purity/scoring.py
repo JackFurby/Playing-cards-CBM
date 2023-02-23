@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from experiments.purity.purity_model import PurityModel
 
 
-def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, f1=None, train=True, device="cpu"):
+def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, train=True, device="cpu"):
 	"""
 	Training and evaluation loop.
 
@@ -22,14 +22,12 @@ def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, f1=None
 			data_loader (Pytorch dataloader): Pytorch dataloader with dataset Initilised
 			optimizer (torch.optim): Optimiser for updating model weights
 			criterion (pytorch loss / list of Pytorch loss): Loss method
-			f1 (Pytorch torchmetrics F1): F1 metrics object
 			train (bool): True if model is training, False if model is testing
 			device (str): Device top train / test using (e.g. cpu or cuda:0)
 
 		returns:
 			average loss: Average loss of model
 			average accuracy: Average accuracy of concepts / task (non joint)
-			average F1 score: Average F1 score of concepts / task (non joint)
 	"""
 
 	if train:
@@ -79,9 +77,6 @@ def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, f1=None
 			# accuracy for concepts
 			accuracy.append(binary_accuracy(outputs, target_concepts).item())  # NOT SURE IF THIS IS THE RIGHT METRIC TO USE
 
-			#if f1 is not None:
-			#	f1_acc.append(f1(outputs, target_concepts.to(torch.int32))) # NOT SURE IF THIS IS THE RIGHT METRIC TO USE
-
 			losses.append(loss.item())
 			if train:
 				loss.backward()
@@ -91,14 +86,7 @@ def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, f1=None
 
 		acc = sum(accuracy) / len(accuracy)
 
-		#if f1 is not None:
-		#	f1_avg_acc = sum(f1_acc) / len(f1_acc)
-		#else:
-		#	f1_avg_acc = None
-		#	task_f1 = None
-		f1_avg_acc = None
-
-	return sum(losses) / len(losses), acc, f1_avg_acc
+	return sum(losses) / len(losses), acc
 
 
 def binary_accuracy(output, target):
@@ -213,8 +201,6 @@ if __name__ == "__main__":
 	sig_string = "_sig" if args.use_sig else ""
 	save_name = f"{model_name}_{args.mode}_model.pth"
 
-	f1 = F1Score().to(device)
-
 	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1)
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1)
 
@@ -247,29 +233,27 @@ if __name__ == "__main__":
 		for i in range(args.n_concepts):
 			attr_criterion.append(nn.CrossEntropyLoss())
 
-	bestLoss = None
-	bestEpoch = 0
+	best_loss = None
+	best_epoch = 0
 
 	for epoch in range(25):
-		train_loss, train_acc, train_f1_score = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, f1=f1, train=True, device=device)
-		test_loss, test_acc, test_f1_score = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, f1=f1, train=False, device=device)
+		train_loss, train_acc = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, train=True, device=device)
+		test_loss, test_acc = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, train=False, device=device)
 
-		if (bestLoss is None) or (bestLoss > testLoss):
-			bestLoss = testLoss
-			bestEpoch = epoch
+		if (best_loss is None) or (best_loss > test_loss):
+			best_loss = test_loss
+			best_epoch = epoch
 
 			if not os.path.exists("./saves"):
 				os.makedirs("./saves")
-			saveName = f"./saves/{save_name}"
-			torch.save(purity_model.state_dict(), saveName)
+			save_name = f"./saves/{save_name}"
+			torch.save(purity_model.state_dict(), save_name)
 			print("Model saved")
 
 		print("epoch:", epoch)
-		print("trainLoss:", trainLoss)
-		print("trainAcc:", trainAcc, "%")
-		print("trainF1:", trainF1.item())
-		print("testLoss:", testLoss)
-		print("testAcc:", testAcc, "%")
-		print("testF1:", testF1.item())
+		print("trainLoss:", train_loss)
+		print("trainAcc:", train_acc, "%")
+		print("testLoss:", test_loss)
+		print("testAcc:", test_acc, "%")
 
 	print(f"Finished training! Best epoch: {bestEpoch}")
