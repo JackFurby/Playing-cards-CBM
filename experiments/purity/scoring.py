@@ -66,16 +66,18 @@ def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, train=T
 			target_concepts = torch.repeat_interleave(pred_concepts.detach(), concepts_in.size(1), dim=0)
 
 			outputs = purity_model(concepts_in)
+			sigmoid_outputs = torch.nn.Sigmoid()(outputs.view(outputs.size(0), -1))
+			sigmoid_targets = torch.nn.Sigmoid()(target_concepts.view(target_concepts.size(0), -1))
 
 			batch_losses = []
 			for i in range(len(criterion)):
-				batch_losses.append(criterion[i](outputs[:, i], target_concepts[:, i]))
+				batch_losses.append(criterion[i](sigmoid_outputs[:, i], sigmoid_targets[:, i]))
 
 			loss = sum(batch_losses) / len(batch_losses)
 			#sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
 			# accuracy for concepts
-			accuracy.append(binary_accuracy(outputs, target_concepts).item())  # NOT SURE IF THIS IS THE RIGHT METRIC TO USE
+			accuracy.append(binary_accuracy(sigmoid_outputs, sigmoid_targets).item())  # NOT SURE IF THIS IS THE RIGHT METRIC TO USE
 
 			losses.append(loss.item())
 			if train:
@@ -166,7 +168,6 @@ if __name__ == "__main__":
 	parser.add_argument(
 		'--mode',
 		type=str,
-		default="XtoC",
 		choices=["OIS", "NIS"],
 		help='Evauation metric'
 	)
@@ -199,7 +200,7 @@ if __name__ == "__main__":
 
 	model_name = args.pretrained_weights.split("/")[-1][:-4]
 	sig_string = "_sig" if args.use_sig else ""
-	save_name = f"{model_name}_{args.mode}_model.pth"
+	save_name = f"{model_name}_{args.mode}_representations.pth"
 
 	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1)
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1)
@@ -255,4 +256,4 @@ if __name__ == "__main__":
 		print("testLoss:", test_loss)
 		print("testAcc:", test_acc, "%")
 
-	print(f"Finished training! Best epoch: {bestEpoch}")
+	print(f"Finished training! Best epoch: {best_epoch}")

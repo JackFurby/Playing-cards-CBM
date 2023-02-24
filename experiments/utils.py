@@ -23,7 +23,7 @@ def get_dataset(split, return_points=False, return_orig=False, return_path=False
 	elif split == "three":
 		n_concepts = 52
 		n_classes = 1
-		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, dataset_root="../dataset/playing-cards/", has_class=False, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
+		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three/concepts.txt")
 	elif split == "poker":
 		n_concepts = 52
