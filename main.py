@@ -93,6 +93,13 @@ if __name__ == "__main__":
 		help='Path to dataset split files from dataset root (default: "")'
 	)
 	parser.add_argument(
+		'--dataset_name',
+		type=str,
+		default='cards',
+		choices=["cards", "faces"],
+		help='Name of dataset (default: "cards")'
+	)
+	parser.add_argument(
 		'--weighted_loss',
 		action='store_true',
 		help='Whether to use weighted loss for single concept or multiple ones'
@@ -165,8 +172,8 @@ if __name__ == "__main__":
 
 	print(args)
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=args.num_workers)
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=args.num_workers)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, resampling=True, num_workers=args.num_workers)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, num_workers=args.num_workers)
 
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
