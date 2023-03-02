@@ -46,7 +46,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				optimizer.zero_grad()
 
 			if mode == "CtoY":
-				concepts = concepts.view(concepts.size(0), -1)  # make sure input is vector (will not be if using multi input images)
+				concepts = concepts.view(concepts.size(0), -1)  # make sure input is vector
 				outputs = model(concepts)
 			else:
 				outputs = model(images)
@@ -89,8 +89,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				task_loss = criterion[0](task_out, labels)
 				for i in range(len(criterion) - 1):
 					concept_loss = criterion[i + 1](concept_out[:, i].squeeze(), concepts[:, i])
-					#batch_losses.append((attr_loss_weight * concept_loss) + ((1 - attr_loss_weight) * task_loss))
-					#batch_losses.append(concept_loss + ((1 - attr_loss_weight) * task_loss))
 					batch_losses.append((attr_loss_weight * concept_loss) + task_loss)
 
 				loss = sum(batch_losses) / len(batch_losses)

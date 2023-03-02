@@ -100,6 +100,18 @@ if __name__ == "__main__":
 		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
+		'--x_resize',
+		type=int,
+		default=299,
+		help='Number of pixels in x axis of model input image'
+	)
+	parser.add_argument(
+		'--y_resize',
+		type=int,
+		default=299,
+		help='Number of pixels in y axis of model input image'
+	)
+	parser.add_argument(
 		'--weighted_loss',
 		action='store_true',
 		help='Whether to use weighted loss for single concept or multiple ones'
@@ -172,8 +184,8 @@ if __name__ == "__main__":
 
 	print(args)
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, resampling=True, num_workers=args.num_workers)
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, num_workers=args.num_workers)
+	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, x_resize=args.x_resize, y_resize=args.y_resize, resampling=True, num_workers=args.num_workers)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, x_resize=args.x_resize, y_resize=args.y_resize, num_workers=args.num_workers)
 
 	if args.mode == "XtoC":
 		model = PlayingCardNet(num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)

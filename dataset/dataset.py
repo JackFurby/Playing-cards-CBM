@@ -222,13 +222,13 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', dataset_name="cards", return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, drop_last=None, train_transform=True):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', dataset_name="cards", x_resize=299, y_resize=299, return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, drop_last=None, train_transform=True):
 	"""
 	"""
 	is_training = True if ('train.pkl' in pkl_path and train_transform) else False
 	if is_training:
 		transform = transforms.Compose([
-			transforms.Resize((299, 299)),
+			transforms.Resize((x_resize, y_resize)),
 			transforms.RandomHorizontalFlip(),
 			transforms.RandomVerticalFlip(),
 			transforms.ColorJitter(brightness=.3, contrast=.3, saturation=.3, hue=.3),
@@ -238,7 +238,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		])
 	else:
 		transform = transforms.Compose([
-			transforms.Resize((299, 299)),
+			transforms.Resize((x_resize, y_resize)),
 			transforms.ToTensor(),
 			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
 			])
