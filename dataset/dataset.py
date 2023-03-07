@@ -166,7 +166,7 @@ class CelebADataset(Dataset):
 			if self.return_orig:
 				img = transforms.ToTensor()(img)
 				if self.resize_orig:
-					extra["orig_img"] = torch.as_tensor(transforms.Resize((299, 299))(img))
+					extra["orig_img"] = torch.as_tensor(transforms.Resize((218, 178))(img))
 				else:
 					extra["orig_img"] = torch.as_tensor(img)
 			if self.return_path:
@@ -226,21 +226,37 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 	"""
 	"""
 	is_training = True if ('train.pkl' in pkl_path and train_transform) else False
-	if is_training:
-		transform = transforms.Compose([
-			transforms.Resize((x_resize, y_resize)),
-			transforms.RandomHorizontalFlip(),
-			transforms.RandomVerticalFlip(),
-			transforms.ColorJitter(brightness=.3, contrast=.3, saturation=.3, hue=.3),
-			transforms.RandomGrayscale(p=0.1),
-			transforms.ToTensor(),
-			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
-		])
+	if dataset_name=="cards":
+		if is_training:
+			transform = transforms.Compose([
+				transforms.Resize((y_resize, x_resize)),
+				transforms.RandomHorizontalFlip(),
+				transforms.RandomVerticalFlip(),
+				transforms.ColorJitter(brightness=.3, contrast=.3, saturation=.3, hue=.3),
+				transforms.RandomGrayscale(p=0.1),
+				transforms.ToTensor(),
+				transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
+			])
+		else:
+			transform = transforms.Compose([
+				transforms.Resize((y_resize, x_resize)),
+				transforms.ToTensor(),
+				transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
+			])
 	else:
-		transform = transforms.Compose([
-			transforms.Resize((x_resize, y_resize)),
-			transforms.ToTensor(),
-			transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[2, 2, 2])
+		if is_training:
+			transform = transforms.Compose([
+				transforms.Resize((y_resize, x_resize)),
+				transforms.ColorJitter(brightness=32/255, saturation=(0.5, 1.5)),
+				transforms.RandomHorizontalFlip(),
+				transforms.ToTensor(), #implicitly divides by 255
+				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+			])
+		else:
+			transform = transforms.Compose([
+				transforms.Resize((y_resize, x_resize)),
+				transforms.ToTensor(), #implicitly divides by 255
+				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
 
 	if dataset_name == "cards":

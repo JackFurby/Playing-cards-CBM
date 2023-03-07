@@ -81,7 +81,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three_card_class  --weighted_loss`
 
-`python main.py --mode XtoC --n_concepts 39 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces`
+`python main.py --mode XtoC --n_concepts 39 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218`
 
 
 #### Independent CtoY training
@@ -143,6 +143,69 @@ With a trained model the architecture will contain a modlule list layer containi
 `sh roar.sh`
 
 
-### Purity
+### Purity (OIS and NIS)
 
-`python experiments/purity/scoring.py --pretrained_weights saves/converted/independent-three-seed-950.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --mode OIS`
+#### setup
+
+1. Clone `https://github.com/mateoespinosa/concept-quality`
+
+2. Update `requiremetns.txt`
+
+  ```
+  matplotlib==3.6.*
+  matplotlib-inline==0.1.*
+  numpy==1.24.*
+  scanpy==1.9.*
+  scikit-learn==1.2.*
+  scipy==1.10.*
+  Pillow==9.4.*
+  pandas==1.5.*
+  h5py==3.8.*
+  PyYAML==6.0.*
+  sklearn==0.0
+  setuptools==67.5.*
+  tensorboard==2.11.*
+  tensorboard-data-server==0.6.*
+  tensorboard-plugin-wit==1.8.*
+  tensorflow==2.11.*
+  tensorflow-datasets==4.8.*
+  tensorflow-estimator==2.11.*
+  tensorflow-io-gcs-filesystem==0.31.*
+  tensorflow-metadata==1.12.*
+  tensorflow-probability==0.19.*
+  ```
+
+3. Update `setup.py`
+
+  ```py
+  from setuptools import setup, find_packages
+
+  with open("README.md", "r") as f:
+      long_description = f.read()
+
+  with open('requirements.txt') as f:
+      required = f.read().splitlines()
+
+  version = '0.1.0'
+  setup(
+      name='concepts_xai',
+      version=version,
+      packages=find_packages(),
+      install_requires=required,
+      description='Concept Extraction Comparison',
+      long_description=long_description,
+      long_description_content_type="text/markdown",
+      python_requires='>=3.6',
+      classifiers=[
+          "Programming Language :: Python :: 3",
+          "License :: OSI Approved :: Apache-2.0 License",
+          "Operating System :: OS Independent",
+      ],
+  )
+  ```
+
+4. Install `concepts_xai` from concept-quality directory: `python setup.py install`
+
+#### Run experiments
+
+`python experiments/purity/scoring.py --pretrained_weights saves/converted/sequential-poker-seed-625.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52`

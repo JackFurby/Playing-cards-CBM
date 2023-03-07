@@ -3,132 +3,53 @@ from torch import nn
 import numpy as np
 import argparse
 from torchmetrics import F1Score
-from dataset.dataset import load_data
+from dataset.dataset import load_data, find_class_imbalance
 from models.model import End2EndModel
 from tqdm import tqdm
 import os
 import pickle
 import matplotlib.pyplot as plt
-from experiments.purity.purity_model import PurityModel
+from experiments.purity.purity_model import PredictorModel
+
+import concepts_xai.evaluation.metrics.oracle as oracle
+import concepts_xai.evaluation.metrics.niching as niche
 
 
-def train(x_to_c_model, purity_model, data_loader, optimizer, criterion, train=True, device="cpu"):
-	"""
-	Training and evaluation loop.
+def ImputityScore(x_to_c_model, data_loader, mode, device="cpu"):
+	x_to_c_model.eval()
 
-		args:
-			x_to_c_model (Pytorch model): X to C Pytorch model
-			purity_model (Pytorch model): Pytorch model to train / evaluate
-			data_loader (Pytorch dataloader): Pytorch dataloader with dataset Initilised
-			optimizer (torch.optim): Optimiser for updating model weights
-			criterion (pytorch loss / list of Pytorch loss): Loss method
-			train (bool): True if model is training, False if model is testing
-			device (str): Device top train / test using (e.g. cpu or cuda:0)
-
-		returns:
-			average loss: Average loss of model
-			average accuracy: Average accuracy of concepts / task (non joint)
-	"""
-
-	if train:
-		purity_model.train()
-	else:
-		purity_model.eval()
-
-	losses = []
-	accuracy = []
-	task_acc = []
-	f1_acc = []
-	with torch.set_grad_enabled(train):
+	c_soft = []
+	c_true = []
+	with torch.set_grad_enabled(False):
 		for images, labels, ground_concepts in tqdm(data_loader, unit="batch"):
 			# Transfering images and labels to GPU if available
 			images, labels, ground_concepts = images.to(device), labels.to(device), ground_concepts.to(device)
 
-			if train:
-				# Zero the parameter gradients
-				optimizer.zero_grad()
+			concept_representations = x_to_c_model(images)
 
-			one_hot = nn.functional.one_hot(torch.arange(0, ground_concepts.size(1)), num_classes=ground_concepts.size(1)).to(device)
+			c_soft.append(concept_representations)
+			c_true.append(ground_concepts)
 
-			pred_concepts = x_to_c_model(images)
-
-			concepts_in = []
-
-			for i in range(pred_concepts.size(0)):
-				concepts_in.append(torch.mul(pred_concepts[i], one_hot))
-
-			# x_to_c_model concept predictions are turned into one hot like vectors
-			# each concept prediction is in an array of size (0, num_concepts) where all but that concept has the value of 0
-			# the new batch size for purity_model training is original batch size * num_concepts
-			concepts_in = torch.cat(concepts_in)
-
-			# repeate concepts to use as lables for concepts_in
-			target_concepts = torch.repeat_interleave(pred_concepts.detach(), concepts_in.size(1), dim=0)
-
-			outputs = purity_model(concepts_in)
-			sigmoid_outputs = torch.nn.Sigmoid()(outputs.view(outputs.size(0), -1))
-			sigmoid_targets = torch.nn.Sigmoid()(target_concepts.view(target_concepts.size(0), -1))
-
-			batch_losses = []
-			for i in range(len(criterion)):
-				batch_losses.append(criterion[i](sigmoid_outputs[:, i], sigmoid_targets[:, i]))
-
-			loss = sum(batch_losses) / len(batch_losses)
-			#sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
-
-			# accuracy for concepts
-			accuracy.append(binary_accuracy(sigmoid_outputs, sigmoid_targets).item())  # NOT SURE IF THIS IS THE RIGHT METRIC TO USE
-
-			losses.append(loss.item())
-			if train:
-				loss.backward()
-
-				# Optimizing the parameters
-				optimizer.step()
-
-		acc = sum(accuracy) / len(accuracy)
-
-	return sum(losses) / len(losses), acc
-
-
-def binary_accuracy(output, target):
-	"""
-	Computes the accuracy for multiple binary predictions.
-
-	args:
-		output (Pytorch tensor): Model prediction
-		target (Pytorch tensor): Ground truth from dataset
-	returns:
-		acc: binary accuracy
-	"""
-	pred = output >= 0.5
-	target = target >= 0.5
-	acc = (pred.int()).eq(target.int()).sum()
-	acc = acc * 100 / np.prod(np.array(target.size()))
-	return acc
+	if mode == "oracle":
+		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
+			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
+			c_true=np.stack(np.concatenate(c_true, axis=0)),
+			output_matrices=True
+		)
+		return score, pred_matrix, oracle_matrix
+	elif mode == "niche":
+		score = niche.niche_impurity_score(
+			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
+			c_true=np.stack(np.concatenate(c_true, axis=0))
+		)
+		return score
+	else:
+		raise Exception(f"Mode has to have the value 'oracle' or 'niche'")
 
 
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description='Evaluate a Concept Bottleneck Model')
-	parser.add_argument(
-		'--lr',
-		type=float,
-		default=0.001,
-		help='Starting learning rate (default: 0.001)'
-	)
-	parser.add_argument(
-		'--batch_size',
-		type=int,
-		default=16,
-		help='Number of samples per batch (default: 16)'
-	)
-	parser.add_argument(
-		'--seed',
-		type=int,
-		default=0,
-		help='Seed set to Pytorch (default: 0)'
-	)
 	parser.add_argument(
 		'--pretrained_weights',
 		type=str,
@@ -156,32 +77,9 @@ if __name__ == "__main__":
 		help='Number of concepts/attributes in dataset'
 	)
 	parser.add_argument(
-		'--weighted_loss',
-		action='store_true',
-		help='Whether to use weighted loss for single concept or multiple ones'
-	)
-	parser.add_argument(
-		'--freeze',
-		action='store_true',
-		help='Freeze the input to layer before concept vector model part'
-	)
-	parser.add_argument(
-		'--mode',
-		type=str,
-		choices=["OIS", "NIS"],
-		help='Evauation metric'
-	)
-	parser.add_argument(
 		'--use_sig',
 		action='store_true',
 		help='Use sigmoid between the XtoC and the CtoY model parts'
-	)
-	parser.add_argument(
-		'--optimizer',
-		type=str,
-		default='adam',
-		choices=["adam", "sgd"],
-		help='Optimizer to use for training (default: adam)'
 	)
 	parser.add_argument(
 		'--use_cpu',
@@ -196,64 +94,41 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	torch.manual_seed(args.seed)  # reproducibility
-
 	model_name = args.pretrained_weights.split("/")[-1][:-4]
-	sig_string = "_sig" if args.use_sig else ""
-	save_name = f"{model_name}_{args.mode}_representations.pth"
 
-	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, resampling=True, num_workers=1)
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
 
 	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
 
-	if args.optimizer == "adam":
-		optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-	else:
-		optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+	save_dir = f"./results/metrics/{model_name}"
 
-	# we do not want to change the CBM weights.
-	if args.freeze:
-		for name, param in model.named_parameters():
-			param.requires_grad = False
-		print("model layers frozen")
+	"""
+	ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
 
-	model.eval()
-	model.to(device)
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
+	with open(f"{save_dir}/{args.dataset_postfix.split('/')[-1]}_ois_score.txt", "w") as file:
+		file.write(f"{ois}\n")
 
-	purity_model = PurityModel(num_concepts=model.x_to_c_model.out_fc.out_features).to(device)
+	for matrix_name in ["pred_matrix", "oracle_matrix"]:
+		if matrix_name == "pred_matrix":
+			matrix = pred_matrix
+		else:
+			matrix = oracle_matrix
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+		fig.colorbar(cax)
 
-	attr_criterion = []  # separate criterion (loss function) for each attribute
-	if args.weighted_loss:
-		imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
-		print(imbalance)
-		for ratio in imbalance:
-			attr_criterion.append(nn.BCEWithLogitsLoss(weight=torch.FloatTensor([ratio]).to(device)))
-	else:
-		for i in range(args.n_concepts):
-			attr_criterion.append(nn.CrossEntropyLoss())
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
+		plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+	"""
 
-	best_loss = None
-	best_epoch = 0
+	nis = ImputityScore(model.x_to_c_model, val_loader, mode="niche", device=device)
 
-	for epoch in range(25):
-		train_loss, train_acc = train(model.x_to_c_model, purity_model, train_loader, optimizer, attr_criterion, train=True, device=device)
-		test_loss, test_acc = train(model.x_to_c_model, purity_model, val_loader, optimizer, attr_criterion, train=False, device=device)
-
-		if (best_loss is None) or (best_loss > test_loss):
-			best_loss = test_loss
-			best_epoch = epoch
-
-			if not os.path.exists("./saves"):
-				os.makedirs("./saves")
-			torch.save(purity_model.state_dict(), f"./saves/{save_name}")
-			print("Model saved")
-
-		print("epoch:", epoch)
-		print("trainLoss:", train_loss)
-		print("trainAcc:", train_acc, "%")
-		print("testLoss:", test_loss)
-		print("testAcc:", test_acc, "%")
-
-	print(f"Finished training! Best epoch: {best_epoch}")
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
+	with open(f"{save_dir}/{args.dataset_postfix.split('/')[-1]}_nis_score.txt", "w") as file:
+		file.write(f"{nis}\n")
