@@ -473,6 +473,19 @@ if __name__ == "__main__":
 
 	print("Completed LRP features")
 
+	## LPR (only positive relevance)
+
+	for threshold in thresholds:
+		save_path = f'dataset/roar/lrp_positive/{model_name}/{threshold}/imgs/{args.dataset_split}'
+		if not os.path.exists(save_path):
+			print(f'Generating images for threshold {threshold}')
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], train_loader, threshold, save_path=save_path, device=device)
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], val_loader, threshold, save_path=save_path, device=device)
+		else:
+			print(f'Images for threshold {threshold} already exist')
+
+	print("Completed LRP features")
+
 	## SG_SQ
 
 	"""
@@ -511,6 +524,19 @@ if __name__ == "__main__":
 			print(f'Generating images for threshold {threshold}')
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], train_loader, threshold, save_path=save_path, concept_only=True, device=device)
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, concept_only=True, device=device)
+		else:
+			print(f'Images for threshold {threshold} already exist')
+
+	print("Completed concept (LRP) features")
+
+	## LPR (only positive relevance)
+
+	for threshold in thresholds:
+		save_path = f'dataset/roar/concept_lrp_positive/{model_name}/{threshold}/imgs/{args.dataset_split}'
+		if not os.path.exists(save_path):
+			print(f'Generating images for threshold {threshold}')
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], train_loader, threshold, save_path=save_path, concept_only=True, device=device)
+			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], val_loader, threshold, save_path=save_path, concept_only=True, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
 
