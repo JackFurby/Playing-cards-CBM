@@ -484,7 +484,7 @@ if __name__ == "__main__":
 		else:
 			print(f'Images for threshold {threshold} already exist')
 
-	print("Completed LRP features")
+	print("Completed LRP (positive) features")
 
 	## SG_SQ
 
@@ -540,4 +540,4 @@ if __name__ == "__main__":
 		else:
 			print(f'Images for threshold {threshold} already exist')
 
-	print("Completed concept (LRP) features")
+	print("Completed concept (LRP positive) features")
