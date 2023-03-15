@@ -30,7 +30,7 @@ do
     if test -f "./saves/roar/$MODEL_NAME-$DATA_SPLIT-roar-random-0_$i.pth"; then
       ## random
       python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/roar/random/0.$i --dataset_postfix $DATA_POST --save_name "$MODEL_NAME-XtoC-$DATA_SPLIT-roar-random-0_$i" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.03 --epochs 200 --weighted_loss
-      python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "$MODEL_NAME-CtoY-$DATA_SPLIT-roar-random-0_$i"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/$MODEL_NAME-XtoC-$DATA_SPLIT-roar-random-0_$i.pth" --freeze --use_sig
+      python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/roar/random/0.$i --dataset_postfix splits/three_card_poker --save_name "$MODEL_NAME-CtoY-$DATA_SPLIT-roar-random-0_$i"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/$MODEL_NAME-XtoC-$DATA_SPLIT-roar-random-0_$i.pth" --freeze --use_sig
       python concept_to_standard_model_converter.py --model_path "./saves/$MODEL_NAME-CtoY-$DATA_SPLIT-roar-random-0_$i.pth" --model_out_path "./saves/roar/$MODEL_NAME-$DATA_SPLIT-roar-random-0_$i.pth" --num_concepts 52 --num_classes 6 --end_to_end
     fi
     echo "Completed random"
@@ -51,7 +51,7 @@ do
     if test -f "./saves/roar/$MODEL_NAME-$DATA_SPLIT-roar-concepts-random-0_$i.pth"; then
       ## random (concepts)
       python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/roar/concept_random/0.$i --dataset_postfix $DATA_POST --save_name "$MODEL_NAME-XtoC-$DATA_SPLIT-roar-concepts-random-0_$i" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.03 --epochs 200 --weighted_loss
-      python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "$MODEL_NAME-CtoY-$DATA_SPLIT-roar-concepts-random-0_$i"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/$MODEL_NAME-XtoC-$DATA_SPLIT-roar-concepts-random-0_$i.pth" --freeze --use_sig
+      python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/roar/concept_random/0.$i --dataset_postfix splits/three_card_poker --save_name "$MODEL_NAME-CtoY-$DATA_SPLIT-roar-concepts-random-0_$i"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/$MODEL_NAME-XtoC-$DATA_SPLIT-roar-concepts-random-0_$i.pth" --freeze --use_sig
       python concept_to_standard_model_converter.py --model_path "./saves/$MODEL_NAME-CtoY-$DATA_SPLIT-roar-concepts-random-0_$i.pth" --model_out_path "./saves/roar/$MODEL_NAME-$DATA_SPLIT-roar-concepts-random-0_$i.pth" --num_concepts 52 --num_classes 6 --end_to_end
     fi
     echo "Completed concepts random"
