@@ -9,13 +9,14 @@ from tqdm import tqdm
 import os
 import pickle
 import matplotlib.pyplot as plt
-from experiments.purity.purity_model import PredictorModel
+import glob
+import gc
 
 import concepts_xai.evaluation.metrics.oracle as oracle
 import concepts_xai.evaluation.metrics.niching as niche
 
 
-def ImputityScore(x_to_c_model, data_loader, mode, device="cpu"):
+def ImputityScore(x_to_c_model, data_loader, mode):
 	x_to_c_model.eval()
 
 	c_soft = []
@@ -23,7 +24,7 @@ def ImputityScore(x_to_c_model, data_loader, mode, device="cpu"):
 	with torch.set_grad_enabled(False):
 		for images, labels, ground_concepts in tqdm(data_loader, unit="batch"):
 			# Transfering images and labels to GPU if available
-			images, labels, ground_concepts = images.to(device), labels.to(device), ground_concepts.to(device)
+			images, labels, ground_concepts = images, labels, ground_concepts
 
 			concept_representations = x_to_c_model(images)
 
@@ -31,12 +32,17 @@ def ImputityScore(x_to_c_model, data_loader, mode, device="cpu"):
 			c_true.append(ground_concepts)
 
 	if mode == "oracle":
-		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
+		#score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
+		#	c_soft=np.stack(np.concatenate(c_soft, axis=0)),
+		#	c_true=np.stack(np.concatenate(c_true, axis=0)),
+		#	output_matrices=True
+		#)
+		score = oracle.oracle_impurity_score(
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-			c_true=np.stack(np.concatenate(c_true, axis=0)),
-			output_matrices=True
+			c_true=np.stack(np.concatenate(c_true, axis=0))
 		)
-		return score, pred_matrix, oracle_matrix
+		#return score, pred_matrix, oracle_matrix
+		return score
 	elif mode == "niche":
 		score = niche.niche_impurity_score(
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
@@ -81,19 +87,65 @@ if __name__ == "__main__":
 		action='store_true',
 		help='Use sigmoid between the XtoC and the CtoY model parts'
 	)
-	parser.add_argument(
-		'--use_cpu',
-		action='store_true',
-		help='Only use the system CPU, even if CUDA is available'
-	)
 	args = parser.parse_args()
 
-	device = torch.device("cuda:0" if (torch.cuda.is_available() and not args.use_cpu) else "cpu")
-	if torch.cuda.is_available() and not args.use_cpu:
-		print("Device:", device, torch.cuda.get_device_name(0))
-	else:
-		print("Device:", device)
+	val_loader = load_data(f"./{args.dataset_root}/splits/three_card_poker/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
 
+	save_dir = f"./results/metrics/"
+
+	# get all models trained on poker cards
+
+	model_list = glob.glob('saves/converted/*sequential*poker*.pth')
+
+	ois_scores = []
+	for model_file in model_list:
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
+		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+
+		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+		ois_scores.append((model_file, ois))
+
+		gc.collect()
+
+	model_list = glob.glob('saves/converted/*independent*poker*.pth')
+
+	for model_file in model_list:
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
+		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+
+		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+		ois_scores.append((model_file, ois))
+
+		gc.collect()
+
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
+	with open(f"{save_dir}/poker_models_ois_scores.txt", "w") as file:
+		for score in ois_scores:
+			concepts.write(f"{score[0]} {score[1]}\n")
+
+	# get all models trained on three random cards
+
+	model_list = glob.glob('saves/converted/*three*.pth')
+
+	ois_scores = []
+	for model_file in model_list:
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
+		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+
+		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
+		ois_scores.append((model_file, ois))
+
+		gc.collect()
+
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
+	with open(f"{save_dir}/three_models_ois_scores.txt", "w") as file:
+		for score in ois_scores:
+			concepts.write(f"{score[0]} {score[1]}\n")
+
+
+	"""
 	model_name = args.pretrained_weights.split("/")[-1][:-4]
 
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
@@ -103,7 +155,6 @@ if __name__ == "__main__":
 
 	save_dir = f"./results/metrics/{model_name}"
 
-	"""
 	ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
 
 	if not os.path.exists(save_dir):
@@ -124,7 +175,6 @@ if __name__ == "__main__":
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 		plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
-	"""
 
 	nis = ImputityScore(model.x_to_c_model, val_loader, mode="niche", device=device)
 
@@ -132,3 +182,4 @@ if __name__ == "__main__":
 		os.makedirs(save_dir)
 	with open(f"{save_dir}/{args.dataset_postfix.split('/')[-1]}_nis_score.txt", "w") as file:
 		file.write(f"{nis}\n")
+	"""

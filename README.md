@@ -81,7 +81,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three_card_class  --weighted_loss --optimizer sgd`
 
-`python main.py --mode XtoC --n_concepts 39 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd`
+`python main.py --mode XtoC --n_concepts 36 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd --pretrained_weights saves/vgg11_bn-imagenet.pth --freeze`
 
 
 #### Independent CtoY training

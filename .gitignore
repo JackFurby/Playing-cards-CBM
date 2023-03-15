@@ -143,3 +143,5 @@ imgs/
 dataset/playing-cards
 experiments/all_acc.pkl
 dataset/celebA
+dataset/roar/
+results/

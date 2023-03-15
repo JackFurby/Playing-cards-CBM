@@ -13,6 +13,7 @@ import lrp
 from experiments.utils import heatmap
 import cv2
 from captum.attr import IntegratedGradients, NoiseTunnel
+from distutils.dir_util import copy_tree
 
 import time
 import numpy as np
@@ -457,11 +458,12 @@ if __name__ == "__main__":
 			gen_random(val_loader, threshold, save_path=save_path, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f"dataset/roar/random/{threshold}/splits")
 
 	print("Completed random features")
 
 	## LPR
-
+	"""
 	for threshold in thresholds:
 		save_path = f'dataset/roar/lrp/{model_name}/{threshold}/imgs/{args.dataset_split}'
 		if not os.path.exists(save_path):
@@ -470,6 +472,7 @@ if __name__ == "__main__":
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f'dataset/roar/lrp/{model_name}/{threshold}/splits')
 
 	print("Completed LRP features")
 
@@ -483,8 +486,10 @@ if __name__ == "__main__":
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], val_loader, threshold, save_path=save_path, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f'dataset/roar/lrp_positive/{model_name}/{threshold}/splits')
 
 	print("Completed LRP (positive) features")
+	"""
 
 	## SG_SQ
 
@@ -513,11 +518,12 @@ if __name__ == "__main__":
 			gen_random(val_loader, threshold, save_path=save_path, concept_only=True, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f'dataset/roar/concept_random/{threshold}/splits')
 
 	print("Completed concept (random) features")
 
 	## LPR
-
+	"""
 	for threshold in thresholds:
 		save_path = f'dataset/roar/concept_lrp/{model_name}/{threshold}/imgs/{args.dataset_split}'
 		if not os.path.exists(save_path):
@@ -526,6 +532,7 @@ if __name__ == "__main__":
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, threshold, save_path=save_path, concept_only=True, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f'dataset/roar/concept_lrp/{model_name}/{threshold}/splits')
 
 	print("Completed concept (LRP) features")
 
@@ -539,5 +546,7 @@ if __name__ == "__main__":
 			gen_lrp([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "alpha2beta1", "alpha2beta1"], val_loader, threshold, save_path=save_path, concept_only=True, device=device)
 		else:
 			print(f'Images for threshold {threshold} already exist')
+		copy_tree(f'dataset/playing-cards/splits', f'dataset/roar/concept_lrp_positive/{model_name}/{threshold}/splits')
 
 	print("Completed concept (LRP positive) features")
+	"""

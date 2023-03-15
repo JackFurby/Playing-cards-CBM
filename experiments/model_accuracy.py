@@ -202,6 +202,33 @@ if __name__ == "__main__":
 		elif "sequential-single" in i[0]:
 			sequential_single.append(i)
 
+	if not os.path.exists(f"./results"):
+		os.makedirs(f"./results")
+	with open(f"./results/all_model_accs.txt", "w") as file:
+		file.write(f"Model name, concept accuracy, concept F1, task accuracy, task F1\n")
+		for model in standard_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in standard_single:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in independent_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in independent_three:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in independent_single:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in joint_single:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in joint_sig_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in joint_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in sequential_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in sequential_three:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in sequential_single:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+
 	for idx, type in enumerate(["concept accuracy", "concept F1", "task F1", "task accuracy"]):
 
 		inde_poker_vals = np.array([i[idx + 1] for i in independent_poker])
@@ -246,7 +273,7 @@ if __name__ == "__main__":
 		errors = [std_standard_poker, std_standard_single, std_inde_poker, std_inde_three, std_inde_single, std_sequential_poker, std_sequential_three, std_sequential_single, std_joint_poker, std_joint_sig_poker, std_joint_single]
 
 		for idx, i in enumerate(model_means):
-			print(i, errors[idx])
+			print(type, models[idx], i, errors[idx])
 
 		# Build the plot
 		fig, ax = plt.subplots()

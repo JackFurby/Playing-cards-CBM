@@ -84,7 +84,7 @@ def extract_card(image_gradient, card_cord):
 	return output, pos, neg
 
 
-def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, device="cpu", model_name="model", target_concept=None):
+def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, device="cpu", model_name="model", target_concept=None, samples_per_class=-1):
 	"""
 	model_parts: List of pytorch models
 	rules: List of LRP rules
@@ -93,7 +93,13 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 	device: string pytorch device
 	model_name: name of model (used for saving results to a recognisable file path)
 	target_concept: None if results are for entire samples, int of concept index if averaging concept saliency maps
+	samples_per_class: Number of samples to generate saliency maps for (ignored if set to -1)
 	"""
+	# keep track of number of samples we have generated results for
+	sample_gen_count = []
+	for i in range(data_loader.dataset.num_classes):
+		sample_gen_count.append(0)
+
 	sample_num = 0
 	concept_saliency, card_relevance, all_relevance, all_cards_relevance = [], [], [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
@@ -106,88 +112,92 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 			image.requires_grad_(True)
 			image.grad = None  # Reset gradient
 
-			save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
-			if not os.path.exists(f"{save_dir}"):
-				os.makedirs(f"{save_dir}")
+			sample_gen_count[labels[image_index].item()] += 1
+			if samples_per_class == -1 or sample_gen_count[labels[image_index].item()] <= samples_per_class:
 
-			pred_concepts = image
-			for idx, model_part in enumerate(model_parts):
-				pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
+				save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
+				if not os.path.exists(f"{save_dir}"):
+					os.makedirs(f"{save_dir}")
 
-			# Save input image
-			AX.clear()
-			AX.set_axis_off()
-			AX.imshow(orig_image[image_index].squeeze().permute(1, 2, 0))
-			FIG.savefig(f'{save_dir}/input.png', bbox_inches='tight', pad_inches = 0)
+				pred_concepts = image
+				for idx, model_part in enumerate(model_parts):
+					pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
 
-			# Write true concepts to file
-			with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
-				f.write("True concepts for sample\n")
-				f.write("========================\n")
-				for idy, concept in enumerate(concepts[idx]):
-					f.write(f"{idy}: {concept_index_to_string(idy)}, concept value: {concept.item()}\n")
+				if target_concept == None:
+					# Save input image
+					AX.clear()
+					AX.set_axis_off()
+					AX.imshow(orig_image[image_index].squeeze().permute(1, 2, 0))
+					FIG.savefig(f'{save_dir}/input.png', bbox_inches='tight', pad_inches = 0)
 
-			# Write concept predictions to file (sorted by concept value)
-			pred_concepts_readable = torch.nn.Sigmoid()(pred_concepts)
-			pred_list = []
-			for idx, i in enumerate(pred_concepts_readable[0]):
-				pred_list.append((idx, i.item()))
-			pred_concepts_readable = sorted(pred_list, key=lambda x: -x[1])
-			with open(f'{save_dir}/concept-pred.txt', mode='wt', encoding='utf-8') as f:
-				f.write("Predicted concepts (with Sigmoid)\n")
-				f.write("=================================\n")
-				for item in pred_concepts_readable:
-					f.write(f"{item[0]}: {concept_index_to_string(item[0])}, Sig value: {item[1]}\n")
+					# Write true concepts to file
+					with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
+						f.write("True concepts for sample\n")
+						f.write("========================\n")
+						for idy, concept in enumerate(concepts[idx]):
+							f.write(f"{idy}: {concept_index_to_string(idy)}, concept value: {concept.item()}\n")
 
-			for i in range(pred_concepts.size(1)):
-				concept_pred_present = torch.nn.Sigmoid()(pred_concepts[0][i]).item() > 0.5  # only avg cards predicted as present
-				current_concept_target = i == target_concept  # only avg target concepts
-				true_concept_present = concepts[image_index][i].item() == 1  # only avg concepts present in concept labels
-				# only continue if generating saliency map for entire sample or if target concept if correctly predicted as present
-				if (target_concept == None) or (concept_pred_present and current_concept_target and true_concept_present):
-					filter_out = torch.zeros_like(pred_concepts)
-					filter_out[:,i] += 1
+					# Write concept predictions to file (sorted by concept value)
+					pred_concepts_readable = torch.nn.Sigmoid()(pred_concepts)
+					pred_list = []
+					for idx, i in enumerate(pred_concepts_readable[0]):
+						pred_list.append((idx, i.item()))
+					pred_concepts_readable = sorted(pred_list, key=lambda x: -x[1])
+					with open(f'{save_dir}/concept-pred.txt', mode='wt', encoding='utf-8') as f:
+						f.write("Predicted concepts (with Sigmoid)\n")
+						f.write("=================================\n")
+						for item in pred_concepts_readable:
+							f.write(f"{item[0]}: {concept_index_to_string(item[0])}, Sig value: {item[1]}\n")
 
-					# Get the gradient of each input
-					image_gradient = torch.autograd.grad(
-						pred_concepts,
-						image,
-						grad_outputs=filter_out,
-						retain_graph=True)[0]
+				for i in range(pred_concepts.size(1)):
+					concept_pred_present = torch.nn.Sigmoid()(pred_concepts[0][i]).item() > 0.5  # only avg cards predicted as present
+					current_concept_target = i == target_concept  # only avg target concepts
+					true_concept_present = concepts[image_index][i].item() == 1  # only avg concepts present in concept labels
+					# only continue if generating saliency map for entire sample or if target concept if correctly predicted as present
+					if (target_concept == None) or (concept_pred_present and current_concept_target and true_concept_present):
+						filter_out = torch.zeros_like(pred_concepts)
+						filter_out[:,i] += 1
 
-					# generating saliency map for entire sample
-					if target_concept == None:
+						# Get the gradient of each input
+						image_gradient = torch.autograd.grad(
+							pred_concepts,
+							image,
+							grad_outputs=filter_out,
+							retain_graph=True)[0]
 
-						attr = heatmap(image_gradient, cmap_name='seismic')
+						# generating saliency map for entire sample
+						if target_concept == None:
 
-						# Save concept saliency map
-						AX.clear()
-						AX.set_axis_off()
-						AX.imshow(attr.squeeze(), cmap='seismic')
-						FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
+							attr = heatmap(image_gradient, cmap_name='seismic')
 
-					# computing relevancy in and outside of concepts
-					else:
+							# Save concept saliency map
+							AX.clear()
+							AX.set_axis_off()
+							AX.imshow(attr.squeeze(), cmap='seismic')
+							FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
 
-						if card_classes[image_index].size(0) == 1:  # single playing card in image
-							card_cord = card_points[image_index][0]
-						else:  # multiple playing cards in image, concepts match card_classes
-							for concept in range(card_classes[image_index].size(0)):
-								if card_classes[image_index][concept].item() == i:  # true if card in image matches i
-									card_cord = card_points[image_index][concept]
+						# computing relevancy in and outside of concepts
+						else:
 
-						for i in range(card_classes[image_index].size(0)):
-							card_gradient, card_pos, card_neg = extract_card(image_gradient, card_points[image_index][i])
-							all_cards_relevance.append((card_pos, card_neg))
+							if card_classes[image_index].size(0) == 1:  # single playing card in image
+								card_cord = card_points[image_index][0]
+							else:  # multiple playing cards in image, concepts match card_classes
+								for concept in range(card_classes[image_index].size(0)):
+									if card_classes[image_index][concept].item() == i:  # true if card in image matches i
+										card_cord = card_points[image_index][concept]
 
-						card_gradient, card_pos, card_neg = extract_card(image_gradient, card_cord)
-						card_relevance.append((card_pos, card_neg))
+							for i in range(card_classes[image_index].size(0)):
+								card_gradient, card_pos, card_neg = extract_card(image_gradient, card_points[image_index][i])
+								all_cards_relevance.append((card_pos, card_neg))
 
-						all_pos = torch.clip(image_gradient, min=0)  # all image positive relevance
-						all_neg = torch.clip(image_gradient, max=0)  # all image negative relevance
-						all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
+							card_gradient, card_pos, card_neg = extract_card(image_gradient, card_cord)
+							card_relevance.append((card_pos, card_neg))
 
-						concept_saliency.append(card_gradient)
+							all_pos = torch.clip(image_gradient, min=0)  # all image positive relevance
+							all_neg = torch.clip(image_gradient, max=0)  # all image negative relevance
+							all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
+
+							concept_saliency.append(card_gradient)
 
 			sample_num += 1
 
@@ -201,21 +211,25 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		AX.imshow(attr.squeeze(), cmap='seismic')
 		FIG.savefig(f'results/lrp/{model_name}/average_{concept_index_to_string(target_concept)}.png', bbox_inches='tight', pad_inches = 0)
 
-	# work out the proportion of positive and negative relevance for the concept from the total relevance
-	concept_pos = [x[0] for x in card_relevance]
-	concept_neg = [x[1] for x in card_relevance]
-	all_pos = [x[0] for x in all_relevance]
-	all_neg = [x[1] for x in all_relevance]
-	cards_pos = [x[0] for x in all_cards_relevance]
-	cards_neg = [x[1] for x in all_cards_relevance]
+	if target_concept != None:
+		# work out the proportion of positive and negative relevance for the concept from the total relevance
+		concept_pos = [x[0] for x in card_relevance]
+		concept_neg = [x[1] for x in card_relevance]
+		all_pos = [x[0] for x in all_relevance]
+		all_neg = [x[1] for x in all_relevance]
+		cards_pos = [x[0] for x in all_cards_relevance]
+		cards_neg = [x[1] for x in all_cards_relevance]
 
-	concept_all_pos_prop = sum(concept_pos) / sum(all_pos)
-	concept_all_neg_prop = sum(concept_neg) / sum(all_neg)
+		concept_all_pos_prop = sum(concept_pos) / sum(all_pos)
+		concept_all_neg_prop = sum(concept_neg) / sum(all_neg)
 
-	concept_cards_pos_prop = sum(concept_pos) / sum(cards_pos)
-	concept_cards_neg_prop = sum(concept_neg) / sum(cards_neg)
+		concept_cards_pos_prop = sum(concept_pos) / sum(cards_pos)
+		concept_cards_neg_prop = sum(concept_neg) / sum(cards_neg)
 
-	return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop
+		return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop
+	# We only use the return values if we have a target concept
+	else:
+		return None
 
 
 if __name__ == "__main__":
@@ -268,6 +282,12 @@ if __name__ == "__main__":
 		action='store_true',
 		help='Only use the system CPU, even if CUDA is available'
 	)
+	parser.add_argument(
+		'--samples_per_class',
+		type=int,
+		help='Max number of samples to generate results for per class in the dataset (set to -1 to ignore)',
+		default=25
+	)
 	args = parser.parse_args()
 
 	device = torch.device("cuda:0" if (torch.cuda.is_available() and not args.use_cpu) else "cpu")
@@ -306,7 +326,7 @@ if __name__ == "__main__":
 	XtoC_model_3.to(device).eval()
 
 	# gen saliency maps for full samples
-	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None)
+	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None, samples_per_class=args.samples_per_class)
 
 	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
 	# gen average saliency maps for concepts

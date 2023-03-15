@@ -43,6 +43,7 @@ class PlayingCardDataset(Dataset):
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
+		highest_class = 0
 		for i in dataset_split:
 			sample = {
 				"id": dataset_split[i],
@@ -52,6 +53,12 @@ class PlayingCardDataset(Dataset):
 				"card_points": dataset_split[i]["card_points"],
 			}
 			self.data.append(sample)
+
+			if dataset_split[i]["class_label"] > highest_class:
+				highest_class = dataset_split[i]["class_label"]
+
+		self.num_concepts = len(self.data[0]["concepts"])
+		self.num_classes = highest_class + 1
 
 	def __len__(self):
 		return len(self.data)
