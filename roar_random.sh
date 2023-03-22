@@ -4,6 +4,13 @@ for j in 1 2 3 4 5
 do
   for DATA_SPLIT in three_card_poker three
   do
+
+    if [[ "$DATA_SPLIT" == *"poker"* ]]; then
+      DATA_POST=splits/three_card_poker
+    else
+      DATA_POST=splits/three
+    fi
+
     for i in 1 3 5 7 9
     do
       RAN_NUM=$(shuf -i 0-1000 -n1)
