@@ -28,21 +28,24 @@ def ImputityScore(x_to_c_model, data_loader, mode):
 
 			concept_representations = x_to_c_model(images)
 
-			c_soft.append(concept_representations)
+			sigmoid_outputs = torch.nn.Sigmoid()(concept_representations.view(concept_representations.size(0), -1))
+
+			#c_soft.append(concept_representations)
+			c_soft.append(sigmoid_outputs)
 			c_true.append(ground_concepts)
 
 	if mode == "oracle":
-		#score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
-		#	c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-		#	c_true=np.stack(np.concatenate(c_true, axis=0)),
-		#	output_matrices=True
-		#)
-		score = oracle.oracle_impurity_score(
+		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-			c_true=np.stack(np.concatenate(c_true, axis=0))
+			c_true=np.stack(np.concatenate(c_true, axis=0)),
+			output_matrices=True
 		)
-		#return score, pred_matrix, oracle_matrix
-		return score
+		#score = oracle.oracle_impurity_score(
+		#	c_soft=np.stack(np.concatenate(c_soft, axis=0)),
+		#	c_true=np.stack(np.concatenate(c_true, axis=0))
+		#)
+		return score, pred_matrix, oracle_matrix
+		#return score
 	elif mode == "niche":
 		score = niche.niche_impurity_score(
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
@@ -87,99 +90,143 @@ if __name__ == "__main__":
 		action='store_true',
 		help='Use sigmoid between the XtoC and the CtoY model parts'
 	)
+	parser.add_argument(
+		'--multi_runs',
+		action='store_true',
+		help='Use sigmoid between the XtoC and the CtoY model parts'
+	)
+	parser.add_argument(
+		'--results_txt',
+		type=str,
+		default="",
+		help='Path to txt file to append results to (default: "")'
+	)
 	args = parser.parse_args()
 
 	val_loader = load_data(f"./{args.dataset_root}/splits/three_card_poker/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
 
-	save_dir = f"./results/metrics/"
+	# generate results for multiple model weights and save to txt file
+	if args.multi_runs:
 
-	# get all models trained on poker cards
+		save_dir = f"./results/metrics/"
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
 
-	model_list = glob.glob('saves/converted/*sequential*poker*.pth')
+		# get all models trained on poker cards
 
-	ois_scores = []
-	for model_file in model_list:
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
-		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+		model_list = glob.glob('saves/converted/*sequential*poker*.pth')
 
-		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
-		ois_scores.append((model_file, ois))
+		ois_scores = []
+		for model_file in model_list:
+			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
 
-		gc.collect()
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+			ois_scores.append((model_file, ois))
 
-	model_list = glob.glob('saves/converted/*independent*poker*.pth')
+			for matrix_name in ["pred_matrix", "oracle_matrix"]:
+				if matrix_name == "pred_matrix":
+					matrix = pred_matrix
+				else:
+					matrix = oracle_matrix
+				fig = plt.figure()
+				ax = fig.add_subplot(111)
+				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+				fig.colorbar(cax)
 
-	for model_file in model_list:
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
-		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+				if not os.path.exists(f"save_dir/{model_name}"):
+					os.makedirs(f"save_dir/{model_name}")
+				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 
-		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
-		ois_scores.append((model_file, ois))
+			gc.collect()
 
-		gc.collect()
+		model_list = glob.glob('saves/converted/*independent*poker*.pth')
 
-	if not os.path.exists(save_dir):
-		os.makedirs(save_dir)
-	with open(f"{save_dir}/poker_models_ois_scores.txt", "w") as file:
-		for score in ois_scores:
-			concepts.write(f"{score[0]} {score[1]}\n")
+		for model_file in model_list:
+			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
 
-	# get all models trained on three random cards
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+			ois_scores.append((model_file, ois))
 
-	model_list = glob.glob('saves/converted/*three*.pth')
+			for matrix_name in ["pred_matrix", "oracle_matrix"]:
+				if matrix_name == "pred_matrix":
+					matrix = pred_matrix
+				else:
+					matrix = oracle_matrix
+				fig = plt.figure()
+				ax = fig.add_subplot(111)
+				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+				fig.colorbar(cax)
 
-	ois_scores = []
-	for model_file in model_list:
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=False, use_modulelist=False)
-		model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+				if not os.path.exists(f"save_dir/{model_name}"):
+					os.makedirs(f"save_dir/{model_name}")
+				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 
-		ois = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
-		ois_scores.append((model_file, ois))
-
-		gc.collect()
-
-	if not os.path.exists(save_dir):
-		os.makedirs(save_dir)
-	with open(f"{save_dir}/three_models_ois_scores.txt", "w") as file:
-		for score in ois_scores:
-			concepts.write(f"{score[0]} {score[1]}\n")
-
-
-	"""
-	model_name = args.pretrained_weights.split("/")[-1][:-4]
-
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
-
-	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
-
-	save_dir = f"./results/metrics/{model_name}"
-
-	ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
-
-	if not os.path.exists(save_dir):
-		os.makedirs(save_dir)
-	with open(f"{save_dir}/{args.dataset_postfix.split('/')[-1]}_ois_score.txt", "w") as file:
-		file.write(f"{ois}\n")
-
-	for matrix_name in ["pred_matrix", "oracle_matrix"]:
-		if matrix_name == "pred_matrix":
-			matrix = pred_matrix
-		else:
-			matrix = oracle_matrix
-		fig = plt.figure()
-		ax = fig.add_subplot(111)
-		cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-		fig.colorbar(cax)
+			gc.collect()
 
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
-		plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+		with open(f"{save_dir}/poker_models_ois_scores.txt", "w") as file:
+			for score in ois_scores:
+				concepts.write(f"{score[0]} {score[1]}\n")
 
-	nis = ImputityScore(model.x_to_c_model, val_loader, mode="niche", device=device)
+		# get all models trained on three random cards
 
-	if not os.path.exists(save_dir):
-		os.makedirs(save_dir)
-	with open(f"{save_dir}/{args.dataset_postfix.split('/')[-1]}_nis_score.txt", "w") as file:
-		file.write(f"{nis}\n")
-	"""
+		model_list = glob.glob('saves/converted/*three*.pth')
+
+		ois_scores = []
+		for model_file in model_list:
+			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
+
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
+			ois_scores.append((model_file, ois))
+
+			for matrix_name in ["pred_matrix", "oracle_matrix"]:
+				if matrix_name == "pred_matrix":
+					matrix = pred_matrix
+				else:
+					matrix = oracle_matrix
+				fig = plt.figure()
+				ax = fig.add_subplot(111)
+				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+				fig.colorbar(cax)
+
+				if not os.path.exists(f"save_dir/{model_name}"):
+					os.makedirs(f"save_dir/{model_name}")
+				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+
+			gc.collect()
+
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
+		with open(f"{save_dir}/three_models_ois_scores.txt", "w") as file:
+			for score in ois_scores:
+				concepts.write(f"{score[0]} {score[1]}\n")
+
+	# generate results for a single weights file and append results to txt file
+	else:
+
+		model_name = args.pretrained_weights.split("/")[-1][:-4]
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
+
+		ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+		with open(args.results_txt, "a") as f:
+			f.write(f"{model_name} {ois}\n")
+
+		save_dir = f"./results/metrics/{model_name}"
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
+
+		for matrix_name in ["pred_matrix", "oracle_matrix"]:
+			if matrix_name == "pred_matrix":
+				matrix = pred_matrix
+			else:
+				matrix = oracle_matrix
+			fig = plt.figure()
+			ax = fig.add_subplot(111)
+			cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+			fig.colorbar(cax)
+			plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
