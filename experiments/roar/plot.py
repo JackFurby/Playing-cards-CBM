@@ -170,8 +170,8 @@ if __name__ == "__main__":
 	poker_dataset_models = []
 
 	for features_removed in [0, 1, 3, 5, 7, 9]:
-		three_dataset.append([])
-		poker_dataset.append([])
+		three_dataset_models.append([])
+		poker_dataset_models.append([])
 
 	for i in all_acc:
 		print(file)

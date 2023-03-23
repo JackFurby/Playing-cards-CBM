@@ -142,6 +142,8 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `sh roar.sh`
 
+'python experiments/roar/plot.py --weights_dir ./saves/roar --dataset_root dataset/roar/random/0.1'
+
 
 ### Purity (OIS and NIS)
 
