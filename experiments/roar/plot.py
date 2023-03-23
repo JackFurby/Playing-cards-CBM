@@ -174,4 +174,4 @@ if __name__ == "__main__":
 		poker_dataset_models.append([])
 
 	for i in all_acc:
-		print(file)
+		print(i[0])
