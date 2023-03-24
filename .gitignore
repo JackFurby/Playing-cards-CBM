@@ -142,6 +142,7 @@ temp/
 imgs/
 dataset/playing-cards
 experiments/all_acc.pkl
+experiments/roar_acc.pkl
 dataset/celebA
 dataset/roar/
 results/

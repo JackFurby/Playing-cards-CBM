@@ -153,7 +153,20 @@ if __name__ == "__main__":
 			else:
 				postfix = "splits/three_card_poker"
 
-			val_loader = load_data(f"./{args.dataset_root}/{postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1)
+			if "0_0" in file:
+				dataset_loc = f"./dataset/playing-cards/{postfix}/val.pkl"
+			if "0_1" in file:
+				dataset_loc = f"./dataset/roar/random/0.1/{postfix}/val.pkl"
+			if "0_3" in file:
+				dataset_loc = f"./dataset/roar/random/0.3/{postfix}/val.pkl"
+			if "0_5" in file:
+				dataset_loc = f"./dataset/roar/random/0.5/{postfix}/val.pkl"
+			if "0_7" in file:
+				dataset_loc = f"./dataset/roar/random/0.7/{postfix}/val.pkl"
+			else:
+				dataset_loc = f"./dataset/roar/random/0.9/{postfix}/val.pkl"
+
+			val_loader = load_data(dataset_loc, args.batch_size, dataset_root=args.dataset_root, num_workers=1)
 
 			model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, use_sigmoid=use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(f"{args.weights_dir}/{file}", map_location=torch.device('cpu')))
@@ -174,4 +187,58 @@ if __name__ == "__main__":
 		poker_dataset_models.append([])
 
 	for i in all_acc:
-		print(i[0])
+		name_split = i[0].split("-")
+		if name_split[-2][-1] == "0":
+			f_removed_index = 0
+		elif name_split[-2][-1] == "1":
+			f_removed_index = 1
+		elif name_split[-2][-1] == "3":
+			f_removed_index = 2
+		elif name_split[-2][-1] == "5":
+			f_removed_index = 3
+		elif name_split[-2][-1] == "7":
+			f_removed_index = 4
+		else:
+			f_removed_index = 5
+		if "three_card_poker" in i[0]:
+			poker_dataset_models[f_removed_index].append(i)
+		else:
+			three_dataset_models[f_removed_index].append(i)
+
+	for i in poker_dataset_models:
+		print(i)
+
+	for i in three_dataset_models:
+		print(i)
+
+
+	x = ["0%", "10%", "30%", "50%", "70%", "90%"]
+
+	random_three, random_poker, concept_random_three, concept_random_poker = [], [], [], []
+
+	for idx, removed in enumerate(poker_dataset_models):
+		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
+		random = [i[1] for i in removed if "concepts-random" not in i[0]]
+		random_poker.append(random)
+		concept_random_poker.append(concept_random)
+
+	for idx, removed in enumerate(three_dataset_models):
+		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
+		random = [i[1] for i in removed if "concepts-random" not in i[0]]
+		random_three.append(random)
+		concept_random_three.append(concept_random)
+
+
+
+
+	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three")
+	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker")
+	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three")
+	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker")
+
+	plt.xlabel("Features removed")
+	plt.ylabel("Concept accuracy")
+	plt.legend(loc="best")
+	plt.ylim(0, 100)
+	plt.xlim(0, 5)
+	plt.show()
