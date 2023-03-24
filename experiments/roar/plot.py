@@ -154,19 +154,19 @@ if __name__ == "__main__":
 				postfix = "splits/three_card_poker"
 
 			if "0_0" in file:
-				dataset_loc = f"./dataset/playing-cards/{postfix}/val.pkl"
+				dataset_root = f"./dataset/playing-cards"
 			if "0_1" in file:
-				dataset_loc = f"./dataset/roar/random/0.1/{postfix}/val.pkl"
+				dataset_root = f"./dataset/roar/random/0.1"
 			if "0_3" in file:
-				dataset_loc = f"./dataset/roar/random/0.3/{postfix}/val.pkl"
+				dataset_root = f"./dataset/roar/random/0.3"
 			if "0_5" in file:
-				dataset_loc = f"./dataset/roar/random/0.5/{postfix}/val.pkl"
+				dataset_root = f"./dataset/roar/random/0.5"
 			if "0_7" in file:
-				dataset_loc = f"./dataset/roar/random/0.7/{postfix}/val.pkl"
+				dataset_root = f"./dataset/roar/random/0.7"
 			else:
-				dataset_loc = f"./dataset/roar/random/0.9/{postfix}/val.pkl"
+				dataset_root = f"./dataset/roar/random/0.9"
 
-			val_loader = load_data(dataset_loc, args.batch_size, dataset_root=args.dataset_root, num_workers=1)
+			val_loader = load_data(f"./{dataset_root}/{postfix}/val.pkl", args.batch_size, dataset_root=dataset_root, num_workers=1)
 
 			model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, use_sigmoid=use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(f"{args.weights_dir}/{file}", map_location=torch.device('cpu')))
