@@ -155,13 +155,13 @@ if __name__ == "__main__":
 
 			if "0_0" in file:
 				dataset_root = f"./dataset/playing-cards"
-			if "0_1" in file:
+			elif "0_1" in file:
 				dataset_root = f"./dataset/roar/random/0.1"
-			if "0_3" in file:
+			elif "0_3" in file:
 				dataset_root = f"./dataset/roar/random/0.3"
-			if "0_5" in file:
+			elif "0_5" in file:
 				dataset_root = f"./dataset/roar/random/0.5"
-			if "0_7" in file:
+			elif "0_7" in file:
 				dataset_root = f"./dataset/roar/random/0.7"
 			else:
 				dataset_root = f"./dataset/roar/random/0.9"
@@ -174,6 +174,8 @@ if __name__ == "__main__":
 			model.to(device)
 
 			concept_acc, concept_F1, task_F1, task_acc = eval(model, val_loader, f1=f1, device=device)
+			
+			print(file, f"./{dataset_root}/{postfix}/val.pkl", concept_acc)
 
 			all_acc.append((file, concept_acc, concept_F1, task_F1, task_acc))
 
