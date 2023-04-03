@@ -5,6 +5,7 @@ import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
 from models.model import End2EndModel
+from models.cub_model import ModelXtoCtoY as CUB_End2EndModel
 from tqdm import tqdm
 import os
 import pickle
@@ -51,7 +52,7 @@ def ImputityScore(x_to_c_model, data_loader, mode):
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
 			c_true=np.stack(np.concatenate(c_true, axis=0))
 		)
-		return score
+		return score, None, None
 	else:
 		raise Exception(f"Mode has to have the value 'oracle' or 'niche'")
 
@@ -101,9 +102,15 @@ if __name__ == "__main__":
 		default="",
 		help='Path to txt file to append results to (default: "")'
 	)
+	parser.add_argument(
+		'--mode',
+		type=str,
+		choices=["oracle", "niche"],
+		help='Type of score to generate'
+	)
 	args = parser.parse_args()
 
-	val_loader = load_data(f"./{args.dataset_root}/splits/three_card_poker/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
 
 	# generate results for multiple model weights and save to txt file
 	if args.multi_runs:
@@ -121,22 +128,25 @@ if __name__ == "__main__":
 			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
 
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode)
 			ois_scores.append((model_file, ois))
 
-			for matrix_name in ["pred_matrix", "oracle_matrix"]:
-				if matrix_name == "pred_matrix":
-					matrix = pred_matrix
-				else:
-					matrix = oracle_matrix
-				fig = plt.figure()
-				ax = fig.add_subplot(111)
-				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-				fig.colorbar(cax)
+			if pred_matrix == None:
+				pass
+			else:
+				for matrix_name in ["pred_matrix", "oracle_matrix"]:
+					if matrix_name == "pred_matrix":
+						matrix = pred_matrix
+					else:
+						matrix = oracle_matrix
+					fig = plt.figure()
+					ax = fig.add_subplot(111)
+					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+					fig.colorbar(cax)
 
-				if not os.path.exists(f"save_dir/{model_name}"):
-					os.makedirs(f"save_dir/{model_name}")
-				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+					if not os.path.exists(f"save_dir/{model_name}"):
+						os.makedirs(f"save_dir/{model_name}")
+					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 
 			gc.collect()
 
@@ -146,22 +156,25 @@ if __name__ == "__main__":
 			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
 
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode)
 			ois_scores.append((model_file, ois))
 
-			for matrix_name in ["pred_matrix", "oracle_matrix"]:
-				if matrix_name == "pred_matrix":
-					matrix = pred_matrix
-				else:
-					matrix = oracle_matrix
-				fig = plt.figure()
-				ax = fig.add_subplot(111)
-				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-				fig.colorbar(cax)
+			if pred_matrix == None:
+				pass
+			else:
+				for matrix_name in ["pred_matrix", "oracle_matrix"]:
+					if matrix_name == "pred_matrix":
+						matrix = pred_matrix
+					else:
+						matrix = oracle_matrix
+					fig = plt.figure()
+					ax = fig.add_subplot(111)
+					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+					fig.colorbar(cax)
 
-				if not os.path.exists(f"save_dir/{model_name}"):
-					os.makedirs(f"save_dir/{model_name}")
-				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+					if not os.path.exists(f"save_dir/{model_name}"):
+						os.makedirs(f"save_dir/{model_name}")
+					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 
 			gc.collect()
 
@@ -180,22 +193,25 @@ if __name__ == "__main__":
 			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
 
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle", device=device)
+			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode, device=device)
 			ois_scores.append((model_file, ois))
 
-			for matrix_name in ["pred_matrix", "oracle_matrix"]:
-				if matrix_name == "pred_matrix":
-					matrix = pred_matrix
-				else:
-					matrix = oracle_matrix
-				fig = plt.figure()
-				ax = fig.add_subplot(111)
-				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-				fig.colorbar(cax)
+			if pred_matrix == None:
+				pass
+			else:
+				for matrix_name in ["pred_matrix", "oracle_matrix"]:
+					if matrix_name == "pred_matrix":
+						matrix = pred_matrix
+					else:
+						matrix = oracle_matrix
+					fig = plt.figure()
+					ax = fig.add_subplot(111)
+					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+					fig.colorbar(cax)
 
-				if not os.path.exists(f"save_dir/{model_name}"):
-					os.makedirs(f"save_dir/{model_name}")
-				plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+					if not os.path.exists(f"save_dir/{model_name}"):
+						os.makedirs(f"save_dir/{model_name}")
+					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 
 			gc.collect()
 
@@ -209,24 +225,37 @@ if __name__ == "__main__":
 	else:
 
 		model_name = args.pretrained_weights.split("/")[-1][:-4]
-		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+		if "cub" in args.dataset_root:
+			model = CUB_End2EndModel(n_class_attr=2, num_classes=args.n_classes, n_attributes=args.n_concepts, expand_dim=0, use_relu=False, use_sigmoid=args.use_sigmoid, train=True)
+		else:
+			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
+		model.eval()
 
-		ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode="oracle")
+		if "cub" in args.dataset_root:
+			x_to_c_model = model.first_model
+		else:
+			x_to_c_model = model.x_to_c_model
+
+
+		score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode)
 		with open(args.results_txt, "a") as f:
-			f.write(f"{model_name} {ois}\n")
+			f.write(f"{model_name} {score}\n")
 
 		save_dir = f"./results/metrics/{model_name}"
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 
-		for matrix_name in ["pred_matrix", "oracle_matrix"]:
-			if matrix_name == "pred_matrix":
-				matrix = pred_matrix
-			else:
-				matrix = oracle_matrix
-			fig = plt.figure()
-			ax = fig.add_subplot(111)
-			cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-			fig.colorbar(cax)
-			plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+		if pred_matrix == None:
+			pass
+		else:
+			for matrix_name in ["pred_matrix", "oracle_matrix"]:
+				if matrix_name == "pred_matrix":
+					matrix = pred_matrix
+				else:
+					matrix = oracle_matrix
+				fig = plt.figure()
+				ax = fig.add_subplot(111)
+				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+				fig.colorbar(cax)
+				plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
