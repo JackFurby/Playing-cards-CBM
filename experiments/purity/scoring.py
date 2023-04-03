@@ -110,7 +110,10 @@ if __name__ == "__main__":
 	)
 	args = parser.parse_args()
 
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
+	if "CUB" in args.dataset_root:
+		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1, dataset_name="cub")
+	else:
+		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, num_workers=1)
 
 	# generate results for multiple model weights and save to txt file
 	if args.multi_runs:
