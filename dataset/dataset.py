@@ -263,7 +263,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		else:
 			transform = transforms.Compose([
 				#transforms.Resize((y_resize, x_resize)),
-				transforms.CenterCrop((y_resize, x_resize))
+				transforms.CenterCrop((y_resize, x_resize)),
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
