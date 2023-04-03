@@ -202,6 +202,9 @@ if __name__ == "__main__":
 		elif "sequential-single" in i[0]:
 			sequential_single.append(i)
 
+	for i in sequential_single:
+		print(i)
+
 	if not os.path.exists(f"./results"):
 		os.makedirs(f"./results")
 	with open(f"./results/all_model_accs.txt", "w") as file:

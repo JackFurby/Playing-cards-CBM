@@ -174,7 +174,7 @@ if __name__ == "__main__":
 			model.to(device)
 
 			concept_acc, concept_F1, task_F1, task_acc = eval(model, val_loader, f1=f1, device=device)
-			
+
 			print(file, f"./{dataset_root}/{postfix}/val.pkl", concept_acc)
 
 			all_acc.append((file, concept_acc, concept_F1, task_F1, task_acc))
@@ -202,17 +202,11 @@ if __name__ == "__main__":
 			f_removed_index = 4
 		else:
 			f_removed_index = 5
+
 		if "three_card_poker" in i[0]:
 			poker_dataset_models[f_removed_index].append(i)
 		else:
 			three_dataset_models[f_removed_index].append(i)
-
-	for i in poker_dataset_models:
-		print(i)
-
-	for i in three_dataset_models:
-		print(i)
-
 
 	x = ["0%", "10%", "30%", "50%", "70%", "90%"]
 
@@ -221,17 +215,22 @@ if __name__ == "__main__":
 	for idx, removed in enumerate(poker_dataset_models):
 		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
 		random = [i[1] for i in removed if "concepts-random" not in i[0]]
-		random_poker.append(random)
-		concept_random_poker.append(concept_random)
+		if idx == 0:  # duplicate no features removed
+			random_poker.append(random)
+			concept_random_poker.append(random)
+		else:
+			random_poker.append(random)
+			concept_random_poker.append(concept_random)
 
 	for idx, removed in enumerate(three_dataset_models):
 		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
 		random = [i[1] for i in removed if "concepts-random" not in i[0]]
-		random_three.append(random)
-		concept_random_three.append(concept_random)
-
-
-
+		if idx == 0:
+			random_three.append(random)
+			concept_random_three.append(random)
+		else:
+			random_three.append(random)
+			concept_random_three.append(concept_random)
 
 	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three")
 	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker")
@@ -241,6 +240,11 @@ if __name__ == "__main__":
 	plt.xlabel("Features removed")
 	plt.ylabel("Concept accuracy")
 	plt.legend(loc="best")
-	plt.ylim(0, 100)
+	plt.ylim(92, 100)
 	plt.xlim(0, 5)
-	plt.show()
+	#plt.show()
+
+	save_dir = 'results/roar'
+	if not os.path.exists(f"{save_dir}"):
+		os.makedirs(f"{save_dir}")
+	plt.savefig(f'{save_dir}/three_v_poker.png', bbox_inches='tight', pad_inches = 0)

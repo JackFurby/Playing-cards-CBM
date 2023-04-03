@@ -4,6 +4,7 @@ import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data
 from dataset.utils import IndexToString
+from torchvision.utils import save_image
 from models.model import End2EndModel
 from tqdm import tqdm
 import os
@@ -115,26 +116,23 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 			sample_gen_count[labels[image_index].item()] += 1
 			if samples_per_class == -1 or sample_gen_count[labels[image_index].item()] <= samples_per_class:
 
-				save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
-				if not os.path.exists(f"{save_dir}"):
-					os.makedirs(f"{save_dir}")
-
 				pred_concepts = image
 				for idx, model_part in enumerate(model_parts):
 					pred_concepts = model_part.forward(pred_concepts, explain=True, rule=rules[idx])
 
 				if target_concept == None:
+					save_dir = f"results/lrp/{model_name}/{labels[image_index].item()}/{sample_num}/"
+					if not os.path.exists(f"{save_dir}"):
+						os.makedirs(f"{save_dir}")
+
 					# Save input image
-					AX.clear()
-					AX.set_axis_off()
-					AX.imshow(orig_image[image_index].squeeze().permute(1, 2, 0))
-					FIG.savefig(f'{save_dir}/input.png', bbox_inches='tight', pad_inches = 0)
+					save_image(orig_image[image_index], f'{save_dir}/input.png')
 
 					# Write true concepts to file
 					with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
 						f.write("True concepts for sample\n")
 						f.write("========================\n")
-						for idy, concept in enumerate(concepts[idx]):
+						for idy, concept in enumerate(concepts[image_index]):
 							f.write(f"{idy}: {concept_index_to_string(idy)}, concept value: {concept.item()}\n")
 
 					# Write concept predictions to file (sorted by concept value)
