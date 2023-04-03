@@ -225,18 +225,17 @@ if __name__ == "__main__":
 	else:
 
 		model_name = args.pretrained_weights.split("/")[-1][:-4]
-		if "cub" in args.dataset_root:
-			model = CUB_End2EndModel(n_class_attr=2, num_classes=args.n_classes, n_attributes=args.n_concepts, expand_dim=0, use_relu=False, use_sigmoid=args.use_sigmoid, train=True)
+		if "CUB" in args.dataset_root:
+			model = CUB_End2EndModel(n_class_attr=2, num_classes=args.n_classes, n_attributes=args.n_concepts, expand_dim=0, use_relu=False, use_sigmoid=args.use_sig, train=True)
 		else:
 			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
 		model.eval()
 
-		if "cub" in args.dataset_root:
+		if "CUB" in args.dataset_root:
 			x_to_c_model = model.first_model
 		else:
 			x_to_c_model = model.x_to_c_model
-
 
 		score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode)
 		with open(args.results_txt, "a") as f:
