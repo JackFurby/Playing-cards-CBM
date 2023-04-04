@@ -4,7 +4,8 @@ import numpy as np
 import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
-from models.model import End2EndModel
+#from models.model import End2EndModel
+from models.vgg import End2EndModel
 from models.cub_model import ModelXtoCtoY as CUB_End2EndModel
 from tqdm import tqdm
 import os

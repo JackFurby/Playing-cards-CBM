@@ -7,7 +7,8 @@ import random
 import os
 from dataset.dataset import load_data
 from torchvision.utils import save_image
-from models.model import End2EndModel
+#from models.model import End2EndModel
+from models.vgg import End2EndModel
 from models.lrp_converter import convert
 import lrp
 from experiments.utils import heatmap

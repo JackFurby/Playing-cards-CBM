@@ -3,11 +3,61 @@ import numpy as np
 import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data
-from models.model import End2EndModel
+#from models.model import End2EndModel
+from models.vgg import End2EndModel
 from tqdm import tqdm
 import os
 import pickle
 import matplotlib.pyplot as plt
+
+
+def make_plot(three_dataset_models, poker_dataset_models, var_index, var_name, save_name):
+	x = ["0%", "10%", "30%", "50%", "70%", "90%"]
+
+	random_three, random_poker, concept_random_three, concept_random_poker = [], [], [], []
+
+	for idx, removed in enumerate(poker_dataset_models):
+		concept_random = [i[var_index] for i in removed if "concepts-random" in i[0]]
+		random = [i[var_index] for i in removed if "concepts-random" not in i[0]]
+		if idx == 0:  # duplicate no features removed
+			random_poker.append(random)
+			concept_random_poker.append(random)
+		else:
+			random_poker.append(random)
+			concept_random_poker.append(concept_random)
+
+	for idx, removed in enumerate(three_dataset_models):
+		concept_random = [i[var_index] for i in removed if "concepts-random" in i[0]]
+		random = [i[var_index] for i in removed if "concepts-random" not in i[0]]
+		if idx == 0:
+			random_three.append(random)
+			concept_random_three.append(random)
+		else:
+			random_three.append(random)
+			concept_random_three.append(concept_random)
+
+	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three")
+	plt.fill_between(x, [min(i) for i in random_three], [max(i) for i in random_three], alpha=0.2)
+	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker")
+	plt.fill_between(x, [min(i) for i in random_poker], [max(i) for i in random_poker], alpha=0.2)
+	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three")
+	plt.fill_between(x, [min(i) for i in concept_random_three], [max(i) for i in concept_random_three], alpha=0.2)
+	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker")
+	plt.fill_between(x, [min(i) for i in concept_random_poker], [max(i) for i in concept_random_poker], alpha=0.2)
+
+	plt.xlabel("Features removed")
+	plt.ylabel(f"{var_name} accuracy")
+	plt.legend(loc="best")
+	#plt.ylim(92, 100)
+	plt.xlim(0, 5)
+	plt.autoscale(enable=True, axis="y", tight=None)
+
+	save_dir = 'results/roar'
+	if not os.path.exists(f"{save_dir}"):
+		os.makedirs(f"{save_dir}")
+	plt.savefig(f'{save_dir}/{save_name}.png', bbox_inches='tight', pad_inches = 0)
+
+	plt.clf()
 
 
 def eval(model, data_loader, f1=None, device="cpu"):
@@ -208,43 +258,18 @@ if __name__ == "__main__":
 		else:
 			three_dataset_models[f_removed_index].append(i)
 
-	x = ["0%", "10%", "30%", "50%", "70%", "90%"]
+	make_plot(
+		three_dataset_models,
+		poker_dataset_models,
+		1,
+		"Concept",
+		"three_v_poker_concepts"
+	)
 
-	random_three, random_poker, concept_random_three, concept_random_poker = [], [], [], []
-
-	for idx, removed in enumerate(poker_dataset_models):
-		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
-		random = [i[1] for i in removed if "concepts-random" not in i[0]]
-		if idx == 0:  # duplicate no features removed
-			random_poker.append(random)
-			concept_random_poker.append(random)
-		else:
-			random_poker.append(random)
-			concept_random_poker.append(concept_random)
-
-	for idx, removed in enumerate(three_dataset_models):
-		concept_random = [i[1] for i in removed if "concepts-random" in i[0]]
-		random = [i[1] for i in removed if "concepts-random" not in i[0]]
-		if idx == 0:
-			random_three.append(random)
-			concept_random_three.append(random)
-		else:
-			random_three.append(random)
-			concept_random_three.append(concept_random)
-
-	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three")
-	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker")
-	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three")
-	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker")
-
-	plt.xlabel("Features removed")
-	plt.ylabel("Concept accuracy")
-	plt.legend(loc="best")
-	plt.ylim(92, 100)
-	plt.xlim(0, 5)
-	#plt.show()
-
-	save_dir = 'results/roar'
-	if not os.path.exists(f"{save_dir}"):
-		os.makedirs(f"{save_dir}")
-	plt.savefig(f'{save_dir}/three_v_poker.png', bbox_inches='tight', pad_inches = 0)
+	make_plot(
+		three_dataset_models,
+		poker_dataset_models,
+		4,
+		"Task",
+		"three_v_poker_task"
+	)

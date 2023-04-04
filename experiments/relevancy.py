@@ -5,7 +5,8 @@ from torchmetrics import F1Score
 from dataset.dataset import load_data
 from dataset.utils import IndexToString
 from torchvision.utils import save_image
-from models.model import End2EndModel
+#from models.model import End2EndModel
+from models.vgg import End2EndModel
 from tqdm import tqdm
 import os
 import matplotlib.pyplot as plt
