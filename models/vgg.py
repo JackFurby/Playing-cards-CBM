@@ -83,9 +83,9 @@ class CtoYNet(nn.Module):
 		self.expand_dim = expand_dim
 		if self.expand_dim:
 			self.classifier = nn.Sequential(
-				nn.Linear(num_concept_in, 128),
+				nn.Linear(num_concept_in, expand_dim),
 				nn.ReLU(),
-				nn.Linear(128, num_classes)
+				nn.Linear(expand_dim, num_classes)
 			)
 		else:
 			self.classifier = self.lib.Linear(num_concept_in, num_classes)
