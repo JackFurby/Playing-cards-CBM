@@ -63,7 +63,7 @@ class End2EndModel(torch.nn.Module):
 				param.requires_grad = False
 			print("frozen layers in x_to_c_model")
 
-	def forward_stage2(self, stage1_out):
+	def forward_stage2(self, stage_1_out):
 		if self.use_modulelist:
 			stage_1_out = torch.cat(stage_1_out, dim=1)
 		if self.use_sigmoid:
@@ -139,8 +139,8 @@ class VGG(nn.Module):
 				if 'fc' not in name:
 					param.requires_grad = False
 			print("frozen lower model layers")
-			
-			
+
+
 		if init_weights:
 		    for m in self.modules():
 		        if isinstance(m, nn.Conv2d):
