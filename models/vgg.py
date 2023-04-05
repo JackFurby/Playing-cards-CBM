@@ -95,7 +95,7 @@ class CtoYNet(nn.Module):
 
 
 class VGG(nn.Module):
-	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
+	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, pretrained_weights=None, init_weights=True, freeze=False):
 		"""
 		Args:
 		num_classes: number of main task classes
@@ -105,9 +105,9 @@ class VGG(nn.Module):
 		"""
 		super().__init__()
 
-		self.features = features
 		self.num_concepts = num_concepts
-		self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+		self.features = features
+		self.avgPool = nn.AdaptiveAvgPool2d((7, 7))
 		self.flatten = nn.Flatten()
 		self.classifier = nn.Sequential(
 			nn.Linear(512 * 7 * 7, 4096),
@@ -139,8 +139,22 @@ class VGG(nn.Module):
 				if 'fc' not in name:
 					param.requires_grad = False
 			print("frozen lower model layers")
+			
+			
+		if init_weights:
+		    for m in self.modules():
+		        if isinstance(m, nn.Conv2d):
+		            nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+		            if m.bias is not None:
+		                nn.init.constant_(m.bias, 0)
+		        elif isinstance(m, nn.BatchNorm2d):
+		            nn.init.constant_(m.weight, 1)
+		            nn.init.constant_(m.bias, 0)
+		        elif isinstance(m, nn.Linear):
+		            nn.init.normal_(m.weight, 0, 0.01)
+		            nn.init.constant_(m.bias, 0)
 
-	def forward(self, X):
+	def forward(self, x):
 		x = self.features(x)
 		x = self.avgPool(x)
 		x = self.flatten(x)

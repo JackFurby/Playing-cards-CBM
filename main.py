@@ -172,6 +172,7 @@ if __name__ == "__main__":
 		start_lr=args.lr,
 		lr_patience=args.lr_patience,
 		epochs=args.epochs,
+		vgg_version=args.vgg_version,
 		training_mode=args.mode,
 		pretrained_weights=args.pretrained_weights,
 		optimizer=args.optimizer,
@@ -195,8 +196,8 @@ if __name__ == "__main__":
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, x_resize=args.x_resize, y_resize=args.y_resize, num_workers=args.num_workers)
 
 	if args.mode == "XtoC":
-		if model_version == "16_bn":
-			model = models.vgg16_bn(pretrained=False, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		if args.vgg_version == "16_bn":
+			model = models.vgg16_bn(pretrained=True, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
 			model = models.vgg11_bn(pretrained=False, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint" or args.mode == "sequential":
@@ -204,7 +205,7 @@ if __name__ == "__main__":
 	elif args.mode == "CtoY":
 		model = models.CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	else:  # standard training
-		if model_version == "16_bn":
+		if args.vgg_version == "16_bn":
 			model = models.vgg16_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
 			model = models.vgg11_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
