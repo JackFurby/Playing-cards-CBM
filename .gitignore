@@ -145,4 +145,5 @@ experiments/all_acc.pkl
 experiments/roar_acc.pkl
 dataset/celebA
 dataset/roar/
+dataset/chexpert
 results/
