@@ -72,6 +72,13 @@ if __name__ == "__main__":
 		help='File path to pytorch weight file'
 	)
 	parser.add_argument(
+		'--vgg_version',
+		type=str,
+		default="11_bn",
+		choices=["11_bn", "16_bn"],
+		help='Specify the type of vgg model to use (default: "11_bn")'
+	)
+	parser.add_argument(
 		'--n_classes',
 		type=int,
 		help='Number of classes in dataset'
@@ -96,7 +103,7 @@ if __name__ == "__main__":
 		'--dataset_name',
 		type=str,
 		default='cards',
-		choices=["cards", "faces"],
+		choices=["cards", "chexpert"],
 		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
