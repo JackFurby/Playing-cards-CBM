@@ -256,7 +256,7 @@ if __name__ == "__main__":
 			scheduler.step(testLoss)
 
 			if (bestMetric is None) or (bestMetric > testMetric):
-				bestMetric = testLoss
+				bestMetric = testMetric
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
@@ -319,7 +319,7 @@ if __name__ == "__main__":
 			scheduler.step(testLoss)
 
 			if (bestMetric is None) or (bestMetric > testMetric):
-				bestMetric = testLoss
+				bestMetric = testMetric
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
@@ -381,7 +381,7 @@ if __name__ == "__main__":
 			scheduler.step(testLoss)
 
 			if (bestMetric is None) or (bestMetric > testMetric):
-				bestMetric = testLoss
+				bestMetric = testMetric
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
