@@ -130,6 +130,13 @@ if __name__ == "__main__":
 		help='Weight task loss (default: 1.0)'
 	)
 	parser.add_argument(
+		'--save_metric',
+		type=str,
+		default='loss',
+		choices=["loss", "f1"],
+		help='Metric to use when deciding whether to save the model (default: "loss")'
+	)
+	parser.add_argument(
 		'--freeze',
 		action='store_true',
 		help='Freeze the input to layer before concept vector model part'
@@ -184,6 +191,7 @@ if __name__ == "__main__":
 		use_sig=args.use_sig,
 		freeze=args.freeze,
 		seed=args.seed,
+		save_metric=args.save_metric,
 		device=device
 	)
 
@@ -233,17 +241,22 @@ if __name__ == "__main__":
 			for i in range(args.n_concepts):
 				attr_criterion.append(nn.CrossEntropyLoss())
 
-		bestLoss = None
+		bestMetric = None
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
 			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
+			if arge.save_metric == "loss":
+				testMetric = testLoss
+			else:
+				testMetric = 1 - testF1
+
 			scheduler.step(testLoss)
 
-			if (bestLoss is None) or (bestLoss > testLoss):
-				bestLoss = testLoss
+			if (bestMetric is None) or (bestMetric > testMetric):
+				bestMetric = testLoss
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
@@ -291,17 +304,22 @@ if __name__ == "__main__":
 			for i in range(args.n_concepts):
 				attr_criterion.append(nn.CrossEntropyLoss())
 
-		bestLoss = None
+		bestMetric = None
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
 			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
+			if arge.save_metric == "loss":
+				testMetric = testLoss
+			else:
+				testMetric = 1 - testF1
+
 			scheduler.step(testLoss)
 
-			if (bestLoss is None) or (bestLoss > testLoss):
-				bestLoss = testLoss
+			if (bestMetric is None) or (bestMetric > testMetric):
+				bestMetric = testLoss
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):
@@ -348,17 +366,22 @@ if __name__ == "__main__":
 	elif args.mode in ["standard", "CtoY", "sequential"]:
 		criterion = nn.CrossEntropyLoss()
 
-		bestLoss = None
+		bestMetric = None
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
 			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, train=False, device=device)
 
+			if arge.save_metric == "loss":
+				testMetric = testLoss
+			else:
+				testMetric = 1 - testF1
+
 			scheduler.step(testLoss)
 
-			if (bestLoss is None) or (bestLoss > testLoss):
-				bestLoss = testLoss
+			if (bestMetric is None) or (bestMetric > testMetric):
+				bestMetric = testLoss
 				bestEpoch = epoch
 
 				if not os.path.exists("./saves"):

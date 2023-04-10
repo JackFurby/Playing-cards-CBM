@@ -27,6 +27,10 @@ def make_plot(three_dataset_models, poker_dataset_models, var_index, var_name, s
 			concept_random_poker.append(concept_random)
 
 	for idx, removed in enumerate(three_dataset_models):
+		for i in removed:
+			print(i[0], i[1], i[4])
+
+
 		concept_random = [i[var_index] for i in removed if "concepts-random" in i[0]]
 		random = [i[var_index] for i in removed if "concepts-random" not in i[0]]
 		if idx == 0:
@@ -36,13 +40,13 @@ def make_plot(three_dataset_models, poker_dataset_models, var_index, var_name, s
 			random_three.append(random)
 			concept_random_three.append(concept_random)
 
-	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three")
+	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three", marker='o')
 	plt.fill_between(x, [min(i) for i in random_three], [max(i) for i in random_three], alpha=0.2)
-	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker")
+	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker", marker='o')
 	plt.fill_between(x, [min(i) for i in random_poker], [max(i) for i in random_poker], alpha=0.2)
-	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three")
+	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three", marker='o')
 	plt.fill_between(x, [min(i) for i in concept_random_three], [max(i) for i in concept_random_three], alpha=0.2)
-	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker")
+	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker", marker='o')
 	plt.fill_between(x, [min(i) for i in concept_random_poker], [max(i) for i in concept_random_poker], alpha=0.2)
 
 	plt.xlabel("Features removed")
