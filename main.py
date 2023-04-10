@@ -248,7 +248,7 @@ if __name__ == "__main__":
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
 			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
-			if arge.save_metric == "loss":
+			if args.save_metric == "loss":
 				testMetric = testLoss
 			else:
 				testMetric = 1 - testF1
@@ -311,7 +311,7 @@ if __name__ == "__main__":
 			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
 			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
-			if arge.save_metric == "loss":
+			if args.save_metric == "loss":
 				testMetric = testLoss
 			else:
 				testMetric = 1 - testF1
@@ -373,7 +373,7 @@ if __name__ == "__main__":
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
 			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, train=False, device=device)
 
-			if arge.save_metric == "loss":
+			if args.save_metric == "loss":
 				testMetric = testLoss
 			else:
 				testMetric = 1 - testF1
