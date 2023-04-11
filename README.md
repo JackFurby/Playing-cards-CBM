@@ -79,11 +79,11 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing-cards  --dataset_postfix splits/single  --weighted_loss --optimizer sgd`
 
-`python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three_card_class  --weighted_loss --optimizer sgd`
+`python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three  --weighted_loss --optimizer sgd`
 
 `python main.py --mode XtoC --n_concepts 36 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd --pretrained_weights saves/vgg11_bn-imagenet.pth --freeze`
 
-`python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM  --weighted_loss --optimizer sgd --dataset_name chexpert --num_workers 6 --batch_size 32 --save_name chexpert_x_to_c --vgg_version 16_bn --lr 0.01 --x_resize 320 --y_resize 320`
+`python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM --optimizer adam --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 16_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric f1`
 
 
 #### Independent CtoY training
@@ -111,17 +111,19 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### XtoC
 
-`python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17`
+`python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17 vgg_version 11_bn`
+
+`python concept_to_standard_model_converter.py --model_path ./saves/chexpert_x_to_c.pth --model_out_path ./saves/chexpert_XtoC_converted.pth --num_concepts 13 --vgg_version 16_bn`
 
 
 #### XtoC and CtoY (independent)
 
-`python concept_to_standard_model_converter.py --model_path ./saves/independent-XtoC-single.pth --model_2_path ./saves/independent-CtoY-single.pth --model_out_path ./saves/independent-single.pth --num_concepts 17 --num_classes 52`
+`python concept_to_standard_model_converter.py --model_path ./saves/independent-XtoC-single.pth --model_2_path ./saves/independent-CtoY-single.pth --model_out_path ./saves/independent-single.pth --num_concepts 17 --num_classes 52 --vgg_version 11_bn`
 
 
 #### XtoCtoY / end to end / XtoC and CtoY (sequential)
 
-`python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end`
+`python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end --vgg_version 11_bn`
 
 ''
 

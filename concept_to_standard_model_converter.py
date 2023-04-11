@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 import torchvision
-from models.model import PlayingCardNet, End2EndModel, CtoYNet
+import models.vgg as models
 import argparse
 import os
 
 
-def get_concept_model(model_path, num_concepts):
+def get_concept_model(model_path, num_concepts, vgg_version):
 	"""
 	This function will load and return a concept bottleneck model.
 
@@ -17,7 +17,10 @@ def get_concept_model(model_path, num_concepts):
 		Pytorch model
 	"""
 
-	XtoC = PlayingCardNet(num_concepts=num_concepts)
+	if args.vgg_version == "16_bn":
+		XtoC = models.vgg16_bn(num_concepts=num_concepts)
+	else:
+		XtoC = models.vgg11_bn(num_concepts=num_concepts)
 	XtoC.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return XtoC
 
@@ -34,12 +37,12 @@ def get_task_model(model_path, num_concepts, num_classes):
 		Pytorch model
 	"""
 
-	CtoY = CtoYNet(num_concept_in=num_concepts, num_classes=num_classes)
+	CtoY = models.CtoYNet(num_concept_in=num_concepts, num_classes=num_classes)
 	CtoY.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return CtoY
 
 
-def get_end_to_end_model(model_path, num_concepts, num_classes):
+def get_end_to_end_model(model_path, num_concepts, num_classes, vgg_version):
 	"""
 	This function will load and return a concept bottleneck model (end to end / joint).
 
@@ -49,12 +52,12 @@ def get_end_to_end_model(model_path, num_concepts, num_classes):
 	returns:
 		Pytorch model
 	"""
-	model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True)
+	model = models.End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True, model_version=vgg_version)
 	model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 	return model
 
 
-def get_converted_model(model, num_concepts, end_to_end):
+def get_converted_model(model, num_concepts, end_to_end, vgg_version):
 	"""
 	Initilises a new model and load in weights form a concept model.
 	The ModuleList layer from the concept model is replaced by a linear layer
@@ -69,7 +72,10 @@ def get_converted_model(model, num_concepts, end_to_end):
 	returns:
 		Pytorch model
 	"""
-	new_model = PlayingCardNet(num_classes=num_concepts)
+	if args.vgg_version == "16_bn":
+		new_model = models.vgg16_bn(num_classes=num_concepts)
+	else:
+		new_model = models.vgg11_bn(num_classes=num_concepts)
 	state_dict = model.state_dict() if not end_to_end else model.x_to_c_model.state_dict()
 	new_model.load_state_dict(state_dict, strict=False)
 
@@ -97,11 +103,11 @@ def get_converted_model(model, num_concepts, end_to_end):
 	return new_model
 
 
-def combine_model_parts(model_1, model_2, num_classes, num_concepts):
+def combine_model_parts(model_1, model_2, num_classes, num_concepts, vgg_version):
 	"""
 	"""
 
-	end_to_end_model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True)
+	end_to_end_model = models.End2EndModel(num_classes=num_classes, num_concepts=num_concepts, freeze=False, use_sigmoid=True, model_version=vgg_version)
 	end_to_end_model.x_to_c_model = model_1
 	end_to_end_model.c_to_y_model = model_2
 	return end_to_end_model
@@ -141,17 +147,24 @@ if __name__ == "__main__":
 		type=int,
 		help='Number of classes in dataset'
 	)
+	parser.add_argument(
+		'--vgg_version',
+		type=str,
+		default="11_bn",
+		choices=["11_bn", "16_bn"],
+		help='Specify the type of vgg model to use (default: "11_bn")'
+	)
 	args = parser.parse_args()
 
 	if args.end_to_end:
-		model = get_end_to_end_model(model_path=args.model_path, num_concepts=args.num_concepts, num_classes=args.num_classes)
-		model = get_converted_model(model, num_concepts=len(model.x_to_c_model.all_fc), end_to_end=args.end_to_end)
+		model = get_end_to_end_model(model_path=args.model_path, num_concepts=args.num_concepts, num_classes=args.num_classes, vgg_version=args.vgg_version)
+		model = get_converted_model(model, num_concepts=len(model.x_to_c_model.all_fc), end_to_end=args.end_to_end, vgg_version=args.vgg_version)
 	else:
-		model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts)
-		model = get_converted_model(model, num_concepts=len(model.all_fc), end_to_end=args.end_to_end)
+		model = get_concept_model(model_path=args.model_path, num_concepts=args.num_concepts, vgg_version=args.vgg_version)
+		model = get_converted_model(model, num_concepts=len(model.all_fc), end_to_end=args.end_to_end, vgg_version=args.vgg_version)
 		if args.model_2_path is not None:  # X to C and C to Y
 			model_2 = get_task_model(model_path=args.model_2_path, num_concepts=args.num_concepts, num_classes=args.num_classes)
-			model = combine_model_parts(model, model_2, args.num_classes, args.num_concepts)
+			model = combine_model_parts(model, model_2, args.num_classes, args.num_concepts, vgg_version=args.vgg_version)
 
 	print(model)
 

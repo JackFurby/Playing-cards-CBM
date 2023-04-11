@@ -63,7 +63,7 @@ if __name__ == "__main__":
 		'--optimizer',
 		type=str,
 		default='adam',
-		choices=["adam", "sgd"],
+		choices=["adam", "adamW", "sgd"],
 		help='Optimizer to use for training (default: adam)'
 	)
 	parser.add_argument(
@@ -208,6 +208,7 @@ if __name__ == "__main__":
 			model = models.vgg16_bn(pretrained=True, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
 			model = models.vgg11_bn(pretrained=False, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			print(model)
 	elif args.mode == "joint" or args.mode == "sequential":
 		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
 	elif args.mode == "CtoY":
@@ -224,6 +225,8 @@ if __name__ == "__main__":
 
 	if args.optimizer == "adam":
 		optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+	elif args.optimizer == "adamW":
+		optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 	else:
 		optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 	scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=args.lr_patience, factor=0.1)
@@ -245,8 +248,8 @@ if __name__ == "__main__":
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
-			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
+			trainLoss, trainAcc, trainF1, trainAuc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1, testAuc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
@@ -270,9 +273,11 @@ if __name__ == "__main__":
 			print("trainLoss:", trainLoss)
 			print("trainAcc:", trainAcc, "%")
 			print("trainF1:", trainF1.item())
+			print("train AUC:", trainAuc)
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
 			print("testF1:", testF1.item())
+			print("test AUC:", testAuc)
 
 			log_values = {
 				"epoch": epoch,
@@ -285,6 +290,10 @@ if __name__ == "__main__":
 			if testLoss is not None:
 				log_values["trainF1"] = trainF1.item()
 				log_values["testF1"] = testF1.item()
+
+			if testAuc is not None:
+				log_values["train AUC"] = trainAuc
+				log_values["test AUC"] = testAuc
 
 			# Log to wandb
 			wandb.log(log_values)
@@ -308,8 +317,8 @@ if __name__ == "__main__":
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
-			testLoss, testAcc, testF1, testTaskF1, testTaskAcc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
+			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc, trainAuc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1, testTaskF1, testTaskAcc, testAuc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
@@ -334,12 +343,14 @@ if __name__ == "__main__":
 			print("trainAcc:", trainAcc, "%")
 			print("trainTaskAcc:", 100 * trainTaskAcc, "%")
 			print("trainF1:", trainF1.item())
+			print("train AUC:", trainAuc)
 			print("trainTaskF1:", trainTaskF1.item())
 			print("testLoss:", testLoss)
 			print("testAcc:", testAcc, "%")
 			print("testTaskAcc:", 100 * testTaskAcc, "%")
 			print("testF1:", testF1.item())
 			print("testTaskF1:", testTaskF1.item())
+			print("test AUC:", testAuc)
 
 			log_values = {
 				"epoch": epoch,
@@ -357,6 +368,10 @@ if __name__ == "__main__":
 				log_values["trainTaskF1"] = trainTaskF1.item()
 				log_values["testTaskF1"] = testTaskF1.item()
 
+			if testAuc is not None:
+				log_values["train AUC"] = trainAuc
+				log_values["test AUC"] = testAuc
+
 			# Log to wandb
 			wandb.log(log_values)
 
@@ -370,8 +385,8 @@ if __name__ == "__main__":
 		bestEpoch = 0
 
 		for epoch in range(parameters['epochs']):
-			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
-			testLoss, testAcc, testF1 = train(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, train=False, device=device)
+			trainLoss, trainAcc, trainF1, trainAuc = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
+			testLoss, testAcc, testF1, testAuc = train(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, train=False, device=device)
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
