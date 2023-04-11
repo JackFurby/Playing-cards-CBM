@@ -111,14 +111,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					task_f1 = f1(task_out, labels.to(torch.int32))
 
 				# AUC metric
-				#auc_concept = []
-				#for i in range(concepts.size(0)):
-				#	y_pred = sigmoid_outputs[:, i].squeeze().detach().numpy()
-				#	y_true = concepts[:, i].squeeze().detach().numpy()
-				#	fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred, pos_label=1)
-				#	auc_concept.append(metrics.auc(fpr, tpr))
-				#auc_acc.append(auc_concept)
-
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			else:  # XtoC
@@ -137,18 +129,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
 
 				# AUC metric
-				#auc_concept = []
-				#for i in range(concepts.size(0)):
-				#	y_pred = sigmoid_outputs[:, i].squeeze().cpu().detach().numpy()
-				#	y_true = concepts[:, i].squeeze().cpu().detach().numpy()
-				#	fpr, tpr, thresholds = metrics.roc_curve(y_true, y_pred, pos_label=1)
-				#	auc_concept.append(metrics.auc(fpr, tpr))
-				#print(auc_concept)
-				#auc_acc.append(auc_concept)
-
-				#auc_acc.append(metrics.roc_auc_score(concepts.cpu().detach().numpy(), sigmoid_outputs.cpu().detach().numpy(), multi_class='ovr'))
-
-				#print(multilabel_auroc(sigmoid_outputs, concepts, num_labels=52, average="macro", thresholds=None))
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			losses.append(loss.item())
@@ -167,10 +147,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			task_f1 = None
 
 		if len(auc_acc) > 0:
-			#concept_auc = []
-			#for i in auc_acc:
-			#	concept_auc.append(sum(i))
-			#auc_avg = sum(concept_auc) / (len(auc_acc) * len(auc_acc[0]))
 			auc_avg = (sum(auc_acc) / len(auc_acc)).item()
 		else:
 			auc_avg = None

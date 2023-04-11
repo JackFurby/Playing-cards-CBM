@@ -83,7 +83,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 36 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd --pretrained_weights saves/vgg11_bn-imagenet.pth --freeze`
 
-`python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM --optimizer adam --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 16_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric f1`
+`python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM --optimizer adamW --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 16_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric auc`
 
 
 #### Independent CtoY training

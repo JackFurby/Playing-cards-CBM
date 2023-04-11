@@ -253,7 +253,7 @@ if __name__ == "__main__":
 			if args.save_metric == "loss":
 				testMetric = testLoss
 			elif args.save_metric == "auc":
-				testMetric = testAuc
+				testMetric = 1 - testAuc
 			else:
 				testMetric = 1 - testF1
 
@@ -324,7 +324,7 @@ if __name__ == "__main__":
 			if args.save_metric == "loss":
 				testMetric = testLoss
 			elif args.save_metric == "auc":
-				testMetric = testAuc
+				testMetric = 1 - testAuc
 			else:
 				testMetric = 1 - testF1
 
@@ -394,7 +394,7 @@ if __name__ == "__main__":
 			if args.save_metric == "loss":
 				testMetric = testLoss
 			elif args.save_metric == "auc":
-				testMetric = testAuc
+				testMetric = 1 - testAuc
 			else:
 				testMetric = 1 - testF1
 
