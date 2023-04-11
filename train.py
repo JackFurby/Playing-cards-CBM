@@ -119,7 +119,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				#	auc_concept.append(metrics.auc(fpr, tpr))
 				#auc_acc.append(auc_concept)
 
-				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(0), average="macro", thresholds=None))
+				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			else:  # XtoC
 				batch_losses = []
@@ -149,7 +149,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				#auc_acc.append(metrics.roc_auc_score(concepts.cpu().detach().numpy(), sigmoid_outputs.cpu().detach().numpy(), multi_class='ovr'))
 
 				#print(multilabel_auroc(sigmoid_outputs, concepts, num_labels=52, average="macro", thresholds=None))
-				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(0), average="macro", thresholds=None))
+				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			losses.append(loss.item())
 			if train:
