@@ -3,9 +3,9 @@ torch==1.13.1+cu116
 torchaudio==0.13.1+cu116
 torchvision==0.14.1+cu116
 torchmetrics==0.10.*
-matplotlib==3.6.*
+matplotlib==3.7.*
 numpy==1.24.*
-Pillow==9.3.*
+Pillow==9.4.*
 scikit-learn==1.2.*
 wandb
 jupyterlab==3.5.*

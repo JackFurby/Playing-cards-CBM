@@ -133,7 +133,7 @@ if __name__ == "__main__":
 		'--save_metric',
 		type=str,
 		default='loss',
-		choices=["loss", "f1"],
+		choices=["loss", "f1", "auc"],
 		help='Metric to use when deciding whether to save the model (default: "loss")'
 	)
 	parser.add_argument(
@@ -208,7 +208,6 @@ if __name__ == "__main__":
 			model = models.vgg16_bn(pretrained=True, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
 			model = models.vgg11_bn(pretrained=False, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-			print(model)
 	elif args.mode == "joint" or args.mode == "sequential":
 		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
 	elif args.mode == "CtoY":
@@ -253,6 +252,8 @@ if __name__ == "__main__":
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
+			elif args.save_metric == "auc":
+				testMetric = testAuc
 			else:
 				testMetric = 1 - testF1
 
@@ -322,6 +323,8 @@ if __name__ == "__main__":
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
+			elif args.save_metric == "auc":
+				testMetric = testAuc
 			else:
 				testMetric = 1 - testF1
 
@@ -390,6 +393,8 @@ if __name__ == "__main__":
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
+			elif args.save_metric == "auc":
+				testMetric = testAuc
 			else:
 				testMetric = 1 - testF1
 
