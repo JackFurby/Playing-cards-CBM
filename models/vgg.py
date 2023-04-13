@@ -40,22 +40,22 @@ model_urls = {
 
 
 class End2EndModel(torch.nn.Module):
-	def __init__(self, num_classes=6, num_concepts=52, model_version="11_bn", pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
+	def __init__(self, num_classes=6, num_concepts=52, model_version="11_bn", pretrained_weights=None, imnet_weights=False, freeze=False, use_sigmoid=False, use_modulelist=True):
 		super(End2EndModel, self).__init__()
 		self.c_to_y_model = CtoYNet(num_concepts, num_classes)
 		self.use_sigmoid = use_sigmoid
 		self.use_modulelist = use_modulelist  # modulelist used for training but may be converted to linear layer after
 
 		if self.use_modulelist:
-			if model_version == "16_bn":
-				self.x_to_c_model = vgg16_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			if model_version == "19_bn":
+				self.x_to_c_model = vgg19_bn(pretrained=imnet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imnet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
-			if model_version == "16_bn":
-				self.x_to_c_model = vgg16_bn(pretrained=False, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+			if model_version == "19_bn":
+				self.x_to_c_model = vgg19_bn(pretrained=imnet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=False, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imnet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model

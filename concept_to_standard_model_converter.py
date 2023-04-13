@@ -17,8 +17,8 @@ def get_concept_model(model_path, num_concepts, vgg_version):
 		Pytorch model
 	"""
 
-	if args.vgg_version == "16_bn":
-		XtoC = models.vgg16_bn(num_concepts=num_concepts)
+	if args.vgg_version == "19_bn":
+		XtoC = models.vgg19_bn(num_concepts=num_concepts)
 	else:
 		XtoC = models.vgg11_bn(num_concepts=num_concepts)
 	XtoC.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
@@ -72,8 +72,8 @@ def get_converted_model(model, num_concepts, end_to_end, vgg_version):
 	returns:
 		Pytorch model
 	"""
-	if args.vgg_version == "16_bn":
-		new_model = models.vgg16_bn(num_classes=num_concepts)
+	if args.vgg_version == "19_bn":
+		new_model = models.vgg19_bn(num_classes=num_concepts)
 	else:
 		new_model = models.vgg11_bn(num_classes=num_concepts)
 	state_dict = model.state_dict() if not end_to_end else model.x_to_c_model.state_dict()
@@ -151,7 +151,7 @@ if __name__ == "__main__":
 		'--vgg_version',
 		type=str,
 		default="11_bn",
-		choices=["11_bn", "16_bn"],
+		choices=["11_bn", "19_bn"],
 		help='Specify the type of vgg model to use (default: "11_bn")'
 	)
 	args = parser.parse_args()
