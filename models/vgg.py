@@ -40,7 +40,7 @@ model_urls = {
 
 
 class End2EndModel(torch.nn.Module):
-	def __init__(self, num_classes=6, num_concepts=52, model_version="11_bn", pretrained_weights=None, imnet_weights=False, freeze=False, use_sigmoid=False, use_modulelist=True):
+	def __init__(self, num_classes=6, num_concepts=52, model_version="11_bn", pretrained_weights=None, imagenet_weights=False, freeze=False, use_sigmoid=False, use_modulelist=True):
 		super(End2EndModel, self).__init__()
 		self.c_to_y_model = CtoYNet(num_concepts, num_classes)
 		self.use_sigmoid = use_sigmoid

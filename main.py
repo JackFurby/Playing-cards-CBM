@@ -69,7 +69,12 @@ if __name__ == "__main__":
 	parser.add_argument(
 		'--pretrained_weights',
 		type=str,
-		help='File path to pytorch weight file'
+		help='File path to pytorch weight file. Used to set model weights to a model not trained on Imagenet'
+	)
+	parser.add_argument(
+		'--imagenet_weights',
+		action='store_true',
+		help='If included the models XtoC part will be initilised with Imagenet weights'
 	)
 	parser.add_argument(
 		'--vgg_version',
@@ -182,6 +187,7 @@ if __name__ == "__main__":
 		vgg_version=args.vgg_version,
 		training_mode=args.mode,
 		pretrained_weights=args.pretrained_weights,
+		imagenet_weights=args.imagenet_weights,
 		optimizer=args.optimizer,
 		n_concepts=args.n_concepts,
 		n_classes=args.n_classes,
@@ -205,18 +211,18 @@ if __name__ == "__main__":
 
 	if args.mode == "XtoC":
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=True, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
-			model = models.vgg11_bn(pretrained=False, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint" or args.mode == "sequential":
-		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
+		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, imagenet_weights=args.imagenet_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
 	elif args.mode == "CtoY":
 		model = models.CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	else:  # standard training
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
-			model = models.vgg11_bn(pretrained=False, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 
 	model.to(device)
 
