@@ -32,7 +32,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint", "CtoY", "sequential"],
+		choices=["XtoC", "standard", "joint", "CtoY", "sequential", "XtoC_test"],
 		help='Training method to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
@@ -214,6 +214,11 @@ if __name__ == "__main__":
 			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
 			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+	if args.mode == "XtoC_test":
+		if args.vgg_version == "19_bn":
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_classes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		else:
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_classes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint" or args.mode == "sequential":
 		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, imagenet_weights=args.imagenet_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
 	elif args.mode == "CtoY":
@@ -255,6 +260,68 @@ if __name__ == "__main__":
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1, trainAuc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
 			testLoss, testAcc, testF1, testAuc = train(model, val_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
+
+			if args.save_metric == "loss":
+				testMetric = testLoss
+			elif args.save_metric == "auc":
+				testMetric = 1 - testAuc
+			else:
+				testMetric = 1 - testF1
+
+			scheduler.step(testLoss)
+
+			if (bestMetric is None) or (bestMetric > testMetric):
+				bestMetric = testMetric
+				bestEpoch = epoch
+
+				if not os.path.exists("./saves"):
+					os.makedirs("./saves")
+				saveName = f"./saves/{save_name}"
+				torch.save(model.state_dict(), saveName)
+				wandb.save(saveName)
+				print("Model saved")
+
+			print("epoch:", epoch)
+			print("trainLoss:", trainLoss)
+			print("trainAcc:", trainAcc, "%")
+			print("trainF1:", trainF1.item())
+			print("train AUC:", trainAuc)
+			print("testLoss:", testLoss)
+			print("testAcc:", testAcc, "%")
+			print("testF1:", testF1.item())
+			print("test AUC:", testAuc)
+
+			log_values = {
+				"epoch": epoch,
+				"Train XtoC Loss": trainLoss,
+				"Train XtoC Accuracy": trainAcc,
+				"Test XtoC Loss": testLoss,
+				"Test XtoC Accuracy": testAcc
+			}
+
+			if testLoss is not None:
+				log_values["trainF1"] = trainF1.item()
+				log_values["testF1"] = testF1.item()
+
+			if testAuc is not None:
+				log_values["train AUC"] = trainAuc
+				log_values["test AUC"] = testAuc
+
+			# Log to wandb
+			wandb.log(log_values)
+
+			for param_group in optimizer.param_groups:
+				wandb.log({"learning rate": param_group['lr']})
+
+	if args.mode == "XtoC_test":
+		criterion = nn.BCELoss()
+
+		bestMetric = None
+		bestEpoch = 0
+
+		for epoch in range(parameters['epochs']):
+			trainLoss, trainAcc, trainF1, trainAuc = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
+			testLoss, testAcc, testF1, testAuc = train(model, val_loader, optimizer, criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=False, device=device)
 
 			if args.save_metric == "loss":
 				testMetric = testLoss
