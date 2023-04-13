@@ -220,9 +220,9 @@ if __name__ == "__main__":
 		model = models.CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
 	else:  # standard training
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_classes=args.n_classes)
 		else:
-			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_classes=args.n_classes)
 
 	model.to(device)
 

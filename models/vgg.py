@@ -48,14 +48,14 @@ class End2EndModel(torch.nn.Module):
 
 		if self.use_modulelist:
 			if model_version == "19_bn":
-				self.x_to_c_model = vgg19_bn(pretrained=imnet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=imnet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
 			if model_version == "19_bn":
-				self.x_to_c_model = vgg19_bn(pretrained=imnet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=imnet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model
@@ -95,7 +95,7 @@ class CtoYNet(nn.Module):
 
 
 class VGG(nn.Module):
-	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, pretrained_weights=None, init_weights=True, freeze=False):
+	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, pretrained_weights=None, init_weights=True, dropout=0.5, freeze=False):
 		"""
 		Args:
 		num_classes: number of main task classes
@@ -112,10 +112,10 @@ class VGG(nn.Module):
 		self.classifier = nn.Sequential(
 			nn.Linear(512 * 7 * 7, 4096),
 			nn.ReLU(True),
-			nn.Dropout(0.5),
+			nn.Dropout(p=dropout),
 			nn.Linear(4096, 4096),
 			nn.ReLU(True),
-			nn.Dropout(0.5),
+			nn.Dropout(p=dropout),
 		)
 
 		# concept training requires a modulelist for loss
