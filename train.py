@@ -115,7 +115,10 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 			elif mode == "XtoC_test":
 				sigmoid_outputs = torch.nn.Sigmoid()(outputs)
-				loss = criterion(sigmoid_outputs, concepts)
+				weight = (concepts.size()[0] - concepts.sum()) / concepts.sum()
+				print(weight)
+				#loss = criterion(sigmoid_outputs, concepts)
+				loss = F.binary_cross_entropy_with_logits(sigmoid_outputs, concepts, pos_weight=weight)
 				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
 				if f1 is not None:
