@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from sklearn import metrics
@@ -114,18 +115,36 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			elif mode == "XtoC_test":
-				sigmoid_outputs = torch.nn.Sigmoid()(outputs)
-				weight = (concepts.size()[0] - concepts.sum()) / concepts.sum()
-				print(weight)
+				#sigmoid_outputs = torch.nn.Sigmoid()(outputs)
+				#weight = (concepts.size()[0] - concepts.sum()) / concepts.sum()
+				#print(weight)
+				#print(concepts.size(), concepts.size()[0], concepts.sum())
 				#loss = criterion(sigmoid_outputs, concepts)
-				loss = F.binary_cross_entropy_with_logits(sigmoid_outputs, concepts, pos_weight=weight)
-				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+				#loss = F.binary_cross_entropy_with_logits(outputs, concepts, pos_weight=weight)
+				#accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
 
-				if f1 is not None:
-					f1_acc.append(f1(outputs, concepts.to(torch.int32)))
+				#if f1 is not None:
+				#	f1_acc.append(f1(outputs, concepts.to(torch.int32)))
 
 				# AUC metric
-				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
+				#auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
+
+				batch_losses = []
+                                for i in range(len(criterion)):
+                                        loss = criterion[i](outputs[i].squeeze(), concepts[:, i])
+                                        batch_losses.append(loss)
+
+                                loss = sum(batch_losses) / len(concepts[:, i])
+                                sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
+
+                                # accuracy for concepts
+                                accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+
+                                if f1 is not None:
+                                        f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
+
+                                # AUC metric
+                                auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 			else:  # XtoC
 				batch_losses = []
 				for i in range(len(criterion)):

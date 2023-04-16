@@ -216,7 +216,7 @@ if __name__ == "__main__":
 			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	if args.mode == "XtoC_test":
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_classes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 		else:
 			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_classes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 	elif args.mode == "joint" or args.mode == "sequential":
@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
 	f1 = F1Score().to(device)
 
-	if args.mode == "XtoC":
+	if args.mode == "XtoC" or "XtoC_test":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
