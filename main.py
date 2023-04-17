@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
 	f1 = F1Score().to(device)
 
-	if args.mode == "XtoC" or "XtoC_test":
+	if args.mode == "XtoC" or args.mode == "XtoC_test":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
@@ -313,7 +313,7 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
-	if args.mode == "XtoC_test":
+	elif args.mode == "XtoC_test":
 		criterion = nn.BCELoss()
 
 		bestMetric = None
