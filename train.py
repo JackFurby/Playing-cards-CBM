@@ -131,7 +131,13 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 				batch_losses = []
 				for i in range(len(criterion)):
-					loss = criterion[i](outputs[i].squeeze(), concepts[:, i])
+					i_pred = outputs[i].squeeze()
+					i_true = concepts[:, i]
+					if i_true.sum() > 0:
+						weight = (i_true.size(0) - i_true.sum()) / i_true.sum()
+					else:
+						weight = torch.tensor(i_true.size(0))
+					loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
 					batch_losses.append(loss)
 
 				loss = sum(batch_losses) / len(concepts[:, i])
