@@ -140,7 +140,7 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
 					batch_losses.append(loss)
 
-				loss = sum(batch_losses) / len(concepts[:, i])
+				loss = sum(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
 				# accuracy for concepts
