@@ -135,9 +135,10 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					i_true = concepts[:, i]
 					if i_true.sum() > 0:
 						weight = (i_true.size(0) - i_true.sum()) / i_true.sum()
+						loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
 					else:
-						weight = torch.tensor(i_true.size(0))
-					loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
+						#weight = torch.tensor(i_true.size(0))
+						loss = torch.tensor(0., requires_grad=True).to(device)
 					batch_losses.append(loss)
 
 				loss = sum(batch_losses)
