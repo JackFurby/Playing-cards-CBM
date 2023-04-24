@@ -3,7 +3,6 @@ import numpy as np
 import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data
-#from models.model import End2EndModel
 from models.vgg import End2EndModel
 from tqdm import tqdm
 import os
@@ -40,14 +39,19 @@ def make_plot(three_dataset_models, poker_dataset_models, var_index, var_name, s
 			random_three.append(random)
 			concept_random_three.append(concept_random)
 
-	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three", marker='o')
-	plt.fill_between(x, [min(i) for i in random_three], [max(i) for i in random_three], alpha=0.2)
-	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker", marker='o')
-	plt.fill_between(x, [min(i) for i in random_poker], [max(i) for i in random_poker], alpha=0.2)
-	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three", marker='o')
-	plt.fill_between(x, [min(i) for i in concept_random_three], [max(i) for i in concept_random_three], alpha=0.2)
-	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker", marker='o')
-	plt.fill_between(x, [min(i) for i in concept_random_poker], [max(i) for i in concept_random_poker], alpha=0.2)
+	#three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Three", marker='o')
+	#plt.fill_between(x, [min(i) for i in random_three], [max(i) for i in random_three], alpha=0.2)
+	#poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker", marker='o')
+	#plt.fill_between(x, [min(i) for i in random_poker], [max(i) for i in random_poker], alpha=0.2)
+	#three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts three", marker='o')
+	#plt.fill_between(x, [min(i) for i in concept_random_three], [max(i) for i in concept_random_three], alpha=0.2)
+	#poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker", marker='o')
+	#plt.fill_between(x, [min(i) for i in concept_random_poker], [max(i) for i in concept_random_poker], alpha=0.2)
+
+	three_ran_plot = plt.plot(x, [max(i) for i in random_three], label="Three", marker='o')
+	poker_ran_plot = plt.plot(x, [max(i) for i in random_poker], label="Poker", marker='o')
+	three_con_ran_plot = plt.plot(x, [max(i) for i in concept_random_three], label="Concepts three", marker='o')
+	poker_con_ran_plot = plt.plot(x, [max(i) for i in concept_random_poker], label="Concepts poker", marker='o')
 
 	plt.xlabel("Features removed")
 	plt.ylabel(f"{var_name} accuracy")
@@ -185,14 +189,7 @@ if __name__ == "__main__":
 		all_acc = []
 
 		for file in os.listdir(args.weights_dir):
-			if "sig" in file:  # joint with sig
-				use_sig = True
-			elif "standard" in file:  # standard as joint
-				use_sig = False
-			elif "joint" not in file:  # independent and sequential
-				use_sig = True
-			else:  # joint without sig
-				use_sig = False
+			use_sig = True
 			if "single" in file:
 				num_concepts = 17
 				num_classes = 52
