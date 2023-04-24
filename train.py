@@ -129,19 +129,18 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				# AUC metric
 				#auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
-				batch_losses = []
+				loss = 0
 				for i in range(len(criterion)):
 					i_pred = outputs[i].squeeze()
 					i_true = concepts[:, i]
 					if i_true.sum() > 0:
 						weight = (i_true.size(0) - i_true.sum()) / i_true.sum()
-						loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
+						i_loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
 					else:
 						#weight = torch.tensor(i_true.size(0))
-						loss = torch.tensor(0., requires_grad=True).to(device)
-					batch_losses.append(loss)
+						i_loss = torch.tensor(0., requires_grad=True).to(device)
+					loss += i_loss
 
-				loss = sum(batch_losses)
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
 
 				# accuracy for concepts
