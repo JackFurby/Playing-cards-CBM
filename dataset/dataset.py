@@ -71,11 +71,6 @@ class PlayingCardDataset(Dataset):
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
-		# temp - convert concepts to 3 hot vector
-		#concepts = torch.zeros(52)
-		#for i in img_data['concepts']:
-		#	concepts[i] = 1
-
 		# create lists for card points and card classes
 		# card points are adjusted for resized images
 		if self.return_points:
@@ -253,18 +248,23 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 	else:
 		if is_training:
 			transform = transforms.Compose([
-				transforms.Resize((y_resize, x_resize)),
+				#transforms.Resize((y_resize, x_resize)),
 				#transforms.RandomResizedCrop((y_resize, x_resize)),
 				#transforms.ColorJitter(brightness=32/255, saturation=(0.5, 1.5)),
 				#transforms.RandomHorizontalFlip(),
+				transforms.Resize(x_resize + 50),
+				transforms.CenterCrop(x_resize),
+				transforms.RandomHorizontalFlip(),
 				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.09, 1.05)),
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
 		else:
 			transform = transforms.Compose([
-				transforms.Resize((y_resize, x_resize)),
+				#transforms.Resize((y_resize, x_resize)),
 				#transforms.CenterCrop((y_resize, x_resize)),
+				transforms.Resize(x_resize + 50),
+				transforms.CenterCrop(x_resize),
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
