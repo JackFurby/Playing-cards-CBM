@@ -36,4 +36,4 @@ parameters:
   num_workers:
     value: 4
   pretrained_weights:
-    value: ./saves/independent-XtoC-poker-seed-307.pth
+    value: ./saves/poker_XtoC_best_sweep.pth

@@ -36,4 +36,4 @@ parameters:
   num_workers:
     value: 4
   pretrained_weights:
-    value: ./saves/independent-XtoC-three-seed-612.pth
+    value: ./saves/three_XtoC_best_sweep.pth
