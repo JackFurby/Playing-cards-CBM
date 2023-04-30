@@ -22,7 +22,6 @@ __all__ = [
 	"vgg16_bn",
 	"vgg19_bn",
 	"vgg19",
-	"x_to_c_model",
 	"MLP",
 	"End2EndModel"
 ]
@@ -48,14 +47,19 @@ class End2EndModel(torch.nn.Module):
 
 		if self.use_modulelist:
 			if model_version == "19_bn":
-				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_concepts=num_concepts)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_concepts=num_concepts)
 		else:
 			if model_version == "19_bn":
-				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg19_bn(pretrained=imagenet_weights, num_classes=num_concepts)
 			else:
-				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_classes=num_concepts, pretrained_weights=pretrained_weights)
+				self.x_to_c_model = vgg11_bn(pretrained=imagenet_weights, num_classes=num_concepts)
+
+		# if weights file provided for XtoC model, load them
+		if pretrained_weights is not None:
+			self.x_to_c_model.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=True)  # as we are replacing the final fc layer we can set strict to False
+			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model
@@ -95,7 +99,7 @@ class CtoYNet(nn.Module):
 
 
 class VGG(nn.Module):
-	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, pretrained_weights=None, init_weights=True, dropout=0.5, freeze=False):
+	def __init__(self, features=nn.Module, num_classes=52, num_concepts=0, init_weights=True, dropout=0.5, freeze=False):
 		"""
 		Args:
 		num_classes: number of main task classes
@@ -127,11 +131,6 @@ class VGG(nn.Module):
 		# basic fc for standard training
 		else:
 			self.out_fc = nn.Linear(4096, num_classes)
-
-		# if weights file provided, load them
-		if pretrained_weights is not None:
-			self.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=False)  # as we are replacing the final fc layer we can set strict to False
-			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all but fc layers
 		if freeze:  # only finetune fc layers

@@ -18,17 +18,17 @@ def get_dataset(split, return_points=False, return_orig=False, return_path=False
 	if split == "single":
 		n_concepts = 17
 		n_classes = 52
-		val_loader = load_data("../dataset/playing-cards/splits/single/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
+		val_loader = load_data("../dataset/playing-cards/splits/single/val.pkl", 16, dataset_root="../dataset/playing-cards/", dataset_name="cards", x_resize=299, y_resize=299, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle, train_transform=False)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/single/concepts.txt")
 	elif split == "three":
 		n_concepts = 52
 		n_classes = 1
-		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
+		val_loader = load_data("../dataset/playing-cards/splits/three/val.pkl", 16, dataset_root="../dataset/playing-cards/", dataset_name="cards", x_resize=299, y_resize=299, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle, train_transform=False)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three/concepts.txt")
 	elif split == "poker":
 		n_concepts = 52
 		n_classes = 6
-		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, dataset_root="../dataset/playing-cards/", return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle)
+		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, dataset_root="../dataset/playing-cards/", dataset_name="cards", x_resize=299, y_resize=299, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle, train_transform=False)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three_card_poker/concepts.txt")
 
 	return n_concepts, n_classes, val_loader, concept_index_to_string
