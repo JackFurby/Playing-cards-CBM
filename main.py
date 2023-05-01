@@ -211,14 +211,14 @@ if __name__ == "__main__":
 
 	if args.mode == "XtoC":
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
 		else:
-			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
 	elif args.mode == "XtoC_test":
 		if args.vgg_version == "19_bn":
-			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
 		else:
-			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
 	elif args.mode == "joint" or args.mode == "sequential":
 		model = models.End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, imagenet_weights=args.imagenet_weights, freeze=args.freeze, use_sigmoid=args.use_sig, model_version=args.vgg_version)
 	elif args.mode == "CtoY":
