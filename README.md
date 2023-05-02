@@ -85,6 +85,8 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM --optimizer adamW --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 19_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric auc --imagenet_weights`
 
+`python main.py --mode XtoC --n_concepts 57 --dataset_root dataset/CUB_200_2011/  --dataset_postfix splits/mini_CUB  --weighted_loss --optimizer sgd --dataset_name CUB --vgg_version 19_bn --imagenet_weights --batch_size 8 --use_cpu`
+
 
 #### Independent CtoY training
 
@@ -111,7 +113,7 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### XtoC
 
-`python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17 vgg_version 11_bn`
+`python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17 --vgg_version 11_bn`
 
 `python concept_to_standard_model_converter.py --model_path ./saves/chexpert_x_to_c.pth --model_out_path ./saves/chexpert_XtoC_converted.pth --num_concepts 13 --vgg_version 16_bn`
 

@@ -108,7 +108,7 @@ if __name__ == "__main__":
 		'--dataset_name',
 		type=str,
 		default='cards',
-		choices=["cards", "chexpert"],
+		choices=["cards", "chexpert", "CUB"],
 		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
