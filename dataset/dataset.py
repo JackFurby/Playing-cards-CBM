@@ -326,8 +326,8 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 				transforms.Resize(x_resize + 25),
 				transforms.CenterCrop(x_resize),
 				transforms.RandomHorizontalFlip(),
-				transforms.ColorJitter(brightness=0.05),
-				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05)),
+				transforms.ColorJitter(brightness=0.1),
+				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 			])
