@@ -8,6 +8,29 @@ from sklearn import metrics
 from torchmetrics.functional.classification import multilabel_auroc
 
 
+def get_loss(output, target, index, pos_weight, device):
+	target = target[:, index].view(-1)
+	if pos_weight == None:
+		if target.sum() == 0:
+			loss = torch.tensor(0., requires_grad=True).to(device)
+		else:
+			weight = (target.size()[0] - target.sum()) / target.sum()
+			loss = F.binary_cross_entropy_with_logits(output[:, index].view(-1), target, pos_weight=weight)
+	else:
+		pos_weight = torch.from_numpy(
+			np.array(
+				pos_weight,
+				dtype=np.float32
+			)).to(device).type_as(target)
+		loss = F.binary_cross_entropy_with_logits(
+			output[:, index].view(-1), target, pos_weight=pos_weight[index])
+
+	label = torch.sigmoid(output[:, index].view(-1)).ge(0.5).float()
+	acc = (target == label).float().sum() / len(label)
+
+	return (loss, acc)
+
+
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
 	"""
 	Training and evaluation loop.
@@ -115,20 +138,14 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
 
 			elif mode == "XtoC_test":
-				#sigmoid_outputs = torch.nn.Sigmoid()(outputs)
-				#weight = (concepts.size()[0] - concepts.sum()) / concepts.sum()
-				#print(weight)
-				#print(concepts.size(), concepts.size()[0], concepts.sum())
-				#loss = criterion(sigmoid_outputs, concepts)
-				#loss = F.binary_cross_entropy_with_logits(outputs, concepts, pos_weight=weight)
-				#accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
+				loss = 0
+				for t in range(outputs.size(1)):
+					loss_t, acc_t = get_loss(outputs, concepts, t, None, device)
+					loss += loss_t
+					accuracy.append(acc_t.item())
 
-				#if f1 is not None:
-				#	f1_acc.append(f1(outputs, concepts.to(torch.int32)))
 
-				# AUC metric
-				#auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
-
+				"""
 				loss = 0
 				for i in range(len(criterion)):
 					i_pred = outputs[i].squeeze()
@@ -151,11 +168,12 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 				# AUC metric
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
+				"""
 			else:  # XtoC
 				batch_losses = []
 				for i in range(len(criterion)):
 					loss = criterion[i](outputs[i].squeeze(), concepts[:, i])
-					batch_losses.append(attr_loss_weight * loss)
+					batch_losses.append(loss)
 
 				loss = sum(batch_losses) / len(concepts[:, i])
 				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))

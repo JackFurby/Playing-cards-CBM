@@ -58,7 +58,7 @@ class End2EndModel(torch.nn.Module):
 
 		# if weights file provided for XtoC model, load them
 		if pretrained_weights is not None:
-			self.x_to_c_model.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=True)  # as we are replacing the final fc layer we can set strict to False
+			self.x_to_c_model.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=False)  # as we are replacing the final fc layer we can set strict to False
 			print(f"Loaded weights from {pretrained_weights}")
 
 		# if freeze == true then freeze all layers in x_to_c_model
