@@ -25,10 +25,7 @@ def get_loss(output, target, index, pos_weight, device):
 		loss = F.binary_cross_entropy_with_logits(
 			output[:, index].view(-1), target, pos_weight=pos_weight[index])
 
-	label = torch.sigmoid(output[:, index].view(-1)).ge(0.5).float()
-	acc = (target == label).float().sum() / len(label)
-
-	return (loss, acc)
+	return loss
 
 
 def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", attr_loss_weight=None, train=True, device="cpu"):
@@ -140,9 +137,8 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 			elif mode == "XtoC_test":
 				loss = 0
 				for t in range(outputs.size(1)):
-					loss_t, acc_t = get_loss(outputs, concepts, t, None, device)
+					loss_t = get_loss(outputs, concepts, t, None, device)
 					loss += loss_t
-					accuracy.append(acc_t.item())
 
 				sigmoid_outputs = torch.nn.Sigmoid()(outputs)
 
