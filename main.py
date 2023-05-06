@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
 	f1 = F1Score().to(device)
 
-	if args.mode == "XtoC" or args.mode == "XtoC_test":
+	if args.mode == "XtoC":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		if args.weighted_loss:
 			imbalance = find_class_imbalance(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", True)
