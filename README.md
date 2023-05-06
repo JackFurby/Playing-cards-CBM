@@ -115,7 +115,7 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17 --vgg_version 11_bn`
 
-`python concept_to_standard_model_converter.py --model_path ./saves/chexpert_x_to_c.pth --model_out_path ./saves/chexpert_XtoC_converted.pth --num_concepts 13 --vgg_version 16_bn`
+`python concept_to_standard_model_converter.py --model_path ./saves/chexpert_x_to_c.pth --model_out_path ./saves/chexpert_XtoC_converted.pth --num_concepts 13 --vgg_version 19_bn`
 
 
 #### XtoC and CtoY (independent)
