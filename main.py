@@ -10,6 +10,7 @@ import os
 
 from train import train
 import models.vgg as models
+import models.model as legacy_models
 from dataset.dataset import load_data, find_class_imbalance
 
 
@@ -213,7 +214,7 @@ if __name__ == "__main__":
 		if args.vgg_version == "19_bn":
 			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
 		else:
-			model = models.vgg11_bn(pretrained=args.imagenet_weights, num_concepts=args.n_concepts, freeze=args.freeze)
+			model = legacy_models.PlayingCardNet(num_concepts=args.n_concepts, freeze=args.freeze)
 	elif args.mode == "XtoC_test":
 		if args.vgg_version == "19_bn":
 			model = models.vgg19_bn(pretrained=args.imagenet_weights, num_classes=args.n_concepts, freeze=args.freeze)
