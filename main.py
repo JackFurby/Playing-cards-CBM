@@ -202,6 +202,7 @@ if __name__ == "__main__":
 
 		bestLoss = None
 		bestEpoch = 0
+		lastUpdate = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
@@ -212,6 +213,7 @@ if __name__ == "__main__":
 			if (bestLoss is None) or (bestLoss > testLoss):
 				bestLoss = testLoss
 				bestEpoch = epoch
+				lastUpdate = 0
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -246,6 +248,12 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
+			if lastUpdate > args.lr_patience * 3:
+				print("Early stopping!")
+				break
+			else:
+				lastUpdate += 1
+
 	elif args.mode == "joint":
 		attr_criterion = []  # separate criterion (loss function) for each attribute
 		attr_criterion.append(nn.CrossEntropyLoss())  # criterion for c->y model out
@@ -260,6 +268,7 @@ if __name__ == "__main__":
 
 		bestLoss = None
 		bestEpoch = 0
+		lastUpdate = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1, trainTaskF1, trainTaskAcc = train(model, train_loader, optimizer, attr_criterion, f1=f1, mode=args.mode, attr_loss_weight=args.attr_loss_weight, train=True, device=device)
@@ -270,6 +279,7 @@ if __name__ == "__main__":
 			if (bestLoss is None) or (bestLoss > testLoss):
 				bestLoss = testLoss
 				bestEpoch = epoch
+				lastUpdate = 0
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -312,11 +322,18 @@ if __name__ == "__main__":
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
 
+			if lastUpdate > args.lr_patience * 3:
+				print("Early stopping!")
+				break
+			else:
+				lastUpdate += 1
+
 	elif args.mode in ["standard", "CtoY", "sequential"]:
 		criterion = nn.CrossEntropyLoss()
 
 		bestLoss = None
 		bestEpoch = 0
+		lastUpdate = 0
 
 		for epoch in range(parameters['epochs']):
 			trainLoss, trainAcc, trainF1 = train(model, train_loader, optimizer, criterion, f1=f1, mode=args.mode, train=True, device=device)
@@ -327,6 +344,7 @@ if __name__ == "__main__":
 			if (bestLoss is None) or (bestLoss > testLoss):
 				bestLoss = testLoss
 				bestEpoch = epoch
+				lastUpdate = 0
 
 				if not os.path.exists("./saves"):
 					os.makedirs("./saves")
@@ -360,5 +378,11 @@ if __name__ == "__main__":
 
 			for param_group in optimizer.param_groups:
 				wandb.log({"learning rate": param_group['lr']})
+
+			if lastUpdate > args.lr_patience * 3:
+				print("Early stopping!")
+				break
+			else:
+				lastUpdate += 1
 
 	print(f"Finished training! Best epoch: {bestEpoch}")
