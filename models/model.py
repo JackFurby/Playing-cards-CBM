@@ -3,16 +3,16 @@ from torch import nn
 
 
 class End2EndModel(torch.nn.Module):
-	def __init__(self, num_classes=6, num_concepts=52, pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
+	def __init__(self, model_version, num_classes=6, num_concepts=52, pretrained_weights=None, freeze=False, use_sigmoid=False, use_modulelist=True):
 		super(End2EndModel, self).__init__()
 		self.c_to_y_model = CtoYNet(num_concepts, num_classes)
 		self.use_sigmoid = use_sigmoid
 		self.use_modulelist = use_modulelist  # modulelist used for training but may be converted to linear layer after
 
 		if self.use_modulelist:
-			self.x_to_c_model = PlayingCardNet(num_concepts=num_concepts, pretrained_weights=pretrained_weights)
+			self.x_to_c_model = VGG(model_version=model_version, num_concepts=num_concepts, pretrained_weights=pretrained_weights)
 		else:
-			self.x_to_c_model = PlayingCardNet(num_classes=num_concepts, pretrained_weights=pretrained_weights)
+			self.x_to_c_model = VGG(model_version=model_version, num_classes=num_concepts, pretrained_weights=pretrained_weights)
 
 		# if freeze == true then freeze all layers in x_to_c_model
 		if freeze:  # only finetune c_to_y_model
@@ -47,42 +47,12 @@ class CtoYNet(nn.Module):
 		return self.classifier(x)
 
 
-# VGG 11 with Batch Norm
-class PlayingCardNet(nn.Module):
-	def __init__(self, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
-		super(PlayingCardNet, self).__init__()
+# VGG
+class VGG(nn.Module):
+	def __init__(self, model_version, num_classes=52, num_concepts=0, pretrained_weights=None, freeze=False):
+		super(VGG, self).__init__()
 		self.num_concepts = num_concepts
-		self.features = nn.Sequential(
-			nn.Conv2d(3, 64, kernel_size=3, padding=1),
-			nn.BatchNorm2d(64),
-			nn.ReLU(True),
-			nn.MaxPool2d(kernel_size=2, stride=2),
-			nn.Conv2d(64, 128, kernel_size=3, padding=1),
-			nn.BatchNorm2d(128),
-			nn.ReLU(True),
-			nn.MaxPool2d(kernel_size=2, stride=2),
-			nn.Conv2d(128, 256, kernel_size=3, padding=1),
-			nn.BatchNorm2d(256),
-			nn.ReLU(True),
-			nn.Conv2d(256, 256, kernel_size=3, padding=1),
-			nn.BatchNorm2d(256),
-			nn.ReLU(True),
-			nn.MaxPool2d(kernel_size=2, stride=2),
-			nn.Conv2d(256, 512, kernel_size=3, padding=1),
-			nn.BatchNorm2d(512),
-			nn.ReLU(True),
-			nn.Conv2d(512, 512, kernel_size=3, padding=1),
-			nn.BatchNorm2d(512),
-			nn.ReLU(True),
-			nn.MaxPool2d(kernel_size=2, stride=2),
-			nn.Conv2d(512, 512, kernel_size=3, padding=1),
-			nn.BatchNorm2d(512),
-			nn.ReLU(True),
-			nn.Conv2d(512, 512, kernel_size=3, padding=1),
-			nn.BatchNorm2d(512),
-			nn.ReLU(True),
-			nn.MaxPool2d(kernel_size=2, stride=2)
-		)
+		self.features = get_features(model_version)
 		self.avgPool = nn.AdaptiveAvgPool2d((7, 7))
 		self.flatten = nn.Flatten()
 		self.classifier = nn.Sequential(
@@ -127,3 +97,96 @@ class PlayingCardNet(nn.Module):
 		else:
 			out = self.out_fc(x)
 		return out
+
+
+def get_features(model_version):
+	if model_version == "11_bn":
+		return nn.Sequential(
+			nn.Conv2d(3, 64, kernel_size=3, padding=1),
+			nn.BatchNorm2d(64),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(64, 128, kernel_size=3, padding=1),
+			nn.BatchNorm2d(128),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(128, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(256, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2)
+		)
+	elif model_version == "19_bn":
+		return nn.Sequential(
+			nn.Conv2d(3, 64, kernel_size=3, padding=1),
+			nn.BatchNorm2d(64),
+			nn.ReLU(True),
+			nn.Conv2d(64, 64, kernel_size=3, padding=1),
+			nn.BatchNorm2d(64),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(64, 128, kernel_size=3, padding=1),
+			nn.BatchNorm2d(128),
+			nn.ReLU(True),
+			nn.Conv2d(128, 128, kernel_size=3, padding=1),
+			nn.BatchNorm2d(128),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(128, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.Conv2d(256, 256, kernel_size=3, padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(256, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.Conv2d(512, 512, kernel_size=3, padding=1),
+			nn.BatchNorm2d(512),
+			nn.ReLU(True),
+			nn.MaxPool2d(kernel_size=2, stride=2)
+		)
+	else:
+		raise ValueError(f"{model_version} is not a valid option for model_version")
