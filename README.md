@@ -162,27 +162,27 @@ With a trained model the architecture will contain a modlule list layer containi
 2. Update `requiremetns.txt`
 
   ```
-  matplotlib==3.6.*
-  matplotlib-inline==0.1.*
-  numpy==1.23.*
-  scanpy==1.9.*
-  scikit-learn==1.2.*
-  scipy==1.10.*
-  Pillow==9.4.*
-  pandas==1.5.*
-  h5py==3.8.*
-  PyYAML==6.0.*
+  matplotlib==3.7.1
+  matplotlib-inline==0.1.6
+  numpy==1.24.2
+  scanpy==1.9.3
+  scikit-learn==1.2.0
+  scipy==1.9.1
+  Pillow==9.4.0
+  pandas==1.5.3
+  h5py==3.8.0
+  PyYAML==6.0
   sklearn==0.0
   setuptools==67.5.*
-  tensorboard==2.12.*
-  tensorboard-data-server==0.7.*
-  tensorboard-plugin-wit==1.8.*
-  tensorflow==2.12.*
-  tensorflow-datasets==4.8.*
-  tensorflow-estimator==2.12.*
-  tensorflow-io-gcs-filesystem==0.32.*
-  tensorflow-metadata==1.12.*
-  tensorflow-probability==0.19.*
+  tensorboard==2.11.2
+  tensorboard-data-server==0.6.1
+  tensorboard-plugin-wit==1.8.1
+  tensorflow==2.11.0
+  tensorflow-datasets==4.8.3
+  tensorflow-estimator==2.11.0
+  tensorflow-io-gcs-filesystem==0.31.0
+  tensorflow-metadata==1.12.0
+  tensorflow-probability==0.19.0
   ```
 
 3. Update `setup.py`

@@ -256,7 +256,7 @@ if __name__ == "__main__":
 			model = classifier.Classifier(cfg)
 			model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu'))['state_dict'], strict=False)
 		else:
-			model = End2EndModel(vgg_version="11_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+			model = End2EndModel(model_version="11_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 			model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
 		model.eval()
 
