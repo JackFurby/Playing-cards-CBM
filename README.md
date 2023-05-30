@@ -83,7 +83,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode XtoC --n_concepts 36 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd --pretrained_weights saves/vgg11_bn-imagenet.pth --freeze`
 
-`python main.py --mode XtoC --n_concepts 13 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM --optimizer adamW --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 19_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric auc --imagenet_weights`
+`python main.py --mode XtoC_test --n_concepts 5 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM_5_obs --optimizer adamW --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 19_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric auc --pretrained_weights saves/vgg19_bn-imagenet.pth`
 
 `python main.py --mode XtoC --n_concepts 57 --dataset_root dataset/CUB_200_2011/  --dataset_postfix splits/mini_CUB  --weighted_loss --optimizer sgd --dataset_name CUB --vgg_version 19_bn --imagenet_weights --batch_size 8 --use_cpu`
 
@@ -137,9 +137,11 @@ With a trained model the architecture will contain a modlule list layer containi
 
 ### saliency maps (samples and averages)
 
-`python experiments/relevancy.py --pretrained_weights ./saves/paper_weights/independent-single-seed-557.pth --dataset_root dataset/playing-cards --dataset_postfix splits/single --n_classes 52 --n_concepts 17`
+`python experiments/relevancy.py --pretrained_weights ./saves/paper_weights/independent-single-seed-557.pth --dataset_root dataset/playing-cards --dataset_postfix splits/single --n_classes 52 --n_concepts 17 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52`
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert_1/chexpert_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
 
 ### ROAR
 
@@ -216,6 +218,8 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### Run experiments
 
-`python experiments/purity/scoring.py --pretrained_weights saves/converted/sequential-poker-seed-625.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --results_txt ./results/metrics/ois_poker.txt --mode oracle`
+`python experiments/purity/scoring.py --pretrained_weights saves/converted/sequential-poker-seed-625.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --results_txt ./results/metrics/ois_poker.txt --mode oracle --dataset_name cards`
+
+`python experiments/purity/scoring.py --pretrained_weights saves/chexpert_5_obs/best1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 6 --n_concepts 52 --results_txt ./results/metrics/ois_chexpert.txt --mode oracle --dataset_name chexpert`
 
 `./scoring.sh`

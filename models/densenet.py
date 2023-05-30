@@ -75,6 +75,90 @@ class CtoYNet(nn.Module):
 		return self.classifier(x)
 
 
+class XtoC(nn.Module):
+
+	def __init__(self, backbone_model, global_pool_type, num_classes, fc_bn, fc_drop, lse_gamma):
+		super(XtoC, self).__init__()
+		self.backbone = backbone_model
+		self.global_pool = GlobalPool(global_pool=global_pool_type, lse_gamma=lse_gamma)
+		self.expand = 1
+		self.global_pool_type = global_pool_type
+		if self.global_pool_type == 'AVG_MAX':
+			self.expand = 2
+		elif self.global_pool_type == 'AVG_MAX_LSE':
+			self.expand = 3
+		self.num_classes = num_classes
+		self.fc_bn = fc_bn
+		self.fc_drop = fc_drop
+		self._init_classifier()
+		self._init_bn()
+
+	def _init_classifier(self):
+		for index, num_class in enumerate(self.num_classes):
+			setattr(
+				self,
+				"fc_" +
+				str(index),
+				nn.Conv2d(
+					self.backbone.num_features *
+					self.expand,
+					num_class,
+					kernel_size=1,
+					stride=1,
+					padding=0,
+					bias=True
+				)
+			)
+
+			classifier = getattr(self, "fc_" + str(index))
+			if isinstance(classifier, nn.Conv2d):
+				classifier.weight.data.normal_(0, 0.01)
+				classifier.bias.data.zero_()
+
+	def _init_bn(self):
+		for index, num_class in enumerate(self.num_classes):
+			setattr(
+				self,
+				"bn_" +
+				str(index),
+				nn.BatchNorm2d(self.backbone.num_features * self.expand))
+
+	def cuda(self, device=None):
+		return self._apply(lambda t: t.cuda(device))
+
+	def forward(self, x):
+		# (N, C, H, W)
+		feat_map = self.backbone(x)
+		# [(N, 1), (N,1),...]
+		logits = list()
+		# [(N, H, W), (N, H, W),...]
+		logit_maps = list()
+		for index, num_class in enumerate(self.num_classes):
+
+			classifier = getattr(self, "fc_" + str(index))
+			# (N, 1, H, W)
+			logit_map = None
+			if not (self.global_pool_type == 'AVG_MAX' or
+					self.global_pool_type == 'AVG_MAX_LSE'):
+				logit_map = classifier(feat_map)
+				logit_maps.append(logit_map.squeeze())
+			# (N, C, 1, 1)
+			feat = self.global_pool(feat_map, logit_map)
+
+			if self.fc_bn:
+				bn = getattr(self, "bn_" + str(index))
+				feat = bn(feat)
+			feat = F.dropout(feat, p=self.fc_drop, training=self.training)
+			# (N, num_class, 1, 1)
+
+			logit = classifier(feat)
+			# (N, num_class)
+			logit = logit.squeeze(-1).squeeze(-1)
+			logits.append(logit)
+
+		return (logits, logit_maps)
+
+
 class _DenseLayer(nn.Module):
 	def __init__(self, num_input_features, growth_rate, bn_size, drop_rate, memory_efficient=False):
 		super(_DenseLayer, self).__init__()
@@ -248,6 +332,8 @@ class DenseNet(nn.Module):
 		else:
 			self.classifier = nn.Linear(num_features, num_classes)
 
+		self.num_features = num_features
+
 		# if weights file provided, load them
 		if pretrained_weights is not None:
 			self.load_state_dict(torch.load(pretrained_weights, map_location=torch.device('cpu')), strict=False)  # as we are replacing the final fc layer we can set strict to False
@@ -272,15 +358,15 @@ class DenseNet(nn.Module):
 
 	def forward(self, x: Tensor) -> Tensor:
 		features = self.features(x)
-		x = F.relu(features, inplace=True)
-		x = F.adaptive_avg_pool2d(x, (1, 1))
-		x = torch.flatten(x, 1)
-		if self.num_concepts > 0:
-			out = []
-			for fc in self.classifier:
-				out.append(fc(x))
-		else:
-			out = self.classifier(x)
+		out = F.relu(features, inplace=True)
+		#x = F.adaptive_avg_pool2d(x, (1, 1))
+		#x = torch.flatten(x, 1)
+		#if self.num_concepts > 0:
+		#	out = []
+		#	for fc in self.classifier:
+		#		out.append(fc(x))
+		#else:
+		#	out = self.classifier(x)
 		return out
 
 

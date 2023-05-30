@@ -9,6 +9,8 @@ from torch.utils.data import BatchSampler
 from torch.utils.data import Dataset, DataLoader
 import pickle
 
+from dataset.utils import transform as chexpert_transform
+
 
 class PlayingCardDataset(Dataset):
 	"""
@@ -108,7 +110,7 @@ class PlayingCardDataset(Dataset):
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
 
 
-class CelebADataset(Dataset):
+class ChexpertDataset(Dataset):
 	"""
 	Returns a compatible Torch Dataset object customized for the CelebA dataset
 	"""
@@ -118,6 +120,7 @@ class CelebADataset(Dataset):
 		pkl_file_path,
 		dataset_root,
 		transform=None,
+		keep_concepts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 		return_orig=False,
 		resize_orig=True,
 		return_path=False):
@@ -126,6 +129,7 @@ class CelebADataset(Dataset):
 			pkl_file_path (string): path to pkl file for dataset split from repo root
 			dataset_root (string): path to dataset root from repo root
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
+			keep_concepts (list of ints): list of all indexes (0 indexed) of concepts to use. There is a maximum of 13 conecpts.
 			return_orig (bool): If True then return the original image
 			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
@@ -135,17 +139,32 @@ class CelebADataset(Dataset):
 		self.return_orig = return_orig
 		self.resize_orig = resize_orig
 		self.return_path = return_path
+		self.keep_concepts = keep_concepts
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
+		highest_class = 0
 		for i in dataset_split:
+
+			# discard any concepts we are not keeping
+			final_concepts = []
+			for idx, concept in enumerate(dataset_split[i]["concept_label"]):
+				if idx in self.keep_concepts:
+					final_concepts.append(concept)
+
+
 			sample = {
 				"id": dataset_split[i],
 				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
 				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
-				"concepts": dataset_split[i]["concept_label"],
+				"concepts": final_concepts,
 			}
 			self.data.append(sample)
+
+			if dataset_split[i]["class_label"] > highest_class:
+				highest_class = dataset_split[i]["class_label"]
+
+		self.num_classes = highest_class + 1
 
 	def __len__(self):
 		return len(self.data)
@@ -154,19 +173,22 @@ class CelebADataset(Dataset):
 		img_data = self.data[idx]
 		img_path = img_data['img_path']
 
-		img = Image.open(img_path).convert('RGB')
+		#img = Image.open(img_path).convert('RGB')
+		img = Image.open(img_path)
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
 		if self.transform:
-			altered_img = self.transform(img)
+			#altered_img = self.transform(img)
+			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
 		else:
 			altered_img = img
 
 		if self.return_orig or self.return_path:
 			extra = {}
 			if self.return_orig:
-				img = transforms.ToTensor()(img)
+				#img = transforms.ToTensor()(img)
+				img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
 				if self.resize_orig:
 					extra["orig_img"] = torch.as_tensor(transforms.Resize((218, 178))(img))
 				else:
@@ -337,6 +359,37 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 				])
+	elif dataset_name=="chexpert":
+		if is_training:
+			transform = transforms.Compose([
+				transforms.ColorJitter(brightness=32/255, saturation=(0.5, 1.5)),
+				transforms.Resize(x_resize + 25),
+				transforms.CenterCrop(x_resize),
+				transforms.RandomHorizontalFlip(),
+				transforms.ToTensor(), #implicitly divides by 255
+				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+				])
+		else:
+			transform = chexpert_transform
+
+	elif dataset_name=="chexpert_2":
+		if is_training:
+			transform = transforms.Compose([
+				transforms.Resize(x_resize + 25),
+				transforms.CenterCrop(x_resize),
+				transforms.RandomHorizontalFlip(),
+				transforms.ColorJitter(brightness=0.1),
+				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
+				transforms.ToTensor(), #implicitly divides by 255
+				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+			])
+		else:
+			transform = transforms.Compose([
+				transforms.Resize(x_resize + 25),
+				transforms.CenterCrop(x_resize),
+				transforms.ToTensor(), #implicitly divides by 255
+				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+			])
 	else:
 		if is_training:
 			transform = transforms.Compose([
@@ -360,8 +413,10 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	elif dataset_name == "CUB":
 		dataset = CubDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
+	elif dataset_name == "chexpert" or dataset_name == "chexpert_2":
+		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
 	else:
-		dataset = CelebADataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
+		raise Exception(f"Unknown dataset type: {dataset_name}")
 	if is_training:
 		drop_last = True if drop_last is None else drop_last
 		shuffle = True if shuffle is None else shuffle

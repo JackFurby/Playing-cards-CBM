@@ -5,8 +5,8 @@ from torchmetrics import F1Score
 from dataset.dataset import load_data
 from dataset.utils import IndexToString
 from torchvision.utils import save_image
-#from models.model import End2EndModel
 from models.vgg import End2EndModel
+import models.chexpert.classifier as classifier
 from tqdm import tqdm
 import os
 import matplotlib.pyplot as plt
@@ -14,6 +14,11 @@ from experiments.utils import heatmap, project
 import lrp
 from models.lrp_converter import convert
 import cv2
+from easydict import EasyDict as edict
+
+from captum.attr import IntegratedGradients, Saliency, GuidedGradCam
+from captum.attr import NoiseTunnel
+from captum.attr import visualization as viz
 
 
 # A single figure is defined as putting this in a loop quickly uses up all system memory.
@@ -231,6 +236,111 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		return None
 
 
+def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, device="cpu", model_name="model", samples_per_class=-1):
+	"""
+	model: pytorch model
+	mode: string captum attribute name
+	data_loader: Pytorch dataloader
+	concept_index_to_string: IndexToString object
+	device: string pytorch device
+	model_name: name of model (used for saving results to a recognisable file path)
+	samples_per_class: Number of samples to generate saliency maps for (ignored if set to -1)
+	"""
+	# keep track of number of samples we have generated results for
+	sample_gen_count = []
+	for i in range(data_loader.dataset.num_classes):
+		sample_gen_count.append(0)
+
+	if mode in ["ig_sg", "ig_sg_sq"]:
+		ig = IntegratedGradients(XtoC)
+		nt = NoiseTunnel(ig)
+	elif mode == "gradCAM":
+		guided_gc = GuidedGradCam(XtoC, XtoC.backbone.features.denseblock4.denselayer16[5])
+
+
+	sample_num = 0
+	concept_saliency, card_relevance, all_relevance, all_cards_relevance = [], [], [], []
+	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
+		orig_image = extra["orig_img"]
+		for image_index in range(images.size(0)):
+			image = images[image_index].to(device)
+			image = image.unsqueeze(0)
+			image.requires_grad_(True)
+			image.grad = None  # Reset gradient
+
+			if mode in ["ig_sg", "ig_sg_sq"]:
+				baselines = image * 0
+
+			sample_gen_count[labels[image_index].item()] += 1
+			if samples_per_class == -1 or sample_gen_count[labels[image_index].item()] <= samples_per_class:
+
+				pred_concepts = model(image)
+
+				save_dir = f"results/{mode}/{model_name}/{labels[image_index].item()}/{sample_num}/"
+				if not os.path.exists(f"{save_dir}"):
+					os.makedirs(f"{save_dir}")
+
+				# Save input image
+				save_image(orig_image[image_index], f'{save_dir}/input.png')
+
+				# Write true concepts to file
+				with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
+					f.write("True concepts for sample\n")
+					f.write("========================\n")
+					for idy, concept in enumerate(concepts[image_index]):
+						f.write(f"{idy}: {concept_index_to_string(idy)}, concept value: {concept.item()}\n")
+
+				# Write concept predictions to file (sorted by concept value)
+				pred_concepts_readable = torch.nn.Sigmoid()(pred_concepts)
+				pred_list = []
+				for idx, i in enumerate(pred_concepts_readable[0]):
+					pred_list.append((idx, i.item()))
+				pred_concepts_readable = sorted(pred_list, key=lambda x: -x[1])
+				with open(f'{save_dir}/concept-pred.txt', mode='wt', encoding='utf-8') as f:
+					f.write("Predicted concepts (with Sigmoid)\n")
+					f.write("=================================\n")
+					for item in pred_concepts_readable:
+						f.write(f"{item[0]}: {concept_index_to_string(item[0])}, Sig value: {item[1]}\n")
+
+				for i in range(pred_concepts.size(1)):
+
+					filter_out = torch.zeros_like(pred_concepts)
+					filter_out[:,i] += 1
+
+					if mode in ["ig_sg", "ig_sg_sq"]:
+
+						if model == ig_sg:
+							nt_type = "smoothgrad"
+						else:
+							nt_type = "smoothgrad_sq"
+
+						attributions = nt.attribute(
+							image,
+							target=int(i),
+							baselines=baselines,
+							nt_type=nt_type,
+							nt_samples=25,
+							internal_batch_size=25,
+							stdevs=0.2
+						)
+
+					elif mode == "gradCAM":
+						attribution = guided_gc.attribute(
+							image,
+							target=int(i),
+						)
+
+					attr = heatmap(attribution, cmap_name='seismic')
+
+					# Save concept saliency map
+					AX.clear()
+					AX.set_axis_off()
+					AX.imshow(attr.squeeze(), cmap='seismic')
+					FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
+
+			sample_num += 1
+
+
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description='Evaluate a Concept Bottleneck Model')
@@ -255,6 +365,20 @@ if __name__ == "__main__":
 		type=str,
 		default="",
 		help='Path to dataset split files from dataset root (default: "")'
+	)
+	parser.add_argument(
+		'--dataset_file',
+		type=str,
+		default="val",
+		choices=["val", "test"],
+		help='Dataset split file (default: val)'
+	)
+	parser.add_argument(
+		'--dataset_name',
+		type=str,
+		default='cards',
+		choices=["cards", "chexpert", "CUB"],
+		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
 		'--pretrained_weights',
@@ -287,6 +411,12 @@ if __name__ == "__main__":
 		help='Max number of samples to generate results for per class in the dataset (set to -1 to ignore)',
 		default=25
 	)
+	parser.add_argument(
+		'--saliency_mode',
+		type=str,
+		choices=["lrp", "ig_sg", "ig_sg_sq", "gradCAM"],
+		help='Saliency method to use'
+	)
 	args = parser.parse_args()
 
 	device = torch.device("cuda:0" if (torch.cuda.is_available() and not args.use_cpu) else "cpu")
@@ -295,47 +425,69 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1, return_points=True, return_orig=True)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/{args.dataset_file}.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, num_workers=1, return_points=True, return_orig=True)
 	concept_index_to_string = IndexToString(f"./{args.dataset_root}/{args.dataset_postfix}/concepts.txt")
 
-	model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
-	model_name = args.pretrained_weights.split("/")[-1][:-4]
+	if "playing-cards" in args.dataset_root:
+		model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+		model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu')))
+		model_name = args.pretrained_weights.split("/")[-1][:-4]
 
-	XtoC = convert(model.x_to_c_model)
+		XtoC = convert(model.x_to_c_model)
 
-	XtoC_model_1 = []
-	XtoC_model_2 = []
-	XtoC_model_3 = []
+	else:  # CheXpert model is only XtoC
+		cfg = edict({
+			"backbone": "densenet121",
+			"norm_type": "BatchNorm",
+			"pretrained": True,
+			"num_classes": [1,1,1,1,1],
+		})
 
-	for idx, m in enumerate(XtoC.children()):
-		if idx < 15:
-			XtoC_model_1.append(m)
-		elif idx < 29:
-			XtoC_model_2.append(m)
-		else:
-			XtoC_model_3.append(m)
+		XtoC = classifier.Classifier(cfg)
+		XtoC.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)
+		model_name = args.pretrained_weights.split("/")[-1][:-4]
 
-	XtoC_model_1 = lrp.Sequential(*XtoC_model_1)
-	XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
-	XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
+	if args.saliency_mode == "lrp":
 
-	XtoC_model_1.to(device).eval()
-	XtoC_model_2.to(device).eval()
-	XtoC_model_3.to(device).eval()
+		XtoC_model_1 = []
+		XtoC_model_2 = []
+		XtoC_model_3 = []
 
-	# gen saliency maps for full samples
-	gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None, samples_per_class=args.samples_per_class)
+		for idx, m in enumerate(XtoC.children()):
+			if idx < 15:
+				XtoC_model_1.append(m)
+			elif idx < 29:
+				XtoC_model_2.append(m)
+			else:
+				XtoC_model_3.append(m)
 
-	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
-	# gen average saliency maps for concepts
-	for i in range(len(concept_index_to_string.string_dict)):
-		concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop = gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
-		concept_relevance_prop.append((concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop))
+		XtoC_model_1 = lrp.Sequential(*XtoC_model_1)
+		XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
+		XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
 
-	# open file in write mode
-	with open(f"results/lrp/{model_name}/concept_props.txt", "w") as fp:
-		fp.write(f"concept ID, concept string, positive proportion to entire image (%), negative proportion to entire image (%), positive proportion to all cards (%), negative proportion to all cards (%)\n")
-		for idx, item in enumerate(concept_relevance_prop):
-			# write each item on a new line
-			fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
+		XtoC_model_1.to(device).eval()
+		XtoC_model_2.to(device).eval()
+		XtoC_model_3.to(device).eval()
+
+		# Gen saliency maps for full samples
+		# Only gen for playing cards
+		if "playing-cards" in args.dataset_root:
+			gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=None, samples_per_class=args.samples_per_class)
+
+
+		concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
+		# gen average saliency maps for concepts
+		for i in range(len(concept_index_to_string.string_dict)):
+			concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop = gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
+			concept_relevance_prop.append((concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop))
+
+		# open file in write mode
+		with open(f"results/lrp/{model_name}/concept_props.txt", "w") as fp:
+			fp.write(f"concept ID, concept string, positive proportion to entire image (%), negative proportion to entire image (%), positive proportion to all cards (%), negative proportion to all cards (%)\n")
+			for idx, item in enumerate(concept_relevance_prop):
+				# write each item on a new line
+				fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
+
+	else:
+		XtoC.to(device).eval()
+		gen_captum_saliency(XtoC, args.saliency_mode, val_loader, concept_index_to_string, device, model_name, samples_per_class=args.samples_per_class)
