@@ -6,7 +6,7 @@ touch results/metrics/ois_three.txt
 touch results/metrics/nis_three.txt
 
 
-for MODE in niche oricle
+for MODE in niche oracle
 do
   FILES="saves/converted/*sequential*poker*.pth"
   for MODEL_PATH in $FILES
