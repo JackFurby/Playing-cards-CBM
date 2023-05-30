@@ -39,25 +39,25 @@ def make_plot(three_dataset_models, poker_dataset_models, var_index, var_name, s
 			random_three.append(random)
 			concept_random_three.append(concept_random)
 
-	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Random cards", marker='o')
+	three_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_three], label="Random cards with background removal", marker='o')
 	#plt.fill_between(x, [min(i) for i in random_three], [max(i) for i in random_three], alpha=0.2)
 	plt.fill_between(x, [sum(i)/len(i) - np.std(i) for i in random_three], [sum(i)/len(i) + np.std(i) for i in random_three], alpha=0.2)
-	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker cards", marker='o')
+	poker_ran_plot = plt.plot(x, [sum(i)/len(i) for i in random_poker], label="Poker cards with background removal", marker='o')
 	#plt.fill_between(x, [min(i) for i in random_poker], [max(i) for i in random_poker], alpha=0.2)
 	plt.fill_between(x, [sum(i)/len(i) - np.std(i) for i in random_poker], [sum(i)/len(i) + np.std(i) for i in random_poker], alpha=0.2)
-	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Concepts random cards", marker='o')
+	three_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_three], label="Random cards without background removal", marker='o')
 	#plt.fill_between(x, [min(i) for i in concept_random_three], [max(i) for i in concept_random_three], alpha=0.2)
 	plt.fill_between(x, [sum(i)/len(i) - np.std(i) for i in concept_random_three], [sum(i)/len(i) + np.std(i) for i in concept_random_three], alpha=0.2)
-	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Concepts poker cards", marker='o')
+	poker_con_ran_plot = plt.plot(x, [sum(i)/len(i) for i in concept_random_poker], label="Poker cards without background removal", marker='o')
 	#plt.fill_between(x, [min(i) for i in concept_random_poker], [max(i) for i in concept_random_poker], alpha=0.2)
 	plt.fill_between(x, [sum(i)/len(i) - np.std(i) for i in concept_random_poker], [sum(i)/len(i) + np.std(i) for i in concept_random_poker], alpha=0.2)
 
 	plt.xlabel("Features removed")
 	plt.ylabel(f"{var_name} accuracy")
 	plt.legend(loc="best")
-	#plt.ylim(92, 100)
+	#plt.ylim(90, 100)
 	plt.xlim(0, 5)
-	plt.autoscale(enable=True, axis="y", tight=None)
+	plt.autoscale(enable=True, axis="y", tight=False)
 
 	save_dir = 'results/roar'
 	if not os.path.exists(f"{save_dir}"):
