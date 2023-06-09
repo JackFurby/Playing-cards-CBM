@@ -314,7 +314,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						else:
 							nt_type = "smoothgrad_sq"
 
-						attributions = nt.attribute(
+						attribution = nt.attribute(
 							image,
 							target=int(i),
 							baselines=baselines,
