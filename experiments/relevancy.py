@@ -309,7 +309,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 
 					if mode in ["ig_sg", "ig_sg_sq"]:
 
-						if model == ig_sg:
+						if model == "ig_sg":
 							nt_type = "smoothgrad"
 						else:
 							nt_type = "smoothgrad_sq"

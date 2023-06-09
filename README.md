@@ -141,7 +141,7 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert_1/chexpert_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
 
 ### ROAR
 
