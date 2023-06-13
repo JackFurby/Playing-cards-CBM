@@ -41,12 +41,7 @@ def ImputityScore(x_to_c_model, data_loader, mode, dataset):
 			c_true=np.stack(np.concatenate(c_true, axis=0)),
 			output_matrices=True
 		)
-		#score = oracle.oracle_impurity_score(
-		#	c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-		#	c_true=np.stack(np.concatenate(c_true, axis=0))
-		#)
 		return score, pred_matrix, oracle_matrix
-		#return score
 	elif mode == "niche":
 		score = niche.niche_impurity_score(
 			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
@@ -99,11 +94,6 @@ if __name__ == "__main__":
 		help='Use sigmoid between the XtoC and the CtoY model parts'
 	)
 	parser.add_argument(
-		'--multi_runs',
-		action='store_true',
-		help='Use sigmoid between the XtoC and the CtoY model parts'
-	)
-	parser.add_argument(
 		'--results_txt',
 		type=str,
 		default="",
@@ -118,171 +108,67 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	if "CUB" in args.dataset_root:
-		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, dataset_name="CUB", num_workers=1)
+		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, dataset_name="CUB", num_workers=1, x_resize=299, y_resize=299)
 	elif "chexpert" in args.dataset_root:
 		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/test.pkl", 16, dataset_root=args.dataset_root, dataset_name="chexpert", num_workers=1, x_resize=512, y_resize=512)
 	else:
-		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, dataset_name="cards", num_workers=1)
+		val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", 16, dataset_root=args.dataset_root, dataset_name="cards", num_workers=1, x_resize=299, y_resize=299)
 
-	# generate results for multiple model weights and save to txt file
-	if args.multi_runs:
+	model_name = args.pretrained_weights.split("/")[-1][:-4]
+	if "CUB" in args.dataset_root:
+		model = End2EndModel(vgg_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
+	elif "chexpert" in args.dataset_root:
+		cfg = edict({
+			"backbone": "densenet121",
+			"norm_type": "BatchNorm",
+			"pretrained": True,
+			"lse_gamma": 0.5,
+			"global_pool": "AVG_MAX",
+			"num_classes": [1,1,1,1,1],
+			"attention_map": "FPA",
+			"fc_bn": True,
+			"fc_drop": 0,
+		})
 
-		save_dir = f"./results/metrics/"
-		if not os.path.exists(save_dir):
-			os.makedirs(save_dir)
-
-		# get all models trained on poker cards
-
-		model_list = glob.glob('saves/converted/*sequential*poker*.pth')
-
-		ois_scores = []
-		for model_file in model_list:
-			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
-
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name)
-			ois_scores.append((model_file, ois))
-
-			if pred_matrix == None:
-				pass
-			else:
-				for matrix_name in ["pred_matrix", "oracle_matrix"]:
-					if matrix_name == "pred_matrix":
-						matrix = pred_matrix
-					else:
-						matrix = oracle_matrix
-					fig = plt.figure()
-					ax = fig.add_subplot(111)
-					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-					fig.colorbar(cax)
-
-					if not os.path.exists(f"save_dir/{model_name}"):
-						os.makedirs(f"save_dir/{model_name}")
-					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
-
-			gc.collect()
-
-		model_list = glob.glob('saves/converted/*independent*poker*.pth')
-
-		for model_file in model_list:
-			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
-
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name)
-			ois_scores.append((model_file, ois))
-
-			if pred_matrix == None:
-				pass
-			else:
-				for matrix_name in ["pred_matrix", "oracle_matrix"]:
-					if matrix_name == "pred_matrix":
-						matrix = pred_matrix
-					else:
-						matrix = oracle_matrix
-					fig = plt.figure()
-					ax = fig.add_subplot(111)
-					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-					fig.colorbar(cax)
-
-					if not os.path.exists(f"save_dir/{model_name}"):
-						os.makedirs(f"save_dir/{model_name}")
-					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
-
-			gc.collect()
-
-		if not os.path.exists(save_dir):
-			os.makedirs(save_dir)
-		with open(f"{save_dir}/poker_models_ois_scores.txt", "w") as file:
-			for score in ois_scores:
-				concepts.write(f"{score[0]} {score[1]}\n")
-
-		# get all models trained on three random cards
-
-		model_list = glob.glob('saves/converted/*three*.pth')
-
-		ois_scores = []
-		for model_file in model_list:
-			model = End2EndModel(num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(f"{model_file}", map_location=torch.device('cpu')))
-
-			ois, pred_matrix, oracle_matrix = ImputityScore(model.x_to_c_model, val_loader, mode=args.mode, device=device)
-			ois_scores.append((model_file, ois))
-
-			if pred_matrix == None:
-				pass
-			else:
-				for matrix_name in ["pred_matrix", "oracle_matrix"]:
-					if matrix_name == "pred_matrix":
-						matrix = pred_matrix
-					else:
-						matrix = oracle_matrix
-					fig = plt.figure()
-					ax = fig.add_subplot(111)
-					cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-					fig.colorbar(cax)
-
-					if not os.path.exists(f"save_dir/{model_name}"):
-						os.makedirs(f"save_dir/{model_name}")
-					plt.savefig(f'{save_dir}/{model_name}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
-
-			gc.collect()
-
-		if not os.path.exists(save_dir):
-			os.makedirs(save_dir)
-		with open(f"{save_dir}/three_models_ois_scores.txt", "w") as file:
-			for score in ois_scores:
-				concepts.write(f"{score[0]} {score[1]}\n")
-
-	# generate results for a single weights file and append results to txt file
+		model = classifier.Classifier(cfg)
+		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu'))['state_dict'], strict=False)
 	else:
+		if "sig" in args.pretrained_weights:  # joint with sig
+			use_sig = True
+		elif "standard" in args.pretrained_weights:  # standard as joint
+			use_sig = False
+		elif "joint" not in args.pretrained_weights:  # independent and sequential
+			use_sig = True
+		else:  # joint without sig
+			use_sig = False
 
-		model_name = args.pretrained_weights.split("/")[-1][:-4]
-		if "CUB" in args.dataset_root:
-			model = End2EndModel(vgg_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
-		elif "chexpert" in args.dataset_root:
-			cfg = edict({
-				"backbone": "densenet121",
-				"norm_type": "BatchNorm",
-				"pretrained": True,
-				"lse_gamma": 0.5,
-				"global_pool": "AVG_MAX",
-				"num_classes": [1,1,1,1,1],
-				"attention_map": "FPA",
-				"fc_bn": True,
-				"fc_drop": 0,
-			})
+		model = End2EndModel(model_version="11_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=use_sig, use_modulelist=False)
+		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
 
-			model = classifier.Classifier(cfg)
-			model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu'))['state_dict'], strict=False)
-		else:
-			model = End2EndModel(model_version="11_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
-		model.eval()
+	if "CUB" in args.dataset_root:
+		x_to_c_model = model.first_model
+	elif "chexpert" in args.dataset_root:
+		x_to_c_model = model
+	else:
+		x_to_c_model = model.x_to_c_model
 
-		if "CUB" in args.dataset_root:
-			x_to_c_model = model.first_model
-		elif "chexpert" in args.dataset_root:
-			x_to_c_model = model
-		else:
-			x_to_c_model = model.x_to_c_model
+	score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name)
+	with open(args.results_txt, "a") as f:
+		f.write(f"{model_name} {score}\n")
 
-		score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name)
-		with open(args.results_txt, "a") as f:
-			f.write(f"{model_name} {score}\n")
+	save_dir = f"./results/metrics/{model_name}"
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
 
-		save_dir = f"./results/metrics/{model_name}"
-		if not os.path.exists(save_dir):
-			os.makedirs(save_dir)
-
-		if type(pred_matrix) == np.ndarray:
-			for matrix_name in ["pred_matrix", "oracle_matrix"]:
-				if matrix_name == "pred_matrix":
-					matrix = pred_matrix
-				else:
-					matrix = oracle_matrix
-				fig = plt.figure()
-				ax = fig.add_subplot(111)
-				cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
-				fig.colorbar(cax)
-				plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+	if type(pred_matrix) == np.ndarray:
+		for matrix_name in ["pred_matrix", "oracle_matrix"]:
+			if matrix_name == "pred_matrix":
+				matrix = pred_matrix
+			else:
+				matrix = oracle_matrix
+			fig = plt.figure()
+			ax = fig.add_subplot(111)
+			cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+			fig.colorbar(cax)
+			plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
