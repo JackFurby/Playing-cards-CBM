@@ -57,12 +57,12 @@ do
   FILES="saves/converted/*independent*three*.pth"
   for MODEL_PATH in $FILES
   do
-    #for i in 1 2 3
-    for i in 1
+    for i in 1 2 3
     do
       MODEL_NAME=$(basename $MODEL_PATH .pth)
       DATA_ROOT=dataset/playing-cards
       DATA_POST=splits/three_card_poker
+      #DATA_POST=splits/three
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 

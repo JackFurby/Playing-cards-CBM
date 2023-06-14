@@ -31,6 +31,10 @@ def ImputityScore(x_to_c_model, data_loader, mode, dataset):
 
 			sigmoid_outputs = torch.nn.Sigmoid()(concept_representations.view(concept_representations.size(0), -1))
 
+			#print(concept_representations)
+			#print(sigmoid_outputs)
+			#print(ground_concepts)
+
 			#c_soft.append(concept_representations)
 			c_soft.append(sigmoid_outputs)
 			c_true.append(ground_concepts)
