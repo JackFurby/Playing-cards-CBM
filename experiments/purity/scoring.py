@@ -6,6 +6,7 @@ from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
 from models.model import End2EndModel
 import models.chexpert.classifier as classifier
+import models.cub_vgg as cub_model
 from easydict import EasyDict as edict
 from tqdm import tqdm
 import os
@@ -120,8 +121,21 @@ if __name__ == "__main__":
 
 	model_name = args.pretrained_weights.split("/")[-1][:-4]
 	if "CUB" in args.dataset_root:
-		model = End2EndModel(vgg_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
+		vgg_model = cub_model.vgg16_bn(pretrained=False, num_classes=args.n_classes, n_attributes=args.n_concepts, bottleneck=True, expand_dim=False, train=True)
+		model1 = cub_model.x_to_c_model(freeze=False, model=vgg_model)
+		model2 = cub_model.MLP(input_dim=args.n_concepts, num_classes=args.n_classes, expand_dim=False, train=True)
+		model = cub_model.End2EndModel(model1, model2, False, True, 3)
+
+
+		#model = cub_modle(model_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
+
+
+
+
+
+
+
 	elif "chexpert" in args.dataset_root:
 		cfg = edict({
 			"backbone": "densenet121",
