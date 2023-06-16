@@ -124,7 +124,7 @@ if __name__ == "__main__":
 		vgg_model = cub_model.vgg16_bn(pretrained=False, num_classes=args.n_classes, n_attributes=args.n_concepts, bottleneck=True, expand_dim=False, train=True)
 		model1 = cub_model.x_to_c_model(freeze=False, model=vgg_model)
 		model2 = cub_model.MLP(input_dim=args.n_concepts, num_classes=args.n_classes, expand_dim=False, train=True)
-		model = cub_model.End2EndModel(model1, model2, False, True, 3)
+		model = cub_model.End2EndModel(model1, model2, False, True)
 
 
 		#model = cub_modle(model_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
@@ -190,3 +190,10 @@ if __name__ == "__main__":
 			cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
 			fig.colorbar(cax)
 			plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
+
+		# save matrix
+		with open(f'{save_dir}/pred_matrix.npy', 'wb') as f:
+			np.save(f, pred_matrix)
+
+		with open(f'{save_dir}/oracle_matrix.npy', 'wb') as f:
+			np.save(f, oracle_matrix)
