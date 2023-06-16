@@ -175,7 +175,7 @@ if __name__ == "__main__":
 	with open(args.results_txt, "a") as f:
 		f.write(f"{model_name} {score}\n")
 
-	save_dir = f"./results/metrics/{model_name}"
+	save_dir = f"./results/metrics/{model_name}_{os.listdir('./results/metrics/')}"
 	if not os.path.exists(save_dir):
 		os.makedirs(save_dir)
 
