@@ -144,7 +144,7 @@ dataset/playing-cards
 experiments/all_acc.pkl
 experiments/roar_acc.pkl
 dataset/celebA
-dataset/roar/
+dataset/roar
 dataset/chexpert
 dataset/CUB_200_2011
 dataset/ChestX-ray14
