@@ -80,7 +80,8 @@ class Xray14Dataset(Dataset):
 				sign_classes.append(sign[1])
 
 		if self.transform:
-			altered_img = self.transform(img)
+			kwargs = {"gaussian_blur": 3, "use_equalizeHist": True, "long_side": 512, "border_pad_str": "mean", "pixel_mean": 128.0, "pixel_std": 64.0}
+			altered_img = self.transform(np.asarray(img), **kwargs)
 		else:
 			altered_img = img
 
