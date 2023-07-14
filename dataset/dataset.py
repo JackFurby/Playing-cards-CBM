@@ -1,279 +1,15 @@
-import os
 import torch
-import pickle
-import numpy as np
 import torchvision.transforms as transforms
 
-from PIL import Image
 from torch.utils.data import BatchSampler
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import pickle
 
 from dataset.utils import transform as chexpert_transform
-
-
-class PlayingCardDataset(Dataset):
-	"""
-	Returns a compatible Torch Dataset object customized for the playing card dataset
-	"""
-
-	def __init__(
-		self,
-		pkl_file_path,
-		dataset_root,
-		transform=None,
-		return_orig=False,
-		resize_orig=True,
-		return_path=False,
-		return_points=False):
-		"""
-		Args:
-			pkl_file_path (string): path to pkl file for dataset split from repo root
-			dataset_root (string): path to dataset root from repo root
-			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
-			return_orig (bool): If True then return the original image
-			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
-			return_path (bool): If True then return the original image path (not used if return_orig is true)
-			return_points (bool): If True then return playing card location points (not used if return_orig or return_path is true)
-		"""
-		self.data = []
-		self.transform = transform
-		self.return_orig = return_orig
-		self.resize_orig = resize_orig
-		self.return_path = return_path
-		self.return_points = return_points
-
-		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
-
-		highest_class = 0
-		for i in dataset_split:
-			sample = {
-				"id": dataset_split[i],
-				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
-				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
-				"concepts": dataset_split[i]["concept_label"],
-				"card_points": dataset_split[i]["card_points"],
-			}
-			self.data.append(sample)
-
-			if dataset_split[i]["class_label"] > highest_class:
-				highest_class = dataset_split[i]["class_label"]
-
-		self.num_concepts = len(self.data[0]["concepts"])
-		self.num_classes = highest_class + 1
-
-	def __len__(self):
-		return len(self.data)
-
-	def __getitem__(self, idx):
-		img_data = self.data[idx]
-		img_path = img_data['img_path']
-
-		img = Image.open(img_path).convert('RGB')
-		class_index = img_data['class_index']
-		concepts = img_data['concepts']
-
-		# create lists for card points and card classes
-		# card points are adjusted for resized images
-		if self.return_points:
-			card_points = []
-			card_classes = []
-			for card in img_data['card_points']:
-				points = []
-				for point in card[0]:
-					point = (int(point[0] * (int(299)/img.width)), int(point[1] * (int(299)/img.height)))
-					points.append(point)
-				card_points.append(points)
-				card_classes.append(card[1])
-
-		if self.transform:
-			altered_img = self.transform(img)
-		else:
-			altered_img = img
-
-		if self.return_orig or self.return_path or self.return_points:
-			extra = {}
-			if self.return_orig:
-				img = transforms.ToTensor()(img)
-				if self.resize_orig:
-					extra["orig_img"] = torch.as_tensor(transforms.Resize((299, 299))(img))
-				else:
-					extra["orig_img"] = torch.as_tensor(img)
-			if self.return_path:
-				extra["path"] = img_path
-			if self.return_points:
-				extra["points"] = torch.as_tensor(card_points, dtype=torch.float)
-				extra["card_classes"] = torch.as_tensor(card_classes)
-
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
-		else:
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
-
-
-class ChexpertDataset(Dataset):
-	"""
-	Returns a compatible Torch Dataset object customized for the CelebA dataset
-	"""
-
-	def __init__(
-		self,
-		pkl_file_path,
-		dataset_root,
-		transform=None,
-		keep_concepts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-		return_orig=False,
-		resize_orig=True,
-		return_path=False):
-		"""
-		Args:
-			pkl_file_path (string): path to pkl file for dataset split from repo root
-			dataset_root (string): path to dataset root from repo root
-			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
-			keep_concepts (list of ints): list of all indexes (0 indexed) of concepts to use. There is a maximum of 13 conecpts.
-			return_orig (bool): If True then return the original image
-			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
-			return_path (bool): If True then return the original image path (not used if return_orig is true)
-		"""
-		self.data = []
-		self.transform = transform
-		self.return_orig = return_orig
-		self.resize_orig = resize_orig
-		self.return_path = return_path
-		self.keep_concepts = keep_concepts
-
-		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
-
-		highest_class = 0
-		for i in dataset_split:
-
-			# discard any concepts we are not keeping
-			final_concepts = []
-			for idx, concept in enumerate(dataset_split[i]["concept_label"]):
-				if idx in self.keep_concepts:
-					final_concepts.append(concept)
-
-
-			sample = {
-				"id": dataset_split[i],
-				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
-				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
-				"concepts": final_concepts,
-			}
-			self.data.append(sample)
-
-			if dataset_split[i]["class_label"] > highest_class:
-				highest_class = dataset_split[i]["class_label"]
-
-		self.num_classes = highest_class + 1
-
-	def __len__(self):
-		return len(self.data)
-
-	def __getitem__(self, idx):
-		img_data = self.data[idx]
-		img_path = img_data['img_path']
-
-		#img = Image.open(img_path).convert('RGB')
-		img = Image.open(img_path)
-		class_index = img_data['class_index']
-		concepts = img_data['concepts']
-
-		if self.transform:
-			#altered_img = self.transform(img)
-			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
-		else:
-			altered_img = img
-
-		if self.return_orig or self.return_path:
-			extra = {}
-			if self.return_orig:
-				#img = transforms.ToTensor()(img)
-				img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
-				if self.resize_orig:
-					extra["orig_img"] = torch.as_tensor(transforms.Resize((218, 178))(img))
-				else:
-					extra["orig_img"] = torch.as_tensor(img)
-			if self.return_path:
-				extra["path"] = img_paths
-
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
-		else:
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
-
-
-class CubDataset(Dataset):
-	"""
-	Returns a compatible Torch Dataset object customized for the CUB dataset
-	"""
-
-	def __init__(
-		self,
-		pkl_file_path,
-		dataset_root,
-		transform=None,
-		return_orig=False,
-		resize_orig=True,
-		return_path=False):
-		"""
-		Args:
-			pkl_file_path (string): path to pkl file for dataset split from repo root
-			dataset_root (string): path to dataset root from repo root
-			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
-			return_orig (bool): If True then return the original image
-			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
-			return_path (bool): If True then return the original image path (not used if return_orig is true)
-		"""
-		self.data = []
-		self.transform = transform
-		self.return_orig = return_orig
-		self.resize_orig = resize_orig
-		self.return_path = return_path
-
-		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
-
-		for i in dataset_split:
-			sample = {
-				"id": dataset_split[i],
-				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
-				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
-				"concepts": dataset_split[i]["concept_label"],
-			}
-			self.data.append(sample)
-
-	def __len__(self):
-		return len(self.data)
-
-	def __getitem__(self, idx):
-		img_data = self.data[idx]
-		img_path = img_data['img_path']
-
-		img = Image.open(img_path).convert('RGB')
-		class_index = img_data['class_index']
-		concepts = img_data['concepts']
-
-		if self.transform:
-			altered_img = self.transform(img)
-		else:
-			altered_img = img
-
-		if self.return_orig or self.return_path:
-			extra = {}
-			if self.return_orig:
-				img = transforms.ToTensor()(img)
-				if self.resize_orig:
-					orig_transform = transforms.Compose([
-						transforms.Resize(299 + 25),
-						transforms.CenterCrop(299)
-					])
-					extra["orig_img"] = torch.as_tensor(orig_transform(img))
-				else:
-					extra["orig_img"] = torch.as_tensor(img)
-			if self.return_path:
-				extra["path"] = img_paths
-
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
-		else:
-			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
+from dataset.chexpert import ChexpertDataset
+from dataset.cub import CubDataset
+from dataset.playing_cards import PlayingCardDataset
+from dataset.xray14 import Xray14Dataset
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
@@ -359,37 +95,14 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 				])
-	elif dataset_name=="chexpert":
+	elif dataset_name=="chexpert" or dataset_name=="xray14":
 		if is_training:
 			transform = transforms.Compose([
-				transforms.ColorJitter(brightness=32/255, saturation=(0.5, 1.5)),
-				transforms.Resize(x_resize + 25),
-				transforms.CenterCrop(x_resize),
-				transforms.RandomHorizontalFlip(),
-				transforms.ToTensor(), #implicitly divides by 255
-				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
+				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fillcolor=128),
+				chexpert_transform
 				])
 		else:
 			transform = chexpert_transform
-
-	elif dataset_name=="chexpert_2":
-		if is_training:
-			transform = transforms.Compose([
-				transforms.Resize(x_resize + 25),
-				transforms.CenterCrop(x_resize),
-				transforms.RandomHorizontalFlip(),
-				transforms.ColorJitter(brightness=0.1),
-				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-				transforms.ToTensor(), #implicitly divides by 255
-				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
-			])
-		else:
-			transform = transforms.Compose([
-				transforms.Resize(x_resize + 25),
-				transforms.CenterCrop(x_resize),
-				transforms.ToTensor(), #implicitly divides by 255
-				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
-			])
 	else:
 		if is_training:
 			transform = transforms.Compose([
@@ -413,8 +126,10 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	elif dataset_name == "CUB":
 		dataset = CubDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
-	elif dataset_name == "chexpert" or dataset_name == "chexpert_2":
+	elif dataset_name == "chexpert":
 		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
+	elif dataset_name == "xray14":
+		dataset = Xray14Dataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	else:
 		raise Exception(f"Unknown dataset type: {dataset_name}")
 	if is_training:
