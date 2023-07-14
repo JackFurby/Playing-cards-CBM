@@ -4,7 +4,7 @@ import numpy as np
 import argparse
 from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
-from models.model import End2EndModel
+from models.model import End2EndModel, VGG
 import models.chexpert.classifier as classifier
 import models.cub_vgg as cub_model
 from easydict import EasyDict as edict
@@ -127,14 +127,7 @@ if __name__ == "__main__":
 		model = cub_model.End2EndModel(model1, model2, False, True)
 
 
-		#model = cub_modle(model_version="19_bn", num_classes=args.n_classes, num_concepts=args.n_concepts, use_sigmoid=args.use_sig, use_modulelist=False)
 		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
-
-
-
-
-
-
 
 	elif "chexpert" in args.dataset_root:
 		cfg = edict({
@@ -175,11 +168,11 @@ if __name__ == "__main__":
 	with open(args.results_txt, "a") as f:
 		f.write(f"{model_name} {score}\n")
 
-	save_dir = f"./results/metrics/{model_name}_{len(os.listdir('./results/metrics/'))}"
-	if not os.path.exists(save_dir):
-		os.makedirs(save_dir)
-
 	if type(pred_matrix) == np.ndarray:
+		save_dir = f"./results/metrics/{model_name}_{len(os.listdir('./results/metrics/'))}"
+		if not os.path.exists(save_dir):
+			os.makedirs(save_dir)
+
 		for matrix_name in ["pred_matrix", "oracle_matrix"]:
 			if matrix_name == "pred_matrix":
 				matrix = pred_matrix

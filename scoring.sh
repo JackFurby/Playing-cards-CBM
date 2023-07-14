@@ -66,7 +66,7 @@ do
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
-      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 6 --n_concepts 52 --results_txt "./results/metrics/${MODE}_temp_three.txt" --mode $MODE  --dataset_name cards
+      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 6 --n_concepts 52 --results_txt "./results/metrics/${MODE}_three.txt" --mode $MODE  --dataset_name cards
     done
   done
 

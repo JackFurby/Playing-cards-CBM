@@ -146,4 +146,6 @@ experiments/roar_acc.pkl
 dataset/celebA
 dataset/roar/
 dataset/chexpert
+dataset/CUB_200_2011
+dataset/ChestX-ray14
 results/

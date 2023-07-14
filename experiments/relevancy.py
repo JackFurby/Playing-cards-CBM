@@ -465,6 +465,10 @@ if __name__ == "__main__":
 		XtoC_model_2 = lrp.Sequential(*XtoC_model_2)
 		XtoC_model_3 = lrp.Sequential(*XtoC_model_3)
 
+		print(XtoC_model_1)
+		print(XtoC_model_2)
+		print(XtoC_model_3)
+
 		XtoC_model_1.to(device).eval()
 		XtoC_model_2.to(device).eval()
 		XtoC_model_3.to(device).eval()
