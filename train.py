@@ -150,32 +150,6 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 
 				# AUC metric
 				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
-
-
-				"""
-				loss = 0
-				for i in range(len(criterion)):
-					i_pred = outputs[i].squeeze()
-					i_true = concepts[:, i]
-					if i_true.sum() > 0:
-						weight = (i_true.size(0) - i_true.sum()) / i_true.sum()
-						i_loss = F.binary_cross_entropy_with_logits(i_pred, i_true, pos_weight=weight)
-					else:
-						#weight = torch.tensor(i_true.size(0))
-						i_loss = torch.tensor(0., requires_grad=True).to(device)
-					loss += i_loss
-
-				sigmoid_outputs = torch.nn.Sigmoid()(torch.cat(outputs, dim=1))
-
-				# accuracy for concepts
-				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())
-
-				if f1 is not None:
-					f1_acc.append(f1(sigmoid_outputs, concepts.to(torch.int32)))
-
-				# AUC metric
-				auc_acc.append(multilabel_auroc(sigmoid_outputs, concepts, num_labels=concepts.size(1), average="macro", thresholds=None))
-				"""
 			else:  # XtoC
 				batch_losses = []
 				for i in range(len(criterion)):
