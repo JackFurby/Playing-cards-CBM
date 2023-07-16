@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 import pickle
 import os
 from PIL import Image
+import numpy as np
 
 
 class Xray14Dataset(Dataset):
