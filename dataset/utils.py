@@ -2,7 +2,6 @@ import os
 
 import numpy as np
 import cv2
-import torchvision.transforms as transforms
 
 
 class IndexToString(object):
