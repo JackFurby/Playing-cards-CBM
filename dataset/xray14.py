@@ -64,7 +64,7 @@ class Xray14Dataset(Dataset):
 		img_data = self.data[idx]
 		img_path = img_data['img_path']
 
-		img = Image.open(img_path).convert('RGB')
+		img = Image.open(img_path)
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
@@ -82,7 +82,9 @@ class Xray14Dataset(Dataset):
 				sign_classes.append(sign[1])
 
 		if self.transform:
-			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, train=self.is_training)
+			if self.is_training:
+				img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(img)
+			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
 		else:
 			altered_img = img
 
