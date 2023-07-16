@@ -97,10 +97,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 				])
 	elif dataset_name=="chexpert" or dataset_name=="xray14":
 		if is_training:
-			transform = transforms.Compose([
-				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
-				chexpert_transform
-				])
+			transform = chexpert_transform
 		else:
 			transform = chexpert_transform
 	else:

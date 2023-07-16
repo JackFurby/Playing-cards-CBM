@@ -36,6 +36,7 @@ class Xray14Dataset(Dataset):
 		self.resize_orig = resize_orig
 		self.return_path = return_path
 		self.return_points = return_points
+		self.is_training = True if ('train.pkl' in pkl_file_path) else False
 
 		dataset_split = pickle.load(open(pkl_file_path, 'rb'))
 
@@ -81,8 +82,7 @@ class Xray14Dataset(Dataset):
 				sign_classes.append(sign[1])
 
 		if self.transform:
-			kwargs = {"gaussian_blur": 3, "use_equalizeHist": True, "long_side": 512, "border_pad_str": "mean", "pixel_mean": 128.0, "pixel_std": 64.0}
-			altered_img = self.transform(np.asarray(img), **kwargs)
+			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, train=self.is_training)
 		else:
 			altered_img = img
 

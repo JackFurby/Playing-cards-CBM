@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import cv2
+import torchvision.transforms as transforms
 
 
 class IndexToString(object):
@@ -88,8 +89,12 @@ def fix_ratio(image, long_side, border_pad_str, pixel_mean):
 
 
 # https://github.com/jfhealthcare/Chexpert/blob/master/data/utils.py
-def transform(image, gaussian_blur, use_equalizeHist, long_side, border_pad_str, pixel_mean, pixel_std=None):
+def transform(image, gaussian_blur, use_equalizeHist, long_side, border_pad_str, pixel_mean, pixel_std=None, train=False):
 	assert image.ndim == 2, "image must be gray image"
+
+	if train:
+		image = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(image)
+
 	if use_equalizeHist:
 		image = cv2.equalizeHist(image)
 
