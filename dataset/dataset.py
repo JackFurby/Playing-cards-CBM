@@ -57,7 +57,7 @@ class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
-def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', dataset_name="cards", x_resize=299, y_resize=299, return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, drop_last=None, train_transform=True, keep_concepts=None, bb_only=False):
+def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', dataset_name="cards", x_resize=299, y_resize=299, return_orig=False, resize_orig=True, return_path=False, return_points=False, resampling=False, shuffle=None, num_workers=0, drop_last=None, train_transform=True, keep_concepts=[], bb_only=False):
 	"""
 	"""
 	is_training = True if ('train.pkl' in pkl_path and train_transform) else False
@@ -126,7 +126,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 	elif dataset_name == "chexpert":
 		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
 	elif dataset_name == "xray14":
-		if keep_concepts == []:
+		if len(keep_concepts) == 0:
 			dataset = Xray14Dataset(pkl_path, dataset_root, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points, bb_only=bb_only)
 		else:
 			dataset = Xray14Dataset(pkl_path, dataset_root, keep_concepts=keep_concepts, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points, bb_only=bb_only)
