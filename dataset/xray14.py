@@ -60,13 +60,13 @@ class Xray14Dataset(Dataset):
 				new_bb = None
 			else:
 				new_bb = []
-			for i in keep_concepts:
-				new_concepts.append(sample["concepts"][i])  # Add concepts to concept to keep
+			for j in keep_concepts:
+				new_concepts.append(sample["concepts"][j])  # Add concepts to concept to keep
 				# only keep bounding boxes in keep_concepts
 				if new_bb is not None:
-					bb_index = [j[1] for j in sample["bounding_box"]]
+					bb_index = [k[1] for k in sample["bounding_box"]]
 					for idx, concept in enumerate(bb_index):
-						if i == concept:
+						if j == concept:
 							new_bb.append(sample["bounding_box"][idx])
 
 			sample["concepts"] = new_concepts
