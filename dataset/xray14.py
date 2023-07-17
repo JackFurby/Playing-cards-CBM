@@ -17,19 +17,23 @@ class Xray14Dataset(Dataset):
 		pkl_file_path,
 		dataset_root,
 		transform=None,
+		keep_concepts=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 		return_orig=False,
 		resize_orig=True,
 		return_path=False,
-		return_points=False):
+		return_points=False,
+		bb_only=False):
 		"""
 		Args:
 			pkl_file_path (string): path to pkl file for dataset split from repo root
 			dataset_root (string): path to dataset root from repo root
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
+			keep_concepts list(ints): Only keep concepts in this list (0 indexed). Concepts will be returned in the order provided
 			return_orig (bool): If True then return the original image
 			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
 			return_points (bool): If True then return playing card location points (not used if return_orig or return_path is true)
+			bb_only (bool): If true then only return samples with bounding boxes
 		"""
 		self.data = []
 		self.transform = transform
@@ -50,7 +54,29 @@ class Xray14Dataset(Dataset):
 				"concepts": dataset_split[i]["concept_label"],
 				"bounding_box": dataset_split[i]["bounding_box"],
 			}
-			self.data.append(sample)
+
+			new_concepts = []
+			if sample["bounding_box"] is None:
+				new_bb = None
+			else:
+				new_bb = []
+			for i in keep_concepts:
+				new_concepts.append(sample["concepts"][i])  # Add concepts to concept to keep
+				# only keep bounding boxes in keep_concepts
+				if new_bb is not None:
+					bb_index = [j[1] for j in sample["bounding_box"]]
+					for idx, concept in enumerate(bb_index):
+						if i == concept:
+							new_bb.append(sample["bounding_box"][idx])
+
+			sample["concepts"] = new_concepts
+			sample["bounding_box"] = new_bb
+
+			# Only keep samples with bounding boxes if bb_only is set to True
+			if (bb_only and (sample["bounding_box"] is not None)):
+				self.data.append(sample)
+			elif bb_only is False:
+				self.data.append(sample)
 
 			if dataset_split[i]["class_label"] > highest_class:
 				highest_class = dataset_split[i]["class_label"]
@@ -83,16 +109,17 @@ class Xray14Dataset(Dataset):
 				sign_classes.append(sign[1])
 
 		if self.transform:
+			altered_img = img
 			if self.is_training:
-				img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(img)
-			altered_img = self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
+				altered_img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(altered_img)
+			altered_img = self.transform(np.asarray(altered_img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
 		else:
 			altered_img = img
 
 		if self.return_orig or self.return_path or self.return_points:
 			extra = {}
 			if self.return_orig:
-				img = transforms.ToTensor()(img)
+				img = transforms.ToTensor()(img.convert('RGB'))
 				if self.resize_orig:
 					extra["orig_img"] = torch.as_tensor(transforms.Resize((512, 512))(img))
 				else:
@@ -100,8 +127,8 @@ class Xray14Dataset(Dataset):
 			if self.return_path:
 				extra["path"] = img_path
 			if self.return_points:
-				extra["points"] = torch.as_tensor(card_points, dtype=torch.float)
-				extra["sign_classes"] = torch.as_tensor(card_classes)
+				extra["points"] = torch.as_tensor(sign_points, dtype=torch.float)
+				extra["sign_classes"] = torch.as_tensor(sign_classes)
 
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
 		else:
