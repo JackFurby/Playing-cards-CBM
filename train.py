@@ -10,7 +10,29 @@ from torchmetrics.functional.classification import multilabel_auroc
 
 def get_loss(output, target, index, pos_weight, device):
 	target = target[:, index].view(-1)
+	print(output[:, index].view(-1))
+	print(torch.nn.Sigmoid()(output[:, index].view(-1)))
 	if pos_weight == None:
+		"""
+		binary_output = torch.nn.Sigmoid()(output[:, index].view(-1)) >= 0.5
+		print(binary_output)
+		if target.sum() == 0:  # set weight to number of 1's in target if output has no 1's
+			weight = torch.tensor(0.).to(device)
+		else:  # based on https://arxiv.org/pdf/1705.02315v5.pdf
+			print(target.size(0), target.sum(), target.size(0) - target.sum())
+			batch_pos = target.size(0) / target.sum()
+			batch_neg = target.size(0) / (target.size(0) - target.sum())
+			print(batch_pos, batch_neg)
+			#wight_pos = batch_pos * (target.sum() - binary_output.sum())
+			#weight_neg = batch_neg * ((target.size(0) - target.sum()) - (1 - binary_output.size(0) - binary_output.sum()))
+			wight_pos = batch_pos * (target.sum() - binary_output.size(0))
+			weight_neg = batch_neg * ((target.size(0) - target.sum()) - (1 - binary_output.size(0)))
+			print(wight_pos, weight_neg)
+			weight = wight_pos + weight_neg
+		print(weight)
+		print("===========================")
+		loss = F.binary_cross_entropy_with_logits(output[:, index].view(-1), target, pos_weight=weight)
+		"""
 		if target.sum() == 0:
 			loss = torch.tensor(0., requires_grad=True).to(device)
 		else:
@@ -141,6 +163,9 @@ def train(model, data_loader, optimizer, criterion, f1=None, mode="standard", at
 					loss += loss_t
 
 				sigmoid_outputs = torch.nn.Sigmoid()(outputs)
+
+				print(sigmoid_outputs)
+				print(concepts)
 
 				# accuracy for concepts
 				accuracy.append(binary_accuracy(sigmoid_outputs, concepts).item())

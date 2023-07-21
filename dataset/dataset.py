@@ -95,11 +95,29 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 				transforms.ToTensor(), #implicitly divides by 255
 				transforms.Normalize(mean = [0.5, 0.5, 0.5], std = [2, 2, 2])
 				])
-	elif dataset_name=="chexpert" or dataset_name=="xray14":
+	elif dataset_name == "chexpert":
 		if is_training:
 			transform = chexpert_transform
 		else:
 			transform = chexpert_transform
+	elif dataset_name == "xray14":
+		mean = [0.485, 0.456, 0.406]
+		std = [0.229, 0.224, 0.225]
+		if is_training:
+			transform = transforms.Compose([
+				transforms.RandomHorizontalFlip(),
+				transforms.Resize(224),
+				transforms.CenterCrop(224),
+				transforms.ToTensor(),
+				transforms.Normalize(mean, std)
+			])
+		else:
+			transform = transforms.Compose([
+				transforms.Resize(224),
+				transforms.CenterCrop(224),
+				transforms.ToTensor(),
+				transforms.Normalize(mean, std)
+			])
 	else:
 		if is_training:
 			transform = transforms.Compose([

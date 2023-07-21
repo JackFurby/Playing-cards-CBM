@@ -6,6 +6,8 @@ from PIL import Image
 import numpy as np
 import torchvision.transforms as transforms
 
+import torch.nn.functional as F
+
 
 class Xray14Dataset(Dataset):
 	"""
@@ -56,24 +58,30 @@ class Xray14Dataset(Dataset):
 			}
 
 			new_concepts = []
-			if sample["bounding_box"] is None:
+			if sample["bounding_box"] == None:
 				new_bb = None
 			else:
 				new_bb = []
-			for j in keep_concepts:
+			for new_index, j in enumerate(keep_concepts):
 				new_concepts.append(sample["concepts"][j])  # Add concepts to concept to keep
 				# only keep bounding boxes in keep_concepts
-				if new_bb is not None:
-					bb_index = [k[1] for k in sample["bounding_box"]]
+				if new_bb != None:
+					bb_index = [k[4] for k in sample["bounding_box"]]
 					for idx, concept in enumerate(bb_index):
 						if j == concept:
-							new_bb.append(sample["bounding_box"][idx])
+							new_bb_value = sample["bounding_box"][idx][0:-1]
+							new_bb_value.append(new_index)
+							new_bb.append(new_bb_value)
+
+			## bb is for a discarded concept
+			if (new_bb != None) and (len(new_bb) == 0):
+				new_bb = None
 
 			sample["concepts"] = new_concepts
 			sample["bounding_box"] = new_bb
 
 			# Only keep samples with bounding boxes if bb_only is set to True
-			if (bb_only and (sample["bounding_box"] is not None)):
+			if (bb_only and (sample["bounding_box"] != None)):
 				self.data.append(sample)
 			elif bb_only is False:
 				self.data.append(sample)
@@ -95,18 +103,37 @@ class Xray14Dataset(Dataset):
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
+		x_resize = 224
+		y_resize = 224
+
 		# create lists for sign points and classes
 		# points are adjusted for resized images
 		if self.return_points:
-			sign_points = []
-			sign_classes = []
+			signs_points = []
+			signs_classes = []
 			for sign in img_data['bounding_box']:
 				points = []
-				for point in sign[0]:
-					point = (int(point[0] * (int(512)/img.width)), int(point[1] * (int(512)/img.height)))
+				for point in sign[0:-1]:  # last item in list is sign concept id
+					point = (int(point[0] * (int(x_resize)/img.width)), int(point[1] * (int(y_resize)/img.height)))
 					points.append(point)
-				sign_points.append(points)
-				sign_classes.append(sign[1])
+				signs_points.append(points)
+				signs_classes.append(sign[4])
+
+			# The dataloader needs every sample to have points and classes for all concepts.
+			# pad / create tensors to include values for all concepts.
+			# The index for points and classes will match. If a class has a value of -1 then the points are padding (not from in the dataset.)
+			if len(signs_points) > 0:
+
+				signs_points = torch.as_tensor(signs_points)
+				signs_classes = torch.as_tensor(signs_classes)
+
+				points_target_size = (self.num_concepts, 4, 2)  # num conceps, num points, x and y
+
+				signs_points = F.pad(signs_points, (0, points_target_size[2] - signs_points.size(2), 0, points_target_size[1] - signs_points.size(1), 0, points_target_size[0] - signs_points.size(0)))
+				signs_classes = F.pad(signs_classes, (0, self.num_concepts - signs_classes.size(0)), value=-1)
+			else:
+				signs_points = torch.zeros(self.num_concepts, 4, 2)
+				signs_classes = torch.ones(self.num_concepts) * -1
 
 		if self.transform:
 			altered_img = img
@@ -121,14 +148,14 @@ class Xray14Dataset(Dataset):
 			if self.return_orig:
 				img = transforms.ToTensor()(img.convert('RGB'))
 				if self.resize_orig:
-					extra["orig_img"] = torch.as_tensor(transforms.Resize((512, 512))(img))
+					extra["orig_img"] = torch.as_tensor(transforms.Resize((x_resize, y_resize))(img))
 				else:
 					extra["orig_img"] = torch.as_tensor(img)
 			if self.return_path:
 				extra["path"] = img_path
 			if self.return_points:
-				extra["points"] = torch.as_tensor(sign_points, dtype=torch.float)
-				extra["sign_classes"] = torch.as_tensor(sign_classes)
+				extra["points"] = signs_points
+				extra["sign_classes"] = signs_classes
 
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
 		else:
