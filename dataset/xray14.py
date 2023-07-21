@@ -99,7 +99,8 @@ class Xray14Dataset(Dataset):
 		img_data = self.data[idx]
 		img_path = img_data['img_path']
 
-		img = Image.open(img_path).convert('L')
+		#img = Image.open(img_path).convert('L')
+		img = Image.open(img_path).convert('RGB')
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
