@@ -136,10 +136,11 @@ class Xray14Dataset(Dataset):
 				signs_classes = torch.ones(self.num_concepts) * -1
 
 		if self.transform:
-			altered_img = img
-			if self.is_training:
-				altered_img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(altered_img)
-			altered_img = self.transform(np.asarray(altered_img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
+			#altered_img = img
+			#if self.is_training:
+			#	altered_img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(altered_img)
+			#altered_img = self.transform(np.asarray(altered_img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
+			altered_img = self.transform(img)
 		else:
 			altered_img = img
 
