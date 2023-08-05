@@ -4,6 +4,7 @@ import pickle
 import os
 from PIL import Image
 import numpy as np
+import torchvision.transforms as transforms
 
 
 class ChexpertDataset(Dataset):
@@ -18,7 +19,6 @@ class ChexpertDataset(Dataset):
 		transform=None,
 		keep_concepts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 		return_orig=False,
-		resize_orig=True,
 		return_path=False):
 		"""
 		Args:
@@ -27,13 +27,11 @@ class ChexpertDataset(Dataset):
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
 			keep_concepts (list of ints): list of all indexes (0 indexed) of concepts to use. There is a maximum of 13 conecpts.
 			return_orig (bool): If True then return the original image
-			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
 		"""
 		self.data = []
 		self.transform = transform
 		self.return_orig = return_orig
-		self.resize_orig = resize_orig
 		self.return_path = return_path
 		self.keep_concepts = keep_concepts
 
@@ -83,13 +81,9 @@ class ChexpertDataset(Dataset):
 			extra = {}
 			if self.return_orig:
 				#img = transforms.ToTensor()(img)
-				img = transforms.ToTensor()(Image.open(img_path).convert('RGB'))
-				if self.resize_orig:
-					extra["orig_img"] = torch.as_tensor(transforms.Resize((218, 178))(img))
-				else:
-					extra["orig_img"] = torch.as_tensor(img)
+				extra["orig_img"] = torch.as_tensor(self.transform(np.asarray(img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True))
 			if self.return_path:
-				extra["path"] = img_paths
+				extra["path"] = img_path
 
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
 		else:

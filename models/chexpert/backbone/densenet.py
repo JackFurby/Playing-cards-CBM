@@ -126,8 +126,8 @@ def densenet121(cfg, **kwargs):
 	Args:
 	    pretrained (bool): If True, returns a model pre-trained on ImageNet
 	"""
-	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), norm_type=cfg.norm_type, **kwargs)
-	if cfg.pretrained:
+	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16), norm_type=cfg["norm_type"], **kwargs)
+	if cfg["pretrained"]:
 		# '.'s are no longer allowed in module names, but pervious _DenseLayer
 		# has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
 		# They are also in the checkpoints in model_urls. This pattern is used
@@ -151,8 +151,8 @@ def densenet169(cfg, **kwargs):
 	Args:
 	    pretrained (bool): If True, returns a model pre-trained on ImageNet
 	"""
-	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 32, 32), norm_type=cfg.norm_type, **kwargs)
-	if cfg.pretrained:
+	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 32, 32), norm_type=cfg["norm_type"], **kwargs)
+	if cfg["pretrained"]:
 		# '.'s are no longer allowed in module names, but pervious _DenseLayer
 		# has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
 		# They are also in the checkpoints in model_urls. This pattern is used
@@ -176,8 +176,8 @@ def densenet201(cfg, **kwargs):
 	Args:
 		pretrained (bool): If True, returns a model pre-trained on ImageNet
 	"""
-	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 48, 32), norm_type=cfg.norm_type, **kwargs)
-	if cfg.pretrained:
+	model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 48, 32), norm_type=cfg["norm_type"], **kwargs)
+	if cfg["pretrained"]:
 		# '.'s are no longer allowed in module names, but pervious _DenseLayer
 		# has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
 		# They are also in the checkpoints in model_urls. This pattern is used
@@ -201,8 +201,8 @@ def densenet161(cfg, **kwargs):
 	Args:
 	    pretrained (bool): If True, returns a model pre-trained on ImageNet
 	"""
-	model = DenseNet(num_init_features=96, growth_rate=48, block_config=(6, 12, 36, 24), norm_type=cfg.norm_type, **kwargs)
-	if cfg.pretrained:
+	model = DenseNet(num_init_features=96, growth_rate=48, block_config=(6, 12, 36, 24), norm_type=cfg["norm_type"], **kwargs)
+	if cfg["pretrained"]:
 		# '.'s are no longer allowed in module names, but pervious _DenseLayer
 		# has keys 'norm.1', 'relu.1', 'conv.1', 'norm.2', 'relu.2', 'conv.2'.
 		# They are also in the checkpoints in model_urls. This pattern is used

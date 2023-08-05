@@ -34,11 +34,12 @@ def get_dataset(split, return_points=False, return_orig=False, return_path=False
 	return n_concepts, n_classes, val_loader, concept_index_to_string
 
 ##### https://github.com/fhvilshoj/TorchLRP/blob/74253a1be05f0be0b7c535736023408670443b6e/examples/visualization.py#L60
-def heatmap(X, cmap_name="seismic", reduce=False):
+def heatmap(X, cmap_name="seismic", reduce=False, num_clannels=3):
 	"""
 	X: input
 	cmap_name: Matplotlib cmap
 	reduce: If True reduce dimensions to 1 x W x H, else keep dimentions the same
+	num_clannels: Number of output channels. set to 3 for (r, g, b) and 4 for (r, g, b, a)
 	"""
 	cmap = plt.cm.get_cmap(cmap_name)
 
@@ -54,11 +55,11 @@ def heatmap(X, cmap_name="seismic", reduce=False):
 		return tmp.astype(np.float32)
 
 	tmp = project(tmp, output_range=(0, 255)).astype(int)
-	tmp = cmap(tmp.flatten())[:, :3].T
+	tmp = cmap(tmp.flatten())[:, :num_clannels].T
 	tmp = tmp.T
 
 	shape = list(shape)
-	shape[-1] = 3
+	shape[-1] = num_clannels
 	return tmp.reshape(shape).astype(np.float32)
 
 

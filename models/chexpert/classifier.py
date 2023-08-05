@@ -20,13 +20,14 @@ BACKBONES_TYPES = {
 }
 
 
-class Classifier(nn.Module):
+class XtoC(nn.Module):
 
 	def __init__(self, cfg):
-		super(Classifier, self).__init__()
+		super(XtoC, self).__init__()
 		self.cfg = cfg
-		self.backbone = BACKBONES[cfg.backbone](cfg)
-		self.classifier = nn.Linear(self.backbone.num_features, len(self.cfg.num_classes))
+		self.backbone = BACKBONES[cfg["backbone"]](cfg)
+		self.classifier = nn.Linear(self.backbone.num_features, self.cfg["num_concepts"])
+		#self.sigmoid = nn.Sigmoid()
 
 	def cuda(self, device=None):
 		return self._apply(lambda t: t.cuda(device))
@@ -36,4 +37,5 @@ class Classifier(nn.Module):
 		out = F.adaptive_avg_pool2d(out, (1, 1))
 		out = torch.flatten(out, 1)
 		out = self.classifier(out)
+		#out = self.sigmoid(out)
 		return out

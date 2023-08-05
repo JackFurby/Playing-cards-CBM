@@ -10,20 +10,63 @@ import models.chexpert.classifier as classifier
 from tqdm import tqdm
 import os
 import matplotlib.pyplot as plt
+import matplotlib.pylab as pl
+from matplotlib.colors import ListedColormap
 from experiments.utils import heatmap, project
 import lrp
 from models.lrp_converter import convert
 import cv2
 from easydict import EasyDict as edict
+import json
+from PIL import Image, ImageDraw
+import torchvision.transforms as transforms
 
 from captum.attr import IntegratedGradients, Saliency, GuidedGradCam
 from captum.attr import NoiseTunnel
 from captum.attr import visualization as viz
 
+from dataset.utils import transform as chexpert_transform
+seg_transform = chexpert_transform
+
 
 # A single figure is defined as putting this in a loop quickly uses up all system memory.
 # This figure is reused for all plots
 FIG, AX = plt.subplots()
+
+base_cmap = pl.cm.seismic
+seismic_alpha = base_cmap(np.arange(base_cmap.N))
+seismic_alpha[:,-1] = np.concatenate((np.ones(115), (np.logspace(1, 0, 13)/10), (np.logspace(0, 1, 13)/10), np.ones(115)), axis=0)  # set alpha
+seismic_alpha = ListedColormap(seismic_alpha)  # create new colormap
+
+base_cmap = pl.cm.Greens
+green_alpha = base_cmap(np.arange(base_cmap.N))
+green_alpha[:,-1] = np.linspace(0, 1, 256)  # set alpha
+green_alpha = ListedColormap(green_alpha)  # create new colormap
+
+f = open('./dataset/chexpert/CheXlocalize/gt_annotations_val.json')
+segmentations = json.load(f)
+f.close()
+f = open('./dataset/chexpert/CheXlocalize/gt_annotations_test.json')
+segmentations_test = json.load(f)
+f.close()
+segmentations.update(segmentations_test)
+
+
+def get_human_segmentation(sample_key, concept_key, segmentations=segmentations):
+
+	if sample_key not in segmentations.keys():
+		return None
+	if concept_key not in segmentations[sample_key].keys():
+		return None
+
+	polygons = segmentations[sample_key][concept_key]
+
+	poly = Image.new('1', (segmentations[sample_key]["img_size"][1], segmentations[sample_key]["img_size"][0]))
+	for polygon in polygons:
+		coords = [(point[0], point[1]) for point in polygon]
+		ImageDraw.Draw(poly).polygon(coords,  outline=1, fill=1)
+
+	return poly
 
 
 def extract_card(image_gradient, card_cord):
@@ -281,7 +324,10 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 					os.makedirs(f"{save_dir}")
 
 				# Save input image
-				save_image(orig_image[image_index], f'{save_dir}/input.png')
+				#save_image(orig_image[image_index].permute(2, 0, 1).float(), f'{save_dir}/input.png')
+
+				orig_img = transforms.ToPILImage()(orig_image[image_index].permute(2, 0, 1))
+				orig_img.save(f'{save_dir}/input.png')
 
 				# Write true concepts to file
 				with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
@@ -330,12 +376,36 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							target=int(i),
 						)
 
-					attr = heatmap(attribution, cmap_name='seismic')
+					attr = heatmap(attribution, cmap_name=seismic_alpha, num_clannels=4)
+
+					segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
+
+					# get ground truth segmentation
+					if i == 0:
+						concept_key = "Cardiomegaly"
+					if i == 1:
+						concept_key = "Edema"
+					if i == 2:
+						concept_key = "Consolidation"
+					if i == 3:
+						concept_key = "Atelectasis"
+					if i == 4:
+						concept_key = "Pleural Effusion"
+
+					segmentation_img = get_human_segmentation(segmentation_key, concept_key)
+
+					if segmentation_img != None:
+						segmentation_img = np.asarray(segmentation_img.convert("L"))
+						segmentation_img = seg_transform(segmentation_img, gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True)
+						alpha = np.sum(segmentation_img, axis=-1) > 0  # only keep segmentation areas
 
 					# Save concept saliency map
 					AX.clear()
 					AX.set_axis_off()
-					AX.imshow(attr.squeeze(), cmap='seismic')
+					AX.imshow(orig_image[image_index].squeeze())
+					if type(segmentation_img) == np.ndarray:
+						AX.imshow(alpha, cmap=green_alpha, interpolation='none', alpha=0.5)
+					AX.imshow(attr.squeeze(), cmap=seismic_alpha)
 					FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
 
 			sample_num += 1
@@ -425,7 +495,7 @@ if __name__ == "__main__":
 	else:
 		print("Device:", device)
 
-	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/{args.dataset_file}.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, num_workers=1, return_points=True, return_orig=True)
+	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/{args.dataset_file}.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, num_workers=1, return_points=True, return_orig=True, return_path=True)
 	concept_index_to_string = IndexToString(f"./{args.dataset_root}/{args.dataset_postfix}/concepts.txt")
 
 	if "playing-cards" in args.dataset_root:
@@ -440,10 +510,10 @@ if __name__ == "__main__":
 			"backbone": "densenet121",
 			"norm_type": "BatchNorm",
 			"pretrained": True,
-			"num_classes": [1,1,1,1,1],
+			"num_concepts": 5,
 		})
 
-		XtoC = classifier.Classifier(cfg)
+		XtoC = classifier.XtoC(cfg)
 		XtoC.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)
 		model_name = args.pretrained_weights.split("/")[-1][:-4]
 

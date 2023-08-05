@@ -55,12 +55,12 @@ class StringToIndex(object):
 
 
 # https://github.com/jfhealthcare/Chexpert/blob/master/data/utils.py
-def border_pad(image, long_side, border_pad_str, pixel_mean):
+def border_pad(image, long_side, border_pad_str, pixel_mean, border_pad_type='pixel_mean'):
 	h, w, c = image.shape
 
-	if border_pad == 'zero':
+	if border_pad_type == 'zero':
 		image = np.pad(image, ((0, long_side - h), (0, long_side - w), (0, 0)), mode='constant', constant_values=0.0)
-	elif border_pad == 'pixel_mean':
+	elif border_pad_type == 'pixel_mean':
 		image = np.pad(image, ((0, long_side - h), (0, long_side - w), (0, 0)), mode='constant', constant_values=pixel_mean)
 	else:
 		image = np.pad(image, ((0, long_side - h), (0, long_side - w), (0, 0)), mode=border_pad_str)
@@ -69,7 +69,7 @@ def border_pad(image, long_side, border_pad_str, pixel_mean):
 
 
 # https://github.com/jfhealthcare/Chexpert/blob/master/data/utils.py
-def fix_ratio(image, long_side, border_pad_str, pixel_mean):
+def fix_ratio(image, long_side, border_pad_str, pixel_mean, border_pad_type='pixel_mean'):
 	h, w, c = image.shape
 
 	if h >= w:
@@ -82,33 +82,40 @@ def fix_ratio(image, long_side, border_pad_str, pixel_mean):
 		h_ = round(w_ / ratio)
 
 	image = cv2.resize(image, dsize=(w_, h_), interpolation=cv2.INTER_LINEAR)
-	image = border_pad(image, long_side, border_pad_str, pixel_mean)
+	image = border_pad(image, long_side, border_pad_str, pixel_mean, border_pad_type=border_pad_type)
 
 	return image
 
 
 # https://github.com/jfhealthcare/Chexpert/blob/master/data/utils.py
-def transform(image, gaussian_blur, use_equalizeHist, long_side, border_pad_str, pixel_mean, pixel_std=None):
+def transform(image, gaussian_blur, use_equalizeHist, long_side, border_pad_str, pixel_mean, pixel_std=None, resize_only=False):
 	assert image.ndim == 2, "image must be gray image"
 
-	if use_equalizeHist:
-		image = cv2.equalizeHist(image)
+	if resize_only == False:
+		if use_equalizeHist:
+			image = cv2.equalizeHist(image)
 
-	if gaussian_blur > 0:
-		image = cv2.GaussianBlur(image, (gaussian_blur, gaussian_blur), 0)
+		if gaussian_blur > 0:
+			image = cv2.GaussianBlur(image, (gaussian_blur, gaussian_blur), 0)
 
 	image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
-	image = fix_ratio(image, long_side, border_pad_str, pixel_mean)
+	if resize_only:
+		border_pad_type = 'zero'
+	else:
+		border_pad_type = 'pixel_mean'
+
+	image = fix_ratio(image, long_side, border_pad_str, pixel_mean, border_pad_type=border_pad_type)
 	# augmentation for train or co_train
 
-	# normalization
-	image = image.astype(np.float32) - pixel_mean
-	# vgg and resnet do not use pixel_std, densenet and inception use.
-	if pixel_std:
-		image /= pixel_std
-	# normal image tensor :  H x W x C
-	# torch image tensor :   C X H X W
-	image = image.transpose((2, 0, 1))
+	if resize_only == False:
+		# normalization
+		image = image.astype(np.float32) - pixel_mean
+		# vgg and resnet do not use pixel_std, densenet and inception use.
+		if pixel_std:
+			image /= pixel_std
+		# normal image tensor :  H x W x C
+		# torch image tensor :   C X H X W
+		image = image.transpose((2, 0, 1))
 
 	return image

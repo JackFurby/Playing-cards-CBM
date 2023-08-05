@@ -106,8 +106,10 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		if is_training:
 			transform = transforms.Compose([
 				transforms.RandomHorizontalFlip(),
+				transforms.ColorJitter(brightness=0.1),
 				transforms.Resize(224),
 				transforms.CenterCrop(224),
+				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
 				transforms.ToTensor(),
 				transforms.Normalize(mean, std)
 			])
@@ -142,7 +144,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 	elif dataset_name == "CUB":
 		dataset = CubDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
 	elif dataset_name == "chexpert":
-		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
+		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, return_path=return_path)
 	elif dataset_name == "xray14":
 		if len(keep_concepts) == 0:
 			dataset = Xray14Dataset(pkl_path, dataset_root, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points, bb_only=bb_only)
