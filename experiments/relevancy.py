@@ -279,7 +279,7 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		return None
 
 
-def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, device="cpu", model_name="model", samples_per_class=-1):
+def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, device="cpu", model_name="model", samples_per_class=-1, chexpert=False):
 	"""
 	model: pytorch model
 	mode: string captum attribute name
@@ -323,11 +323,11 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 				if not os.path.exists(f"{save_dir}"):
 					os.makedirs(f"{save_dir}")
 
-				# Save input image
-				#save_image(orig_image[image_index].permute(2, 0, 1).float(), f'{save_dir}/input.png')
-
-				orig_img = transforms.ToPILImage()(orig_image[image_index].permute(2, 0, 1))
-				orig_img.save(f'{save_dir}/input.png')
+				if chexpert:
+					orig_img = transforms.ToPILImage()(orig_image[image_index].permute(2, 0, 1))
+					orig_img.save(f'{save_dir}/input.png')
+				else:
+					save_image(orig_image[image_index], f'{save_dir}/input.png')
 
 				# Write true concepts to file
 				with open(f'{save_dir}/true-concepts.txt', mode='wt', encoding='utf-8') as f:
@@ -359,6 +359,11 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							nt_type = "smoothgrad"
 						else:
 							nt_type = "smoothgrad_sq"
+							
+						if chexpert:
+							stdevs_val=0.2
+						else:
+							stdevs_val=0.0
 
 						attribution = nt.attribute(
 							image,
@@ -367,7 +372,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							nt_type=nt_type,
 							nt_samples=25,
 							internal_batch_size=25,
-							stdevs=0.2
+							stdevs=stdevs_val
 						)
 
 					elif mode == "gradCAM":
@@ -377,34 +382,37 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						)
 
 					attr = heatmap(attribution, cmap_name=seismic_alpha, num_clannels=4)
+					
+					if chexpert:
 
-					segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
+						segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
 
-					# get ground truth segmentation
-					if i == 0:
-						concept_key = "Cardiomegaly"
-					if i == 1:
-						concept_key = "Edema"
-					if i == 2:
-						concept_key = "Consolidation"
-					if i == 3:
-						concept_key = "Atelectasis"
-					if i == 4:
-						concept_key = "Pleural Effusion"
+						# get ground truth segmentation
+						if i == 0:
+							concept_key = "Cardiomegaly"
+						if i == 1:
+							concept_key = "Edema"
+						if i == 2:
+							concept_key = "Consolidation"
+						if i == 3:
+							concept_key = "Atelectasis"
+						if i == 4:
+							concept_key = "Pleural Effusion"
 
-					segmentation_img = get_human_segmentation(segmentation_key, concept_key)
+						segmentation_img = get_human_segmentation(segmentation_key, concept_key)
 
-					if segmentation_img != None:
-						segmentation_img = np.asarray(segmentation_img.convert("L"))
-						segmentation_img = seg_transform(segmentation_img, gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True)
-						alpha = np.sum(segmentation_img, axis=-1) > 0  # only keep segmentation areas
+						if segmentation_img != None:
+							segmentation_img = np.asarray(segmentation_img.convert("L"))
+							segmentation_img = seg_transform(segmentation_img, gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True)
+							alpha = np.sum(segmentation_img, axis=-1) > 0  # only keep segmentation areas
 
 					# Save concept saliency map
 					AX.clear()
 					AX.set_axis_off()
-					AX.imshow(orig_image[image_index].squeeze())
-					if type(segmentation_img) == np.ndarray:
-						AX.imshow(alpha, cmap=green_alpha, interpolation='none', alpha=0.5)
+					if chexpert:
+						AX.imshow(orig_image[image_index].squeeze())
+						if type(segmentation_img) == np.ndarray:
+							AX.imshow(alpha, cmap=green_alpha, interpolation='none', alpha=0.5)
 					AX.imshow(attr.squeeze(), cmap=seismic_alpha)
 					FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
 
