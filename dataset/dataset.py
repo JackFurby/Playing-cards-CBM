@@ -107,16 +107,16 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 			transform = transforms.Compose([
 				transforms.RandomHorizontalFlip(),
 				transforms.ColorJitter(brightness=0.1),
-				transforms.Resize(224),
-				transforms.CenterCrop(224),
+				transforms.Resize(x_resize),
+				transforms.CenterCrop(x_resize),
 				transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128),
 				transforms.ToTensor(),
 				transforms.Normalize(mean, std)
 			])
 		else:
 			transform = transforms.Compose([
-				transforms.Resize(224),
-				transforms.CenterCrop(224),
+				transforms.Resize(x_resize),
+				transforms.CenterCrop(x_resize),
 				transforms.ToTensor(),
 				transforms.Normalize(mean, std)
 			])

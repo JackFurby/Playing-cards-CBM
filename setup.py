@@ -3,10 +3,10 @@ import setuptools
 setuptools.setup(
 	name="playing_cards_concept_models",
 	version="0.0.1",
-	author="Jack Furby",
-	author_email="furbyjl@cardiff.ac.uk",
+	author="",
+	author_email="",
 	description="Concept Models",
-	url="https://github.com/JackFurby/Playing-cards-CBM",
+	url="",
 	packages=setuptools.find_packages(),
 	python_requires='>=3.8, <=3.11',
 	install_requires=[

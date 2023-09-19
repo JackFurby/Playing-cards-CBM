@@ -5,7 +5,8 @@ import os
 from PIL import Image
 import numpy as np
 import torchvision.transforms as transforms
-
+from torch.utils.data import BatchSampler
+from torch.utils.data import DataLoader
 import torch.nn.functional as F
 
 
@@ -19,7 +20,6 @@ class Xray14Dataset(Dataset):
 		pkl_file_path,
 		dataset_root,
 		transform=None,
-		keep_concepts=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 		return_orig=False,
 		resize_orig=True,
 		return_path=False,
@@ -30,7 +30,6 @@ class Xray14Dataset(Dataset):
 			pkl_file_path (string): path to pkl file for dataset split from repo root
 			dataset_root (string): path to dataset root from repo root
 			transform: whether to apply any special transformation. Default = None, i.e. use standard ImageNet preprocessing
-			keep_concepts list(ints): Only keep concepts in this list (0 indexed). Concepts will be returned in the order provided
 			return_orig (bool): If True then return the original image
 			resize_orig (bool): If True then resize the returned original image to the same size as the transformed image
 			return_path (bool): If True then return the original image path (not used if return_orig is true)
@@ -54,40 +53,17 @@ class Xray14Dataset(Dataset):
 				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
 				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
 				"concepts": dataset_split[i]["concept_label"],
-				"bounding_box": dataset_split[i]["bounding_box"],
+				#"bounding_box": dataset_split[i]["bounding_box"],
 			}
 
-			new_concepts = []
-			if sample["bounding_box"] == None:
-				new_bb = None
-			else:
-				new_bb = []
-			for new_index, j in enumerate(keep_concepts):
-				new_concepts.append(sample["concepts"][j])  # Add concepts to concept to keep
-				# only keep bounding boxes in keep_concepts
-				if new_bb != None:
-					bb_index = [k[4] for k in sample["bounding_box"]]
-					for idx, concept in enumerate(bb_index):
-						if j == concept:
-							new_bb_value = sample["bounding_box"][idx][0:-1]
-							new_bb_value.append(new_index)
-							new_bb.append(new_bb_value)
-
-			## bb is for a discarded concept
-			if (new_bb != None) and (len(new_bb) == 0):
-				new_bb = None
-
-			sample["concepts"] = new_concepts
-			sample["bounding_box"] = new_bb
+			if dataset_split[i]["class_label"] > highest_class:
+				highest_class = dataset_split[i]["class_label"]
 
 			# Only keep samples with bounding boxes if bb_only is set to True
 			if (bb_only and (sample["bounding_box"] != None)):
 				self.data.append(sample)
 			elif bb_only is False:
 				self.data.append(sample)
-
-			if dataset_split[i]["class_label"] > highest_class:
-				highest_class = dataset_split[i]["class_label"]
 
 		self.num_concepts = len(self.data[0]["concepts"])
 		self.num_classes = highest_class + 1
@@ -104,11 +80,12 @@ class Xray14Dataset(Dataset):
 		class_index = img_data['class_index']
 		concepts = img_data['concepts']
 
-		x_resize = 224
-		y_resize = 224
+		x_resize = 512
+		y_resize = 512
 
 		# create lists for sign points and classes
 		# points are adjusted for resized images
+		"""
 		if self.return_points:
 			signs_points = []
 			signs_classes = []
@@ -135,12 +112,9 @@ class Xray14Dataset(Dataset):
 			else:
 				signs_points = torch.zeros(self.num_concepts, 4, 2)
 				signs_classes = torch.ones(self.num_concepts) * -1
+		"""
 
 		if self.transform:
-			#altered_img = img
-			#if self.is_training:
-			#	altered_img = transforms.RandomAffine(degrees=(-15, 15), translate=(0.05, 0.05), scale=(0.95, 1.05), fill=128)(altered_img)
-			#altered_img = self.transform(np.asarray(altered_img), gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0)
 			altered_img = self.transform(img)
 		else:
 			altered_img = img
@@ -155,10 +129,91 @@ class Xray14Dataset(Dataset):
 					extra["orig_img"] = torch.as_tensor(img)
 			if self.return_path:
 				extra["path"] = img_path
-			if self.return_points:
-				extra["points"] = signs_points
-				extra["sign_classes"] = signs_classes
+			#if self.return_points:
+			#	extra["points"] = signs_points
+			#	extra["sign_classes"] = signs_classes
 
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float), extra
 		else:
 			return torch.as_tensor(altered_img), torch.as_tensor(class_index), torch.as_tensor(concepts, dtype=torch.float)
+
+
+
+# https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
+class ImbalancedDatasetSampler(torch.utils.data.sampler.Sampler):
+	"""Samples elements randomly from a given list of indices for imbalanced dataset
+	Args:
+		indices (list, optional): a list of indices
+		num_samples (int, optional): number of samples to draw
+	"""
+
+	def __init__(self, dataset, indices=None):
+		# if indices is not provided,
+		# all elements in the dataset will be considered
+		self.indices = list(range(len(dataset))) \
+			if indices is None else indices
+
+		# if num_samples is not provided,
+		# draw `len(indices)` samples in each iteration
+		self.num_samples = len(self.indices)
+
+		# distribution of classes in the dataset
+		label_to_count = {}
+		for idx in self.indices:
+			label = self._get_label(dataset, idx)
+			if label in label_to_count:
+				label_to_count[label] += 1
+			else:
+				label_to_count[label] = 1
+
+		# weight for each sample
+		weights = [1.0 / label_to_count[self._get_label(dataset, idx)]
+			for idx in self.indices]
+		self.weights = torch.DoubleTensor(weights)
+
+	def _get_label(self, dataset, idx):  # Note: for single attribute dataset
+		return dataset.data[idx]["id"]['concept_label'][0]
+
+	def __iter__(self):
+		idx = (self.indices[i] for i in torch.multinomial(
+			self.weights, self.num_samples, replacement=True))
+		return idx
+
+	def __len__(self):
+		return self.num_samples
+
+
+# https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
+def find_class_imbalance(pkl_file, multiple_attr=False, attr_idx=-1):
+	"""
+	Calculate class imbalance ratio for binary attribute labels stored in pkl_file
+	If attr_idx >= 0, then only return ratio for the corresponding attribute id
+	If multiple_attr is True, then return imbalance ratio separately for each attribute. Else, calculate the overall imbalance across all attributes
+	"""
+	imbalance_ratio = []
+	data = pickle.load(open(pkl_file, 'rb'))
+	n = len(data)
+	n_attr = len(list(data.items())[0][1]['concept_label'])
+	if attr_idx >= 0:
+		n_attr = 1
+	if multiple_attr:
+		n_ones = [0] * n_attr
+		total = [n] * n_attr
+	else:
+		n_ones = [0]
+		total = [n * n_attr]
+	for key in data:
+		labels = data[key]['concept_label']
+		if multiple_attr:
+			for i in range(n_attr):
+				n_ones[i] += labels[i]
+		else:
+			if attr_idx >= 0:
+				n_ones[0] += labels[attr_idx]
+			else:
+				n_ones[0] += sum(labels)
+	for j in range(len(n_ones)):
+		imbalance_ratio.append(total[j]/n_ones[j] - 1)
+	if not multiple_attr: #e.g. [9.0] --> [9.0] * 312
+		imbalance_ratio *= n_attr
+	return imbalance_ratio

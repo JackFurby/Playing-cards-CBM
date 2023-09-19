@@ -1,4 +1,9 @@
 # Playing cards CBM
+Note: This version of the code and data is for the AAAI review process. It includes model weights (train on all datasets) and test data for the playing cards dataset. All commands to run experiments are included below.
+
+Training models has been marked as optional as this is estimated to take around 350 hours of compute
+
+If you do not have enough memory on your GPU (some experiments will need 24GB), the flag `--use_cpu` can be added to run experiments on the CPU. This will increase time required to run experiments significantly.
 ## Setup
 
 Note: These instructions were designed for Ubuntu 22.04. They should however be compatible with other operating systems with minor adjustments.
@@ -17,76 +22,21 @@ Note: These instructions were designed for Ubuntu 22.04. They should however be 
 
 4. Install repo as a package
 
-    `pip install -e .`  
+    `pip install -e .`
 
-5. Download and configure dataset
+5. Setup datasets
 
-    a. Clone the playing cards dataset from https://huggingface.co/datasets/JackFurby/playing-cards into the directory `project_root/datasets/playing-cards`
+    Datasets should be in the following file structure
 
-## Arguments
+## Model training (optional)
 
-```
-options:
-  -h, --help            show this help message and exit
-  --lr LR               Starting learning rate (default: 0.001)
-  --lr_patience LR_PATIENCE
-                        Number of epochs with no improvement after which learning rate will be reduced (default: 10)
-  --mode {XtoC,standard,joint,CtoY,sequential}
-                        Training method to use for training a model (default: XtoC)
-  --epochs EPOCHS       Number of epochs to train a model (default: 100)
-  --batch_size BATCH_SIZE
-                        Number of samples per batch (default: 16)
-  --seed SEED           Seed set to Pytorch (default: 0)
-  --num_workers NUM_WORKERS
-                        Number of workers fetching data for the dataloader (default: 0)
-  --optimizer {adam,sgd}
-                        Optimizer to use for training (default: adam)
-  --pretrained_weights PRETRAINED_WEIGHTS
-                        File path to pytorch weight file
-  --n_classes N_CLASSES
-                        Number of classes in dataset
-  --n_concepts N_CONCEPTS
-                        Number of concepts/attributes in dataset
-  --dataset_root DATASET_ROOT
-                        Path to dataset root directory
-  --dataset_postfix DATASET_POSTFIX
-                        Path to dataset split files from dataset root (default: "")
-  --weighted_loss       Whether to use weighted loss for single concept or multiple ones
-  --attr_loss_weight ATTR_LOSS_WEIGHT
-                        Weight task loss (default: 1.0)
-  --freeze              Freeze the input to layer before concept vector model part
-  --use_sig             Use sigmoid between the XtoC and the CtoY model parts
-  --use_cpu             Only use the system CPU, even if CUDA is available
-  --save_name SAVE_NAME
-                        Name to save model file. If left as default a systematic file name will be used (default: "")
-
-```
-
-## Model training
-
-This repository includes training methods for the main CBM training methods.
+Train all models: `sh train_models.sh`
 
 ### Example commands
 
-#### Standard (non-CBM training)
-
-`python main.py --mode standard --n_classes 52 --dataset_root dataset/playing-cards --dataset_postfix splits/single`
-
-`python main.py --mode standard --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker`
-
-
 #### XtoC training
 
-`python main.py --mode XtoC --n_concepts 17 --dataset_root dataset/playing-cards  --dataset_postfix splits/single  --weighted_loss --optimizer sgd`
-
 `python main.py --mode XtoC --n_concepts 52 --dataset_root dataset/playing-cards  --dataset_postfix splits/three  --weighted_loss --optimizer sgd`
-
-`python main.py --mode XtoC --n_concepts 36 --dataset_root dataset/celebA  --dataset_postfix splits/cbm  --weighted_loss --dataset_name faces --x_resize 178 --y_resize 218 --optimizer sgd --pretrained_weights saves/vgg11_bn-imagenet.pth --freeze`
-
-`python main.py --mode XtoC_test --n_concepts 5 --dataset_root dataset/chexpert  --dataset_postfix splits/CBM_5_obs --optimizer adamW --dataset_name chexpert --num_workers 6 --batch_size 16 --save_name chexpert_x_to_c --vgg_version 19_bn --lr 0.0001 --x_resize 320 --y_resize 320 --weighted_loss --save_metric auc --pretrained_weights saves/vgg19_bn-imagenet.pth`
-
-`python main.py --mode XtoC --n_concepts 57 --dataset_root dataset/CUB_200_2011/  --dataset_postfix splits/mini_CUB  --weighted_loss --optimizer sgd --dataset_name CUB --vgg_version 19_bn --imagenet_weights --batch_size 8 --use_cpu`
-
 
 #### Independent CtoY training
 
@@ -97,11 +47,7 @@ This repository includes training methods for the main CBM training methods.
 
 `python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --num_workers 4 --batch_size 32 --pretrained_weights saves/XtoC_best_three.pth --freeze`
 
-*Note: This training method requires pretrained_weights to be passes an XtoC model with a modulelist concept vector*
-
 #### Joint training
-
-`python main.py --mode joint --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --num_workers 4 --batch_size 32 --attr_loss_weight 0.5`
 
 `python main.py --mode joint --n_classes 52 --n_concepts 17 --dataset_root dataset/playing-cards --dataset_postfix splits/single  --num_workers 4 --batch_size 32 --attr_loss_weight 0.99`
 
@@ -115,9 +61,6 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `python concept_to_standard_model_converter.py --model_path ./saves/XtoC_best.pth --model_out_path ./saves/XtoC_converted.pth --num_concepts 17 --vgg_version 11_bn`
 
-`python concept_to_standard_model_converter.py --model_path ./saves/chexpert_x_to_c.pth --model_out_path ./saves/chexpert_XtoC_converted.pth --num_concepts 13 --vgg_version 19_bn`
-
-
 #### XtoC and CtoY (independent)
 
 `python concept_to_standard_model_converter.py --model_path ./saves/independent-XtoC-single.pth --model_2_path ./saves/independent-CtoY-single.pth --model_out_path ./saves/independent-single.pth --num_concepts 17 --num_classes 52 --vgg_version 11_bn`
@@ -127,21 +70,38 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `python concept_to_standard_model_converter.py --model_path ./saves/XtoCtoY_best.pth --model_out_path ./saves/XtoCtoY_converted.pth --num_concepts 52 --num_classes 6 --end_to_end --vgg_version 11_bn`
 
-''
 
 ## Experiments
 
 ### Model accuracies
 
-`python experiments/model_accuracy.py --weights_dir ./saves/paper_weights --dataset_root dataset/playing-cards`
+`python experiments/model_accuracy.py --weights_dir ./saves/converted --dataset_root dataset/playing-cards`
 
 ### saliency maps (samples and averages)
 
-`python experiments/relevancy.py --pretrained_weights ./saves/paper_weights/independent-single-seed-557.pth --dataset_root dataset/playing-cards --dataset_postfix splits/single --n_classes 52 --n_concepts 17 --saliency_mode lrp`
-
 `python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert`
+
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert`
 
 ### ROAR
 
@@ -153,7 +113,7 @@ With a trained model the architecture will contain a modlule list layer containi
 'python experiments/roar/plot.py --weights_dir ./saves/roar'
 
 
-### Purity (OIS and NIS)
+### Purity (OIS)
 
 #### setup
 
@@ -218,8 +178,12 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### Run experiments
 
+Run OIS and NIS scoring: `sh scoring.sh`
+
+This will create a number of txt files containing ois results. To plot these open `plot.py` in `experiments/purity` and copy the values over.
+
+##### Example commands
+
 `python experiments/purity/scoring.py --pretrained_weights saves/converted/sequential-poker-seed-625.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --results_txt ./results/metrics/ois_poker.txt --mode oracle --dataset_name cards`
 
-`python experiments/purity/scoring.py --pretrained_weights saves/chexpert_5_obs/best1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 6 --n_concepts 52 --results_txt ./results/metrics/ois_chexpert.txt --mode oracle --dataset_name chexpert`
-
-`./scoring.sh`
+`python experiments/purity/scoring.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --results_txt ./results/metrics/ois_chexpert.txt --mode oracle --dataset_name chexpert`
