@@ -359,7 +359,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							nt_type = "smoothgrad"
 						else:
 							nt_type = "smoothgrad_sq"
-							
+
 						if chexpert:
 							stdevs_val=0.2
 						else:
@@ -382,22 +382,38 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						)
 
 					attr = heatmap(attribution, cmap_name=seismic_alpha, num_clannels=4)
-					
+
 					if chexpert:
 
 						segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
 
 						# get ground truth segmentation
-						if i == 0:
+						if index == 0:
+							concept_key = "Enlarged Cardiomediastium"
+						if index == 1:
 							concept_key = "Cardiomegaly"
-						if i == 1:
+						if index == 2:
+							concept_key = "Lung Opacity"  # Airspace Opacity
+						if index == 3:
+							concept_key = "Lung Lesion"
+						if index == 4:
 							concept_key = "Edema"
-						if i == 2:
+						if index == 5:
 							concept_key = "Consolidation"
-						if i == 3:
+						if index == 6:
+							concept_key = "Pneumonia"
+						if index == 7:
 							concept_key = "Atelectasis"
-						if i == 4:
+						if index == 8:
+							concept_key = "Pneumothorax"
+						if index == 9:
 							concept_key = "Pleural Effusion"
+						if index == 10:
+							concept_key = "Plaural Other"
+						if index == 11:
+							concept_key = "Fracture"
+						if index == 12:
+							concept_key = "Support Devices"
 
 						segmentation_img = get_human_segmentation(segmentation_key, concept_key)
 
@@ -514,12 +530,14 @@ if __name__ == "__main__":
 		XtoC = convert(model.x_to_c_model)
 
 	else:  # CheXpert model is only XtoC
-		cfg = edict({
+		cfg = {
 			"backbone": "densenet121",
 			"norm_type": "BatchNorm",
 			"pretrained": True,
-			"num_concepts": 5,
-		})
+			"num_concepts": args.n_concepts,
+			"cbm_mode": "full",  # can be either xtoc or full
+			"xtoc_only": True  # if true then only predict concepts
+		}
 
 		XtoC = classifier.XtoC(cfg)
 		XtoC.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)

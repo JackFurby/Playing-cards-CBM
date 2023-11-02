@@ -9,7 +9,7 @@ from dataset.utils import transform as chexpert_transform
 from dataset.chexpert import ChexpertDataset
 from dataset.cub import CubDataset
 from dataset.playing_cards import PlayingCardDataset
-from dataset.xray14 import Xray14Dataset
+from dataset.skin import SkinDataset
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
@@ -100,7 +100,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 			transform = chexpert_transform
 		else:
 			transform = chexpert_transform
-	elif dataset_name == "xray14":
+	elif dataset_name == "skin":
 		mean = [0.485, 0.456, 0.406]
 		std = [0.229, 0.224, 0.225]
 		if is_training:
@@ -145,11 +145,11 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 		dataset = CubDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
 	elif dataset_name == "chexpert":
 		dataset = ChexpertDataset(pkl_path, dataset_root, transform, return_orig=return_orig, return_path=return_path)
-	elif dataset_name == "xray14":
+	elif dataset_name == "skin":
 		if len(keep_concepts) == 0:
-			dataset = Xray14Dataset(pkl_path, dataset_root, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points, bb_only=bb_only)
+			dataset = SkinDataset(pkl_path, dataset_root, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 		else:
-			dataset = Xray14Dataset(pkl_path, dataset_root, keep_concepts=keep_concepts, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points, bb_only=bb_only)
+			dataset = SkinDataset(pkl_path, dataset_root, transform=transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	else:
 		raise Exception(f"Unknown dataset type: {dataset_name}")
 	if is_training:
