@@ -393,7 +393,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						if index == 1:
 							concept_key = "Cardiomegaly"
 						if index == 2:
-							concept_key = "Lung Opacity"  # Airspace Opacity
+							concept_key = "Airspace Opacity"  # Lung Opacity
 						if index == 3:
 							concept_key = "Lung Lesion"
 						if index == 4:
