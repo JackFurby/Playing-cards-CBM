@@ -174,7 +174,15 @@ With a trained model the architecture will contain a modlule list layer containi
   )
   ```
 
-4. Install `concepts_xai` from concept-quality directory: `python setup.py install`
+4. Update `requirements.txt`
+
+  Some pip packages will need updating. This list may not be complete
+
+  ```
+  Pillow==10.1.*
+  ```
+
+5. Install `concepts_xai` from concept-quality directory: `python setup.py install`
 
 #### Run experiments
 

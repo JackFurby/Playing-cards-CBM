@@ -5,7 +5,7 @@ torchvision==0.14.1+cu116
 torchmetrics==0.10.*
 matplotlib==3.7.*
 numpy==1.24.*
-Pillow==9.4.*
+Pillow==10.1.*
 scikit-learn==1.2.*
 wandb
 jupyterlab==3.5.*
@@ -14,4 +14,3 @@ pandas==1.5.*
 tqdm==4.64.*
 opencv-python==4.6.0.*
 captum==0.6.*
-easydict=1.10.*
