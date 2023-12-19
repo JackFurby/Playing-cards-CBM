@@ -1,0 +1,39 @@
+program: main.py
+method: bayes
+project: playing_cards_CBM
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - ${args}
+  - --freeze
+  - --use_sig
+metric:
+  name: Test Loss
+  goal: minimize
+parameters:
+  lr:
+    min: 0.0001
+    max: 0.1
+  optimizer:
+    values: ["adam", "sgd"]
+  lr_patience:
+    values: [3, 5, 10, 15]
+  mode:
+    value: sequential
+  n_concepts:
+    value: 11
+  n_classes:
+    value: 6
+  dataset_root:
+    value: dataset/playing-cards
+  dataset_postfix:
+    value: splits/three_card_poker_class_level
+  epochs:
+    value: 100
+  batch_size:
+    value: 32
+  num_workers:
+    value: 4
+  pretrained_weights:
+    value: ./saves/poker_XtoC_best_sweep.pth
