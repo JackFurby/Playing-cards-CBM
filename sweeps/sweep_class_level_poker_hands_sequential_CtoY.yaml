@@ -36,4 +36,4 @@ parameters:
   num_workers:
     value: 4
   pretrained_weights:
-    value: ./saves/poker_XtoC_best_sweep.pth
+    value: ./saves/class_level_poker_XtoC_best_sweep.pth

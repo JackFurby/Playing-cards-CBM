@@ -33,7 +33,7 @@ if __name__ == "__main__":
 		'--mode',
 		type=str,
 		default="XtoC",
-		choices=["XtoC", "standard", "joint", "CtoY", "sequential", "XtoC_test"],
+		choices=["XtoC", "standard", "joint", "CtoY", "sequential"],
 		help='Training method to use for training a model (default: XtoC)'
 	)
 	parser.add_argument(
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 		'--dataset_name',
 		type=str,
 		default='cards',
-		choices=["cards", "chexpert", "skin"],
+		choices=["cards", "chexpert"],
 		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
@@ -204,16 +204,28 @@ if __name__ == "__main__":
 	train_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/train.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, x_resize=args.x_resize, y_resize=args.y_resize, resampling=True, num_workers=args.num_workers)
 	val_loader = load_data(f"./{args.dataset_root}/{args.dataset_postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, dataset_name=args.dataset_name, x_resize=args.x_resize, y_resize=args.y_resize, num_workers=args.num_workers)
 
-	if args.mode == "XtoC":
-		model = models.VGG(model_version=args.vgg_version, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-	elif args.mode == "XtoC_test":
-		model = models.VGG(model_version=args.vgg_version, num_classes=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
-	elif args.mode == "joint" or args.mode == "sequential":
-		model = models.End2EndModel(model_version=args.vgg_version, num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
-	elif args.mode == "CtoY":
-		model = models.CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
-	else:  # standard training
-		model = models.VGG(model_version=args.vgg_version, num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+	if args.dataset_name == "skin":
+		cfg = {
+			"backbone": "densenet121",
+			"norm_type": "BatchNorm",
+			"pretrained": True,
+			"num_concepts": args.n_concepts,
+			"cbm_mode": "joint",
+			"xtoc_only": False,
+			"freeze": True
+		}
+
+		XtoCtoY = classifier.Classifier(cfg)
+		model =
+	else:
+		if args.mode == "XtoC":
+			model = models.VGG(model_version=args.vgg_version, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
+		elif args.mode == "joint" or args.mode == "sequential":
+			model = models.End2EndModel(model_version=args.vgg_version, num_classes=args.n_classes, num_concepts=args.n_concepts, pretrained_weights=args.pretrained_weights, freeze=args.freeze, use_sigmoid=args.use_sig)
+		elif args.mode == "CtoY":
+			model = models.CtoYNet(num_concept_in=args.n_concepts, num_classes=args.n_classes)
+		else:  # standard training
+			model = models.VGG(model_version=args.vgg_version, num_classes=args.n_classes, pretrained_weights=args.pretrained_weights, freeze=args.freeze)
 
 	model.to(device)
 

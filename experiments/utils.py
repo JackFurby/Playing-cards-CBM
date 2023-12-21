@@ -30,6 +30,11 @@ def get_dataset(split, return_points=False, return_orig=False, return_path=False
 		n_classes = 6
 		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker/val.pkl", 16, dataset_root="../dataset/playing-cards/", dataset_name="cards", x_resize=299, y_resize=299, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle, train_transform=False)
 		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three_card_poker/concepts.txt")
+	elif split == "class":
+		n_concepts = 11
+		n_classes = 6
+		val_loader = load_data("../dataset/playing-cards/splits/three_card_poker_class_level/val.pkl", 16, dataset_root="../dataset/playing-cards/", dataset_name="cards", x_resize=299, y_resize=299, return_points=return_points, return_orig=return_orig, return_path=return_path, shuffle=shuffle, train_transform=False)
+		concept_index_to_string = IndexToString("../dataset/playing-cards/splits/three_card_poker_class_level/concepts.txt")
 
 	return n_concepts, n_classes, val_loader, concept_index_to_string
 

@@ -8,7 +8,6 @@ import torch.nn as nn
 from torch.nn import Parameter
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
-import torchexplain
 
 from typing import Union, List, Dict, Any, cast
 

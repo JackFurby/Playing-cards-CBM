@@ -111,3 +111,29 @@ do
   python main.py --mode sequential --n_classes 6 --n_concepts 52 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --save_name "sequential-CtoY-three-seed-$RAN_NUM"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/sequential-XtoC-three-seed-$RAN_NUM.pth" --freeze --use_sig --seed $RAN_NUM
   python concept_to_standard_model_converter.py --model_path "./saves/sequential-CtoY-three-seed-$RAN_NUM.pth" --model_out_path "./saves/converted/sequential-three-seed-$RAN_NUM.pth" --num_concepts 52 --num_classes 6 --end_to_end
 done
+
+
+# Class level poker cards
+
+# # Independent and sequential taining
+
+for i in 1 2 3 4 5
+do
+  RAN_NUM=$(shuf -i 0-1000 -n1)
+  python main.py --mode XtoC --n_concepts 11 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_class_level --save_name "XtoC-class-level-poker-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 3 --lr 0.0825 --epochs 100 --weighted_loss --seed $RAN_NUM
+
+  #python main.py --mode CtoY --n_concepts 11 --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_class_level --save_name "independent-CtoY-class-level-poker-seed-$RAN_NUM" --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.01 --epochs 200 --seed $RAN_NUM
+  #python concept_to_standard_model_converter.py --model_path "./saves/sequential-CtoY-three-seed-$RAN_NUM.pth" --model_out_path "./saves/converted/sequential-three-seed-$RAN_NUM.pth" --num_concepts 11 --num_classes 6 --end_to_end
+
+  #python main.py --mode sequential --n_classes 6 --n_concepts 11 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_class_level --save_name "sequential-CtoY-three-seed-$RAN_NUM"  --optimizer adam --num_workers 4 --batch_size 32 --lr_patience 5 --lr 0.059 --epochs 200 --pretrained_weights "./saves/sequential-XtoC-three-seed-$RAN_NUM.pth" --freeze --use_sig --seed $RAN_NUM
+  #python concept_to_standard_model_converter.py --model_path "./saves/sequential-CtoY-three-seed-$RAN_NUM.pth" --model_out_path "./saves/converted/sequential-three-seed-$RAN_NUM.pth" --num_concepts 11 --num_classes 6 --end_to_end
+done
+
+# # Joint training (with sig)
+
+for i in 1 2 3 4 5
+do
+  RAN_NUM=$(shuf -i 0-1000 -n1)
+  python main.py --mode joint --n_concepts 11 --n_classes 6 --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker_class_level --save_name "joint_sig-class-level-poker-seed-$RAN_NUM" --optimizer sgd --num_workers 4 --batch_size 32 --lr_patience 15 --lr 0.0398 --epochs 100 --attr_loss_weight 0.867 --use_sig --weighted_loss --seed $RAN_NUM
+  python concept_to_standard_model_converter.py --model_path "./saves/joint_sig-class-level-poker-seed-$RAN_NUM.pth" --model_out_path "./saves/converted/joint_sig-class-level-poker-seed-$RAN_NUM.pth" --num_concepts 11 --num_classes 6 --end_to_end
+done
