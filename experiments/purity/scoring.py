@@ -6,7 +6,6 @@ from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
 from models.model import End2EndModel, VGG
 import models.chexpert.classifier as classifier
-import models.cub_vgg as cub_model
 from easydict import EasyDict as edict
 from tqdm import tqdm
 import os

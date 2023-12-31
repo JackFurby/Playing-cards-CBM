@@ -45,7 +45,7 @@ class Classifier(nn.Module):
 		out = torch.flatten(out, 1)
 		out = self.classifier(out)
 
-		if self.cfg["cbm_mode"] == "joint":
+		if self.cfg["cbm_mode"] == "joint" and self.cfg["xtoc_only"] != True:
 			c_to_y_input = torch.nn.Sigmoid()(out)
 			return out, self.ctoy(c_to_y_input)
 

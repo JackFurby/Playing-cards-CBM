@@ -388,31 +388,31 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
 
 						# get ground truth segmentation
-						if index == 0:
+						if image_index == 0:
 							concept_key = "Enlarged Cardiomediastium"
-						if index == 1:
+						if image_index == 1:
 							concept_key = "Cardiomegaly"
-						if index == 2:
+						if image_index == 2:
 							concept_key = "Airspace Opacity"  # Lung Opacity
-						if index == 3:
+						if image_index == 3:
 							concept_key = "Lung Lesion"
-						if index == 4:
+						if image_index == 4:
 							concept_key = "Edema"
-						if index == 5:
+						if image_index == 5:
 							concept_key = "Consolidation"
-						if index == 6:
+						if image_index == 6:
 							concept_key = "Pneumonia"
-						if index == 7:
+						if image_index == 7:
 							concept_key = "Atelectasis"
-						if index == 8:
+						if image_index == 8:
 							concept_key = "Pneumothorax"
-						if index == 9:
+						if image_index == 9:
 							concept_key = "Pleural Effusion"
-						if index == 10:
+						if image_index == 10:
 							concept_key = "Plaural Other"
-						if index == 11:
+						if image_index == 11:
 							concept_key = "Fracture"
-						if index == 12:
+						if image_index == 12:
 							concept_key = "Support Devices"
 
 						segmentation_img = get_human_segmentation(segmentation_key, concept_key)
@@ -535,12 +535,12 @@ if __name__ == "__main__":
 			"norm_type": "BatchNorm",
 			"pretrained": True,
 			"num_concepts": args.n_concepts,
-			"cbm_mode": "full",  # can be either xtoc or full
+			"cbm_mode": "joint",  # can be either xtoc or joint (joint is also used for sequential)
 			"xtoc_only": True  # if true then only predict concepts
 		}
 
-		XtoC = classifier.XtoC(cfg)
-		XtoC.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)
+		model = classifier.Classifier(cfg)
+		model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)
 		model_name = args.pretrained_weights.split("/")[-1][:-4]
 
 	if args.saliency_mode == "lrp":
@@ -589,5 +589,10 @@ if __name__ == "__main__":
 				fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
 
 	else:
+		if args.dataset_name == "chexpert":
+			XtoC = model  # this is the full model but this code requires XtoC as var name
+			chexpert = True
+		else:
+			chexpert = False
 		XtoC.to(device).eval()
-		gen_captum_saliency(XtoC, args.saliency_mode, val_loader, concept_index_to_string, device, model_name, samples_per_class=args.samples_per_class)
+		gen_captum_saliency(XtoC, args.saliency_mode, val_loader, concept_index_to_string, device, model_name, samples_per_class=args.samples_per_class, chexpert=chexpert)

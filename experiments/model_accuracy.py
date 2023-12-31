@@ -140,9 +140,13 @@ if __name__ == "__main__":
 				use_sig = True
 			else:  # joint without sig
 				use_sig = False
+
 			if "single" in file:
 				num_concepts = 17
 				num_classes = 52
+			elif "class-level" in file:
+				num_concepts = 11
+				num_classes = 6
 			else:
 				num_concepts = 52
 				num_classes = 6
@@ -151,13 +155,15 @@ if __name__ == "__main__":
 				postfix = "splits/single"
 			elif "three" in file:
 				postfix = "splits/three_card_poker"  # the c->y model part is trained on three card poker
+			elif "class-level" in file:
+				postfix = "splits/three_card_poker_class_level"
 			else:
 				postfix = "splits/three_card_poker"
 
 			val_loader = load_data(f"./{args.dataset_root}/{postfix}/val.pkl", args.batch_size, dataset_root=args.dataset_root, num_workers=1)
 
 			model = End2EndModel(num_classes=num_classes, num_concepts=num_concepts, use_sigmoid=use_sig, use_modulelist=False)
-			model.load_state_dict(torch.load(f"{args.weights_dir}/{file}", map_location=torch.device('cpu')))
+			model.load_state_dict(torch.load(f"{args.weights_dir}/{file}", map_location=torch.device('cpu')), strict=False)
 
 			model.to(device)
 
@@ -168,14 +174,17 @@ if __name__ == "__main__":
 		pickle.dump(all_acc, open(f"./experiments/all_acc.pkl", "wb"))
 
 	independent_poker = []
+	independent_class_level_poker = []
 	independent_three = []
 	independent_single = []
 	sequential_poker = []
+	sequential_class_level_poker = []
 	sequential_three = []
 	sequential_single = []
 	joint_single = []
 	joint_sig_poker = []
 	joint_poker = []
+	joint_class_level_poker = []
 	standard_single = []
 	standard_poker = []
 
@@ -186,6 +195,8 @@ if __name__ == "__main__":
 			standard_single.append(i)
 		elif "independent-poker" in i[0]:
 			independent_poker.append(i)
+		elif "independent-class-level-poker" in i[0]:
+			independent_class_level_poker.append(i)
 		elif "independent-three" in i[0]:
 			independent_three.append(i)
 		elif "independent-single" in i[0]:
@@ -196,8 +207,12 @@ if __name__ == "__main__":
 			joint_sig_poker.append(i)
 		elif "joint-poker" in i[0]:
 			joint_poker.append(i)
+		elif "joint_sig-class-level-poker" in i[0]:
+			joint_class_level_poker.append(i)
 		elif "sequential-poker" in i[0]:
 			sequential_poker.append(i)
+		elif "sequential-class-level-poker" in i[0]:
+			sequential_class_level_poker.append(i)
 		elif "sequential-three" in i[0]:
 			sequential_three.append(i)
 		elif "sequential-single" in i[0]:
@@ -216,6 +231,8 @@ if __name__ == "__main__":
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in independent_poker:
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in independent_class_level_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in independent_three:
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in independent_single:
@@ -226,7 +243,11 @@ if __name__ == "__main__":
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in joint_poker:
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in joint_class_level_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in sequential_poker:
+			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
+		for model in sequential_class_level_poker:
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
 		for model in sequential_three:
 			file.write(f"{model[0][:-4]} {model[1]} {model[2]} {model[4]} {model[3]}\n")
@@ -236,45 +257,54 @@ if __name__ == "__main__":
 	for idx, type in enumerate(["concept accuracy", "concept F1", "task F1", "task accuracy"]):
 
 		inde_poker_vals = np.array([i[idx + 1] for i in independent_poker])
+		inde_class_poker_vals = np.array([i[idx + 1] for i in independent_class_level_poker])
 		inde_three_vals = np.array([i[idx + 1] for i in independent_three])
 		inde_single_vals = np.array([i[idx + 1] for i in independent_single])
 		joint_single_vals = np.array([i[idx + 1] for i in joint_single])
 		joint_sig_poker_vals = np.array([i[idx + 1] for i in joint_sig_poker])
 		joint_poker_vals = np.array([i[idx + 1] for i in joint_poker])
+		joint_class_poker_vals = np.array([i[idx + 1] for i in joint_class_level_poker])
 		standard_poker_vals = np.array([i[idx + 1] for i in standard_poker])
 		standard_single_vals = np.array([i[idx + 1] for i in standard_single])
 		sequential_poker_vals = np.array([i[idx + 1] for i in sequential_poker])
+		sequential_class_poker_vals = np.array([i[idx + 1] for i in sequential_class_level_poker])
 		sequential_three_vals = np.array([i[idx + 1] for i in sequential_three])
 		sequential_single_vals = np.array([i[idx + 1] for i in sequential_single])
 
 		mean_inde_poker = np.mean(inde_poker_vals)
+		mean_inde_class_poker = np.mean(inde_class_poker_vals)
 		mean_inde_three = np.mean(inde_three_vals)
 		mean_inde_single = np.mean(inde_single_vals)
 		mean_joint_single = np.mean(joint_single_vals)
 		mean_joint_sig_poker = np.mean(joint_sig_poker_vals)
 		mean_joint_poker = np.mean(joint_poker_vals)
+		mean_joint_class_poker = np.mean(joint_class_poker_vals)
 		mean_standard_poker = np.mean(standard_poker_vals)
 		mean_standard_single = np.mean(standard_single_vals)
 		mean_sequential_poker = np.mean(sequential_poker_vals)
+		mean_sequential_class_poker = np.mean(sequential_class_poker_vals)
 		mean_sequential_three = np.mean(sequential_three_vals)
 		mean_sequential_single = np.mean(sequential_single_vals)
 
 		std_inde_poker = np.std(inde_poker_vals)
+		std_inde_class_poker = np.std(inde_class_poker_vals)
 		std_inde_three = np.std(inde_three_vals)
 		std_inde_single = np.std(inde_single_vals)
 		std_joint_single = np.std(joint_single_vals)
 		std_joint_sig_poker = np.std(joint_sig_poker_vals)
 		std_joint_poker = np.std(joint_poker_vals)
+		std_joint_class_poker = np.std(joint_class_poker_vals)
 		std_standard_poker = np.std(standard_poker_vals)
 		std_standard_single = np.std(standard_single_vals)
 		std_sequential_poker = np.std(sequential_poker_vals)
+		std_sequential_class_poker = np.std(sequential_class_poker_vals)
 		std_sequential_three = np.std(sequential_three_vals)
 		std_sequential_single = np.std(sequential_single_vals)
 
-		models = ["standard_poker", "standard_single", "independent_poker", "independent_three", "independent_single", "sequential_poker", "sequential_three", "sequential_single", "joint_poker", "joint_sig_poker", "joint_single"]
+		models = ["standard_poker", "standard_single", "independent_poker", "independent_class_poker", "independent_three", "independent_single", "sequential_poker", "sequential_class_poker", "sequential_three", "sequential_single", "joint_poker", "joint_sig_poker", "joint_sig_class_poker", "joint_single"]
 		x_pos = np.arange(len(models))
-		model_means = [mean_standard_poker, mean_standard_single, mean_inde_poker, mean_inde_three, mean_inde_single, mean_sequential_poker, mean_sequential_three, mean_sequential_single, mean_joint_poker, mean_joint_sig_poker, mean_joint_single]
-		errors = [std_standard_poker, std_standard_single, std_inde_poker, std_inde_three, std_inde_single, std_sequential_poker, std_sequential_three, std_sequential_single, std_joint_poker, std_joint_sig_poker, std_joint_single]
+		model_means = [mean_standard_poker, mean_standard_single, mean_inde_poker, mean_inde_class_poker, mean_inde_three, mean_inde_single, mean_sequential_poker, mean_sequential_class_poker, mean_sequential_three, mean_sequential_single, mean_joint_poker, mean_joint_sig_poker, mean_joint_class_poker, mean_joint_single]
+		errors = [std_standard_poker, std_standard_single, std_inde_poker, std_inde_class_poker, std_inde_three, std_inde_single, std_sequential_poker, std_sequential_class_poker, std_sequential_three, std_sequential_single, std_joint_poker, std_joint_sig_poker, std_joint_class_poker, std_joint_single]
 
 		for idx, i in enumerate(model_means):
 			print(type, models[idx], i, errors[idx])
