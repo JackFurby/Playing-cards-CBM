@@ -529,7 +529,7 @@ if __name__ == "__main__":
 
 		XtoC = convert(model.x_to_c_model)
 
-	else:  # CheXpert model is only XtoC
+	else:
 		cfg = {
 			"backbone": "densenet121",
 			"norm_type": "BatchNorm",

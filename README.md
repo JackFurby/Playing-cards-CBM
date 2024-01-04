@@ -97,11 +97,11 @@ With a trained model the architecture will contain a modlule list layer containi
 
 `python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert`
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert`
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/chexpert_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/CBM_5_obs --n_classes 2 --n_concepts 5 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert`
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
 ### ROAR
 

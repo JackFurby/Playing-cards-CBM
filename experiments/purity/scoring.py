@@ -6,7 +6,6 @@ from torchmetrics import F1Score
 from dataset.dataset import load_data, find_class_imbalance
 from models.model import End2EndModel, VGG
 import models.chexpert.classifier as classifier
-from easydict import EasyDict as edict
 from tqdm import tqdm
 import os
 import pickle
@@ -125,24 +124,20 @@ if __name__ == "__main__":
 		model2 = cub_model.MLP(input_dim=args.n_concepts, num_classes=args.n_classes, expand_dim=False, train=True)
 		model = cub_model.End2EndModel(model1, model2, False, True)
 
-
 		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu')))
 
 	elif "chexpert" in args.dataset_root:
-		cfg = edict({
+		cfg = {
 			"backbone": "densenet121",
 			"norm_type": "BatchNorm",
 			"pretrained": True,
-			"lse_gamma": 0.5,
-			"global_pool": "AVG_MAX",
-			"num_classes": [1,1,1,1,1],
-			"attention_map": "FPA",
-			"fc_bn": True,
-			"fc_drop": 0,
-		})
+			"num_concepts": args.n_concepts,
+			"cbm_mode": "joint",  # can be either xtoc or joint (joint is also used for sequential)
+			"xtoc_only": True  # if true then only predict concepts
+		}
 
 		model = classifier.Classifier(cfg)
-		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu'))['state_dict'], strict=False)
+		model.load_state_dict(torch.load(args.pretrained_weights, map_location=torch.device('cpu'))['state_dict'], strict=True)
 	else:
 		if "sig" in args.pretrained_weights:  # joint with sig
 			use_sig = True
