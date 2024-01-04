@@ -288,6 +288,7 @@ if __name__ == "__main__":
 	model = classifier.Classifier(cfg)
 	model.load_state_dict(torch.load(f"{args.pretrained_weights}", map_location=torch.device('cpu'))['state_dict'], strict=True)
 	model_name = args.pretrained_weights.split("/")[-1][:-4]
+	model.to(device)
 
 	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
 	# gen average saliency maps for concepts
