@@ -86,7 +86,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	concept_relevance, all_relevance = [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
 		for image_index in range(images.size(0)):
-			image, concepts = images[image_index].to(device), concepts[image_index].to(device)
+			image = images[image_index].to(device)
 			image = image.unsqueeze(0)
 			image.requires_grad_(True)
 			image.grad = None  # Reset gradient
