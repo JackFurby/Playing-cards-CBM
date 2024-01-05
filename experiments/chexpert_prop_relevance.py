@@ -159,8 +159,8 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 							all_neg = torch.clip(attribution, max=0)  # all image negative relevance
 							all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
 
-							concept_pos = all_pos * alpha  # all image positive relevance
-							concept_neg = all_neg * alpha  # all image negative relevance
+							concept_pos = all_pos.cpu() * alpha  # all image positive relevance
+							concept_neg = all_neg.cpu() * alpha  # all image negative relevance
 							concept_relevance.append((torch.sum(concept_pos).item(), torch.sum(concept_neg).item()))
 
 							"""
@@ -208,8 +208,12 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	concept_pos = [x[0] for x in concept_relevance]
 	concept_neg = [x[1] for x in concept_relevance]
 
+	if mode == "ig_sg_sq":
+		concept_neg_prop = 0
+	else:
+		concept_neg_prop = sum(concept_neg) / sum(all_neg)
+
 	concept_pos_prop = sum(concept_pos) / sum(all_pos)
-	concept_neg_prop = sum(concept_neg) / sum(all_neg)
 
 	return concept_pos_prop, concept_neg_prop
 
