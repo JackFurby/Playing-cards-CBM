@@ -80,8 +80,11 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	model_name: name of model (used for saving results to a recognisable file path)
 	"""
 
-	ig = IntegratedGradients(model)
-	nt = NoiseTunnel(ig)
+	if mode in ["ig_sg", "ig_sg_sq"]:
+		ig = IntegratedGradients(model)
+		nt = NoiseTunnel(ig)
+	elif mode == "gradCAM":
+		guided_gc = GuidedGradCam(model, model.backbone.features.denseblock4.denselayer16[5])
 
 	concept_relevance, all_relevance = [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
@@ -90,7 +93,9 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 			image = image.unsqueeze(0)
 			image.requires_grad_(True)
 			image.grad = None  # Reset gradient
-			baselines = image * 0
+
+			if mode in ["ig_sg", "ig_sg_sq"]:
+				baselines = image * 0
 
 			pred_concepts = model(image)
 
@@ -136,20 +141,27 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 							filter_out = torch.zeros_like(pred_concepts)
 							filter_out[:,i] += 1
 
-							if mode == "ig_sg":
-								nt_type = "smoothgrad"
-							else:
-								nt_type = "smoothgrad_sq"
+							if mode in ["ig_sg", "ig_sg_sq"]:
+								if mode == "ig_sg":
+									nt_type = "smoothgrad"
+								else:
+									nt_type = "smoothgrad_sq"
 
-							attribution = nt.attribute(
-								image,
-								target=int(i),
-								baselines=baselines,
-								nt_type=nt_type,
-								nt_samples=25,   #<<<<< chage back to 25 after testing
-								internal_batch_size=25,
-								stdevs=0.2
-							)
+								attribution = nt.attribute(
+									image,
+									target=int(i),
+									baselines=baselines,
+									nt_type=nt_type,
+									nt_samples=25,   #<<<<< chage back to 25 after testing
+									internal_batch_size=25,
+									stdevs=0.2
+								)
+
+							elif mode == "gradCAM":
+								attribution = guided_gc.attribute(
+									image,
+									target=int(i),
+								)
 
 							segmentation_img = np.asarray(segmentation_img.convert("L"))
 							segmentation_img = seg_transform(segmentation_img, gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True)
@@ -159,8 +171,8 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 							all_neg = torch.clip(attribution, max=0)  # all image negative relevance
 							all_relevance.append((torch.sum(all_pos).item(), torch.sum(all_neg).item()))
 
-							concept_pos = all_pos.cpu() * alpha  # all image positive relevance
-							concept_neg = all_neg.cpu() * alpha  # all image negative relevance
+							concept_pos = all_pos.detach().cpu() * alpha  # all image positive relevance
+							concept_neg = all_neg.detach().cpu() * alpha  # all image negative relevance
 							concept_relevance.append((torch.sum(concept_pos).item(), torch.sum(concept_neg).item()))
 
 							"""
@@ -266,7 +278,7 @@ if __name__ == "__main__":
 	parser.add_argument(
 		'--saliency_mode',
 		type=str,
-		choices=["ig_sg", "ig_sg_sq"],
+		choices=["ig_sg", "ig_sg_sq", "gradCAM"],
 		help='Saliency method to use'
 	)
 	args = parser.parse_args()

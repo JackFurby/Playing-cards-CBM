@@ -14,3 +14,4 @@ pandas==1.5.*
 tqdm==4.64.*
 opencv-python==4.6.0.*
 captum==0.6.*
+adjustText==1.0.*

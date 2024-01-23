@@ -12,12 +12,13 @@ import pickle
 import matplotlib.pyplot as plt
 import glob
 import gc
+from sklearn.model_selection import train_test_split
 
 import concepts_xai.evaluation.metrics.oracle as oracle
 import concepts_xai.evaluation.metrics.niching as niche
 
 
-def ImputityScore(x_to_c_model, data_loader, mode, dataset):
+def ImputityScore(x_to_c_model, data_loader, mode, dataset, set_splits=False):
 	x_to_c_model.eval()
 
 	c_soft = []
@@ -35,20 +36,52 @@ def ImputityScore(x_to_c_model, data_loader, mode, dataset):
 			#print(ground_concepts)
 
 			#c_soft.append(concept_representations)
+			if dataset == "chexpert":
+				#print(ground_concepts)
+				#sigmoid_outputs = torch.cat([sigmoid_outputs[0:11], sigmoid_outputs[11+1:]], axis=1)
+				#ground_concepts = torch.cat([ground_concepts[0:11], ground_concepts[11+1:]], axis=1)
+				#print(ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]])
+
+				sigmoid_outputs = ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
+				ground_concepts = ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
 			c_soft.append(sigmoid_outputs)
 			c_true.append(ground_concepts)
 
 	if mode == "oracle":
+		c_soft = np.stack(np.concatenate(c_soft, axis=0))
+		c_true = np.stack(np.concatenate(c_true, axis=0))
+
+		print(np.sum(c_true, axis=0))
+
 		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
-			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-			c_true=np.stack(np.concatenate(c_true, axis=0)),
+			c_soft=c_soft,
+			c_true=c_true,
 			output_matrices=True
 		)
 		return score, pred_matrix, oracle_matrix
 	elif mode == "niche":
+
+		# chexpert has two concepts with a single occurance. This breaks niche_imputiry_score
+		# as they use a AUC score. To fix this we have to set the train splits manually and
+		# duplicate the problematic samples so they always occure in the test split.
+		c_soft=np.stack(np.concatenate(c_soft, axis=0))
+		c_true=np.stack(np.concatenate(c_true, axis=0))
+		if dataset == "chexpert" and set_splits:
+			c_soft_train, c_soft_test, c_true_train, c_true_test = train_test_split(
+				c_soft,
+				c_true,
+				test_size=0.2,
+			)
+			c_true_test = np.vstack([c_true_test, c_true[109], c_true[113]])
+		else:
+			c_soft_train=None
+			c_true_train=None
+
 		score = niche.niche_impurity_score(
-			c_soft=np.stack(np.concatenate(c_soft, axis=0)),
-			c_true=np.stack(np.concatenate(c_true, axis=0))
+			c_soft=c_soft,
+			c_true=c_true,
+			c_soft_train=c_soft_train,
+			c_true_train=c_true_train
 		)
 		return score, None, None
 	else:
@@ -80,6 +113,11 @@ if __name__ == "__main__":
 		default='cards',
 		choices=["cards", "chexpert", "CUB"],
 		help='Name of dataset (default: "cards")'
+	)
+	parser.add_argument(
+		'--set_splits',
+		action='store_true',
+		help='Use if using the instance-level version oc CheXpert'
 	)
 	parser.add_argument(
 		'--n_classes',
@@ -158,7 +196,7 @@ if __name__ == "__main__":
 	else:
 		x_to_c_model = model.x_to_c_model
 
-	score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name)
+	score, pred_matrix, oracle_matrix = ImputityScore(x_to_c_model, val_loader, mode=args.mode, dataset=args.dataset_name, set_splits=args.set_splits)
 	with open(args.results_txt, "a") as f:
 		f.write(f"{model_name} {score}\n")
 

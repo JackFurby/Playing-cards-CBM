@@ -1,9 +1,9 @@
 # Playing cards CBM
-Note: This version of the code and data is for the AAAI review process. It includes model weights (train on all datasets) and test data for the playing cards dataset. All commands to run experiments are included below.
 
-Training models has been marked as optional as this is estimated to take around 350 hours of compute
+This repository is for the IJCAI review process. This code will train models on the playing cards dataset and test models on the playing cards dataset and CheXpert. The playing cards dataset is not included for the review process but will be made available for the camera-ready paper.
 
 If you do not have enough memory on your GPU (some experiments will need 24GB), the flag `--use_cpu` can be added to run experiments on the CPU. This will increase time required to run experiments significantly.
+
 ## Setup
 
 Note: These instructions were designed for Ubuntu 22.04. They should however be compatible with other operating systems with minor adjustments.
@@ -27,6 +27,105 @@ Note: These instructions were designed for Ubuntu 22.04. They should however be 
 5. Setup datasets
 
     Datasets should be in the following file structure
+
+    root
+    |
+    |--datasets
+    |  |
+    |  |--chexpert
+    |  |  |
+    |  |  |--CheXlocalize
+    |  |  |  |
+    |  |  |  |--gradcam_maps_val
+    |  |  |  |  |
+    |  |  |  |  |--patient*_study*_view*_*.pkl
+    |  |  |  |  |
+    |  |  |  |  ...
+    |  |  |  |
+    |  |  |  |--*.json
+    |  |  |
+    |  |  |--CheXpert-v1.0
+    |  |  |  |
+    |  |  |  |--val
+    |  |  |  |  |
+    |  |  |  |  |--patient*/study*/*.jpeg
+    |  |  |  |  |
+    |  |  |  |--test
+    |  |  |  |  |
+    |  |  |  |  |--patient*/study*/*.jpeg
+    |  |  |  |  |
+    |  |  |  |--train
+    |  |  |  |  |
+    |  |  |  |  |--patient*/study*/*.jpeg
+    |  |  |  |  |
+    |  |  |  |  ...
+    |  |  |
+    |  |  |--splits
+    |  |  |  |
+    |  |  |  |--cbm
+    |  |  |  |  |
+    |  |  |  |  |--train.pkl
+    |  |  |  |  |
+    |  |  |  |  |--test.pkl
+    |  |  |  |  |
+    |  |  |  |  |--val.pkl
+    |  |  |  |  |
+    |  |  |  |  |--classes.txt
+    |  |  |  |  |
+    |  |  |  |  |--concepts.txt
+    |  |
+    |  |--playing-cards
+    |  |  |
+    |  |  |--imgs
+    |  |  |  |
+    |  |  |  |--three
+    |  |  |  |  |
+    |  |  |  |  |--*.png
+    |  |  |  |  |
+    |  |  |  |  ...
+    |  |  |  |
+    |  |  |  |--three_card_poker
+    |  |  |  |  |
+    |  |  |  |  |--*.png
+    |  |  |  |  |
+    |  |  |  |  ...
+    |  |  |  |
+    |  |  |  |--three_card_poker_class_level
+    |  |  |  |  |
+    |  |  |  |  |--*.png
+    |  |  |  |  |
+    |  |  |  |  ...
+    |  |  |  |
+    |  |  |--splits
+    |  |  |  |--three
+    |  |  |  |  |
+    |  |  |  |  |--train.pkl
+    |  |  |  |  |
+    |  |  |  |  |--val.pkl
+    |  |  |  |  |
+    |  |  |  |  |--classes.txt
+    |  |  |  |  |
+    |  |  |  |  |--concepts.txt
+    |  |  |  |
+    |  |  |  |--three_card_poker
+    |  |  |  |  |
+    |  |  |  |  |--train.pkl
+    |  |  |  |  |
+    |  |  |  |  |--val.pkl
+    |  |  |  |  |
+    |  |  |  |  |--classes.txt
+    |  |  |  |  |
+    |  |  |  |  |--concepts.txt
+    |  |  |  |
+    |  |  |  |--three_card_poker_class_level
+    |  |  |  |  |
+    |  |  |  |  |--train.pkl
+    |  |  |  |  |
+    |  |  |  |  |--val.pkl
+    |  |  |  |  |
+    |  |  |  |  |--classes.txt
+    |  |  |  |  |
+    |  |  |  |  |--concepts.txt
 
 ## Model training (optional)
 
@@ -53,7 +152,7 @@ Train all models: `sh train_models.sh`
 
 ## Model conversion
 
-With a trained model the architecture will contain a modlule list layer containing linear layers. This can be converted to a single linear layer which will make it easier to index the concept vector.
+With a trained model the architecture will contain a module list layer containing linear layers. This can be converted to a single linear layer which will make it easier to index the concept vector. This is only required for newly trained playing card models.
 
 ### Example commands
 
@@ -73,9 +172,13 @@ With a trained model the architecture will contain a modlule list layer containi
 
 ## Experiments
 
-### Model accuracies
+Note: The commands listed below are examples. Some parts of the commands may need changeing e.g. model file names
+
+### Model accuracies (playing card models only)
 
 `python experiments/model_accuracy.py --weights_dir ./saves/converted --dataset_root dataset/playing-cards`
+
+Note: CheXpert models can be tested with the notebook `chexpert_test.ipynb`
 
 ### saliency maps (samples and averages)
 
@@ -104,6 +207,8 @@ With a trained model the architecture will contain a modlule list layer containi
 `python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
 'python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq'
+
+`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
 ### ROAR
 
@@ -188,7 +293,7 @@ With a trained model the architecture will contain a modlule list layer containi
 
 #### Run experiments
 
-Run OIS and NIS scoring: `sh scoring.sh`
+Run OIS and NIS scoring: `./scoring.sh`
 
 This will create a number of txt files containing ois results. To plot these open `plot.py` in `experiments/purity` and copy the values over.
 

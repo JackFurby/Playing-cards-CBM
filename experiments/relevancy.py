@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw
 import torchvision.transforms as transforms
 
 from captum.attr import IntegratedGradients, Saliency, GuidedGradCam
-from captum.attr import NoiseTunnel
+from captum.attr import NoiseTunnel, LayerAttribution
 from captum.attr import visualization as viz
 
 from dataset.utils import transform as chexpert_transform
@@ -381,6 +381,8 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							target=int(i),
 						)
 
+						#attribution = LayerAttribution.interpolate(attribution, (32, 32))
+
 					attr = heatmap(attribution, cmap_name=seismic_alpha, num_clannels=4)
 
 					if chexpert:
@@ -422,6 +424,13 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 							segmentation_img = seg_transform(segmentation_img, gaussian_blur=3, use_equalizeHist=True, long_side=512, border_pad_str="mean", pixel_mean=128.0, pixel_std=64.0, resize_only=True)
 							alpha = np.sum(segmentation_img, axis=-1) > 0  # only keep segmentation areas
 
+					if mode == "gradCAM":
+						#attr = cv2.resize(attr.squeeze(), dsize=(orig_image[image_index].squeeze().size(0), orig_image[image_index].squeeze().size(1)), interpolation=cv2.INTER_AREA)
+						#attr = cv2.GaussianBlur(attr.squeeze(),(5,5), 5)
+						attr = attr.squeeze()
+					else:
+						attr = attr.squeeze()
+
 					# Save concept saliency map
 					AX.clear()
 					AX.set_axis_off()
@@ -429,7 +438,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						AX.imshow(orig_image[image_index].squeeze())
 						if type(segmentation_img) == np.ndarray:
 							AX.imshow(alpha, cmap=green_alpha, interpolation='none', alpha=0.5)
-					AX.imshow(attr.squeeze(), cmap=seismic_alpha)
+					AX.imshow(attr, cmap=seismic_alpha)
 					FIG.savefig(f'{save_dir}{concept_index_to_string(i)}.png', bbox_inches='tight', pad_inches = 0)
 
 			sample_num += 1
