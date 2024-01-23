@@ -235,7 +235,7 @@ Note: CheXpert models can be tested with the notebook `chexpert_test.ipynb`
   scanpy==1.9.3
   scikit-learn==1.2.0
   scipy==1.9.1
-  Pillow==9.4.0
+  Pillow==10.2.0
   pandas==1.5.3
   h5py==3.8.0
   PyYAML==6.0
