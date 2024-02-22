@@ -14,7 +14,8 @@ import glob
 import gc
 from sklearn.model_selection import train_test_split
 
-import concepts_xai.evaluation.metrics.oracle as oracle
+#import concepts_xai.evaluation.metrics.oracle as oracle
+import experiments.purity.oracle as oracle
 import concepts_xai.evaluation.metrics.niching as niche
 
 
@@ -42,16 +43,15 @@ def ImputityScore(x_to_c_model, data_loader, mode, dataset, set_splits=False):
 				#ground_concepts = torch.cat([ground_concepts[0:11], ground_concepts[11+1:]], axis=1)
 				#print(ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]])
 
-				sigmoid_outputs = ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
-				ground_concepts = ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
+				#sigmoid_outputs = sigmoid_outputs[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
+				#ground_concepts = ground_concepts[:, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]]
+				pass
 			c_soft.append(sigmoid_outputs)
 			c_true.append(ground_concepts)
 
 	if mode == "oracle":
 		c_soft = np.stack(np.concatenate(c_soft, axis=0))
 		c_true = np.stack(np.concatenate(c_true, axis=0))
-
-		print(np.sum(c_true, axis=0))
 
 		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
 			c_soft=c_soft,
@@ -202,6 +202,7 @@ if __name__ == "__main__":
 
 	if type(pred_matrix) == np.ndarray:
 		save_dir = f"./results/metrics/{model_name}_{len(os.listdir('./results/metrics/'))}"
+		print(save_dir)
 		if not os.path.exists(save_dir):
 			os.makedirs(save_dir)
 
@@ -212,7 +213,8 @@ if __name__ == "__main__":
 				matrix = oracle_matrix
 			fig = plt.figure()
 			ax = fig.add_subplot(111)
-			cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+			#cax = ax.matshow(matrix, interpolation='nearest', vmin=0.0, vmax=1.0)
+			cax = ax.matshow(matrix, interpolation='nearest')
 			fig.colorbar(cax)
 			plt.savefig(f'{save_dir}/{args.dataset_postfix.split("/")[-1]}_{matrix_name}.png')
 

@@ -286,7 +286,7 @@ Note: CheXpert models can be tested with the notebook `chexpert_test.ipynb`
   Some pip packages will need updating. This list may not be complete
 
   ```
-  Pillow==10.1.*
+  Pillow==10.2.*
   ```
 
 5. Install `concepts_xai` from concept-quality directory: `python setup.py install`
