@@ -213,6 +213,8 @@ def max_alignment_matrix(matrix):
 def concept_purity_matrix(
     c_soft,
     c_true,
+    c_train_soft=None,
+    c_train_true=None,
     concept_label_cardinality=None,
     predictor_model_fn=None,
     predictor_train_kwags=None,
@@ -270,6 +272,24 @@ def concept_purity_matrix(
     """
     # Start by handling default arguments
     predictor_train_kwags = predictor_train_kwags or {}
+
+    if c_train_soft is not None and c_train_true is not None:  # train and test splits are provided
+
+        assert isinstance(c_train_soft, np.ndarray), (
+            f'c_train_soft must be passed as a np.ndarray. '
+            f'Instead we got an instance of "{type(c_train_soft).__name__}".'
+        )
+
+        assert isinstance(c_soft, np.ndarray), (
+            f'c_soft must be passed as a np.ndarray when c_train_soft is not None. '
+            f'Instead we got an instance of "{type(c_soft).__name__}".'
+        )
+
+        (n_train_samples, n_true_concepts) = c_train_true.shape
+        (n_test_samples, n_true_concepts) = c_true.shape
+
+        c_soft = np.vstack([c_soft, c_train_soft])
+        c_true = np.vstack([c_true, c_train_true])
 
     # Check that their rank is the expected one
     assert len(c_true.shape) == 2, (
@@ -370,10 +390,14 @@ def concept_purity_matrix(
     # Split our test data into two subsets as we will need to train
     # a classifier and then use that trained classifier in the remainder of the
     # data for computing our scores
-    train_indexes, test_indexes = train_test_split(
-        list(range(n_samples)),
-        test_size=test_size,
-    )
+    if c_train_soft is not None and c_train_true is not None:  # train and test splits are provided                    <<<<<<<<<<<<<<<<   still to do
+        train_indexes = list(range(n_train_samples))
+        test_indexes = list(range(n_test_samples))
+    else:  # only test samples are provided. These samples are used for training and testing
+        train_indexes, test_indexes = train_test_split(
+            list(range(n_samples)),
+            test_size=test_size,
+        )
 
     for src_soft_concept in tqdm(range(n_soft_concepts), unit="concept"):
         # Construct a test and training set of features for this concept
@@ -436,7 +460,6 @@ def concept_purity_matrix(
                 true_concepts = np.eye(concept_label_cardinality[tgt_true_concept])[:, used_labels]
                 preds = preds[:, used_labels]
 
-            """
             auc = sklearn.metrics.roc_auc_score(
                 true_concepts,
                 preds.detach().numpy(),
@@ -447,7 +470,6 @@ def concept_purity_matrix(
             # Finally, time to populate the actual entry of our resulting
             # matrix
             #result[src_soft_concept, tgt_true_concept] = auc
-            """
             # Can we replace AUC with F1????
             #preds = scipy.special.expit(preds)
             #print(true_concepts)
@@ -465,7 +487,6 @@ def concept_purity_matrix(
             # Finally, time to populate the actual entry of our resulting
             # matrix
             result[src_soft_concept, tgt_true_concept] = f1
-            """
 
             metric = BinaryF1Score()
             f1 = metric(torch.squeeze(preds, dim=1), torch.from_numpy(true_concepts)).item()
@@ -491,8 +512,6 @@ def concept_purity_matrix(
                 preds.detach().numpy()
             )
 
-            result[src_soft_concept, tgt_true_concept] = acc
-
 
             #print("auc", auc)
             print("f1", f1)
@@ -500,6 +519,9 @@ def concept_purity_matrix(
             print("avg precision score", aps)
             print("accuracy", acc)
             print("r2", r2)
+            """
+
+            result[src_soft_concept, tgt_true_concept] = auc
 
     # And that's all folks
     return result
@@ -569,6 +591,7 @@ def encoder_concept_purity_matrix(
 
 def oracle_purity_matrix(
     concepts,
+    concepts_train=None,
     concept_label_cardinality=None,
     predictor_model_fn=None,
     predictor_train_kwags=None,
@@ -608,6 +631,8 @@ def oracle_purity_matrix(
     return concept_purity_matrix(
         c_soft=concepts,
         c_true=concepts,
+        c_train_soft=concepts_train,
+        c_train_true=concepts_train,
         concept_label_cardinality=concept_label_cardinality,
         predictor_model_fn=predictor_model_fn,
         predictor_train_kwags=predictor_train_kwags,
@@ -627,6 +652,8 @@ def normalize_impurity(impurity, n_concepts):
 def oracle_impurity_score(
     c_soft,
     c_true,
+    c_train_soft=None,
+    c_train_true=None,
     predictor_model_fn=None,
     predictor_train_kwags=None,
     test_size=0.2,
@@ -731,6 +758,8 @@ def oracle_impurity_score(
         pred_matrix = concept_purity_matrix(
             c_soft=c_soft,
             c_true=c_true,
+            c_train_soft=c_train_soft,
+            c_train_true=c_train_true,
             predictor_model_fn=predictor_model_fn,
             predictor_train_kwags=predictor_train_kwags,
             test_size=test_size,
@@ -741,6 +770,7 @@ def oracle_impurity_score(
     if oracle_matrix is None:
         oracle_matrix = oracle_purity_matrix(
             concepts=c_true,
+            concepts_train=c_train_true,
             concept_label_cardinality=concept_label_cardinality,
             predictor_model_fn=predictor_model_fn,
             predictor_train_kwags=predictor_train_kwags,
