@@ -14,6 +14,10 @@ import glob
 import gc
 from sklearn.model_selection import train_test_split
 
+# increase file limit for CheXpert
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 import experiments.purity.oracle as oracle
 # import concepts_xai.evaluation.metrics.niching as niche     << add back in if we start using this metric
 
