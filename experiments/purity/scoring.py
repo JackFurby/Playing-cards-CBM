@@ -45,11 +45,6 @@ def imputityScore(x_to_c_model, train_loader, test_loader, mode, dataset, set_sp
 	c_train_soft = np.stack(np.concatenate(c_train_soft, axis=0))
 	c_train_true = np.stack(np.concatenate(c_train_true, axis=0))
 
-	print(c_soft.shape)
-	print(c_true.shape)
-	print(c_train_soft.shape)
-	print(c_train_true.shape)
-
 	if mode == "oracle":
 		score, pred_matrix, oracle_matrix = oracle.oracle_impurity_score(
 			c_soft=c_soft,

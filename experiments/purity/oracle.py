@@ -37,11 +37,6 @@ def train(model, data_loader, epochs, optimizer, criterion, train=True, device="
                 # Transfering images and labels to GPU if available
                 inputs, labels = inputs.to(device), labels.to(device)
 
-                #print(inputs.size())
-                #print(labels.size())
-                #print(criterion)
-                #print(model)
-
                 if train:
                     # Zero the parameter gradients
                     optimizer.zero_grad()
@@ -245,6 +240,20 @@ def concept_purity_matrix(
         Note that in either case we only require that the first dimension.
     :param np.ndarray c_true: Ground truth concept values in one-to-one
         correspondence with concepts in c_soft. Shape must be
+        (n_samples, n_concepts).
+    :param Or[np.ndarray, List[np.ndarray]] c_train_soft: Predicted set of "soft"
+        concept representations by a concept encoder model applied to the
+        training data. This argument must be an np.ndarray with shape
+        (n_samples, ..., n_concepts) where the concept representation may be
+        of any rank as long as the last dimension is the dimension used to
+        separate distinct concept representations. If concepts have distinct
+        array shapes for their representations, then this argument is expected
+        to be a list of `n_concepts` np.ndarrays where the i-th element in the
+        list is an array with shape (n_samples, ...) containing the tensor
+        representation of the i-th concept.
+        Note that in either case we only require that the first dimension.
+    :param np.ndarray c_train_true: Ground truth concept values in one-to-one
+        correspondence with concepts in c_train_soft. Shape must be
         (n_samples, n_concepts).
     :param List[int] concept_label_cardinality: If given, then this is a list
         of integers such that its i-th index contains the number of classes
@@ -464,61 +473,6 @@ def concept_purity_matrix(
                 preds.detach().numpy(),
                 multi_class='ovo',
             )
-            """
-
-            # Finally, time to populate the actual entry of our resulting
-            # matrix
-            #result[src_soft_concept, tgt_true_concept] = auc
-            # Can we replace AUC with F1????
-            #preds = scipy.special.expit(preds)
-            #print(true_concepts)
-            #print(preds)
-            #print(preds >= 0.5)
-            #preds = preds >= 0.5
-            f1 = sklearn.metrics.f1_score(
-                true_concepts,
-                preds.detach().numpy(),
-                average='macro'
-            )
-
-
-
-            # Finally, time to populate the actual entry of our resulting
-            # matrix
-            result[src_soft_concept, tgt_true_concept] = f1
-
-            metric = BinaryF1Score()
-            f1 = metric(torch.squeeze(preds, dim=1), torch.from_numpy(true_concepts)).item()
-
-            dist = distance.euclidean(
-                true_concepts,
-                np.squeeze(preds.detach().numpy(), axis=1)
-            )
-
-            aps = sklearn.metrics.average_precision_score(
-                true_concepts,
-                preds.detach().numpy()
-            )
-
-            pred = np.squeeze(preds.detach().numpy()) > 0.5
-            acc = sklearn.metrics.accuracy_score(
-                true_concepts,
-                pred
-            )
-
-            r2 = sklearn.metrics.r2_score(
-                true_concepts,
-                preds.detach().numpy()
-            )
-
-
-            #print("auc", auc)
-            print("f1", f1)
-            print("distance", dist)
-            print("avg precision score", aps)
-            print("accuracy", acc)
-            print("r2", r2)
-            """
 
             result[src_soft_concept, tgt_true_concept] = auc
 
@@ -690,6 +644,20 @@ def oracle_impurity_score(
         Note that in either case we only require that the first dimension.
     :param np.ndarray c_true: Ground truth concept values in one-to-one
         correspondence with concepts in c_soft. Shape must be
+        (n_samples, n_concepts).
+    :param Or[np.ndarray, List[np.ndarray]] c_train_soft: Predicted set of "soft"
+        concept representations by a concept encoder model applied to the
+        training data. This argument must be an np.ndarray with shape
+        (n_samples, ..., n_concepts) where the concept representation may be
+        of any rank as long as the last dimension is the dimension used to
+        separate distinct concept representations. If concepts have distinct
+        array shapes for their representations, then this argument is expected
+        to be a list of `n_concepts` np.ndarrays where the i-th element in the
+        list is an array with shape (n_samples, ...) containing the tensor
+        representation of the i-th concept.
+        Note that in either case we only require that the first dimension.
+    :param np.ndarray c_train_true: Ground truth concept values in one-to-one
+        correspondence with concepts in c_train_soft. Shape must be
         (n_samples, n_concepts).
     :param Function[(int,), sklearn-like Estimator] predictor_model_fn: A
         function generator that takes as an argument the number of

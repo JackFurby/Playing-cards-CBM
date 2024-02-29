@@ -4,8 +4,8 @@ touch results/metrics/oracle_poker.txt
 #touch results/metrics/niche_poker.txt
 touch results/metrics/oracle_three.txt
 #touch results/metrics/niche_three.txt
-touch results/metrics/oracle_chexpert_f1.txt
-#touch results/metrics/niche_chexpert_f1.txt
+touch results/metrics/oracle_chexpert.txt
+#touch results/metrics/niche_chexpert.txt
 touch results/metrics/oracle_class_poker.txt
 #touch results/metrics/niche_class_poker.txt
 
@@ -128,7 +128,7 @@ do
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
-      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert_f1.txt" --mode $MODE  --dataset_name chexpert --set_splits
+      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert --set_splits
     done
   done
 
@@ -143,7 +143,7 @@ do
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
-      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert_f1.txt" --mode $MODE  --dataset_name chexpert --set_splits
+      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert --set_splits
     done
   done
 done
