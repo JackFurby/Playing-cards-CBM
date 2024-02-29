@@ -139,7 +139,7 @@ do
     do
       MODEL_NAME=$(basename $MODEL_PATH .ckpt)
       DATA_ROOT=dataset/chexpert
-      DATA_POST=splits/cheXbert
+      DATA_POST=splits/cheXbert_train_val_test
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
