@@ -48,7 +48,7 @@ class ChexpertDataset(Dataset):
 
 			sample = {
 				"id": dataset_split[i],
-				"img_path": os.getcwd() + "/" + dataset_root + "/CheXpert-v1.0" + "/" + dataset_split[i]["img_path"],
+				"img_path": os.getcwd() + "/" + dataset_root + "/" + dataset_split[i]["img_path"],
 				"class_index": dataset_split[i]["class_label"],  # class are 0 indexed
 				"concepts": final_concepts,
 			}
