@@ -128,7 +128,7 @@ do
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
-      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert --set_splits
+      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert
     done
   done
 
@@ -143,7 +143,7 @@ do
 
       echo "Starting $MODE scoring with model $MODEL_NAME"
 
-      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert --set_splits
+      python experiments/purity/scoring.py --pretrained_weights $MODEL_PATH --dataset_root $DATA_ROOT --dataset_postfix $DATA_POST --n_classes 2 --n_concepts 13 --results_txt "./results/metrics/${MODE}_chexpert.txt" --mode $MODE  --dataset_name chexpert
     done
   done
 done
