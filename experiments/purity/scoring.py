@@ -44,22 +44,29 @@ def imputityScore(x_to_c_model, train_loader, test_loader, mode, dataset, save_d
 	"""
 	x_to_c_model.eval()
 
+	if not os.path.exists(save_dir):
+		os.makedirs(save_dir)
+
 	# load concept vectors if they exist, otherwise generate them and save them
 	if os.path.isfile(f"{save_dir}/c_soft.pkl"):
 		c_soft = pickle.load(open(f"{save_dir}/c_soft.pkl", 'rb'))
 		c_true = pickle.load(open(f"{save_dir}/c_true.pkl", 'rb'))
+		print(f"using saved concept saves from {save_dir}")
 	else:
 		c_soft, c_true = getConceptVecs(x_to_c_model, test_loader, dataset)
 		pickle.dump(c_soft, open(f"{save_dir}/c_soft.pkl", "wb"))
 		pickle.dump(c_true, open(f"{save_dir}/c_true.pkl", "wb"))
+		print(f"Saving concepts to {save_dir}")
 
 	if os.path.isfile(f"{save_dir}/c_train_soft.pkl"):
 		c_train_soft = pickle.load(open(f"{save_dir}/c_train_soft.pkl", 'rb'))
 		c_train_true = pickle.load(open(f"{save_dir}/c_train_true.pkl", 'rb'))
+		print(f"using saved concept saves from {save_dir}")
 	else:
 		c_train_soft, c_train_true = getConceptVecs(x_to_c_model, train_loader, dataset)
 		pickle.dump(c_train_soft, open(f"{save_dir}/c_train_soft.pkl", "wb"))
 		pickle.dump(c_train_true, open(f"{save_dir}/c_train_true.pkl", "wb"))
+		print(f"Saving concepts to {save_dir}")
 
 	c_soft = np.stack(np.concatenate(c_soft, axis=0))
 	c_true = np.stack(np.concatenate(c_true, axis=0))
