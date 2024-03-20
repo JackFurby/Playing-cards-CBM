@@ -38,7 +38,7 @@ def getConceptVecs(x_to_c_model, data_loader, dataset):
 	return c_soft, c_true
 
 
-def imputityScore(x_to_c_model, train_loader, test_loader, mode, dataset, save_dir, set_splits=False):
+def imputityScore(x_to_c_model, train_loader, test_loader, mode, dataset, save_dir):
 	"""
 	save_dir (string): name of directory to save c_soft and c_train_soft to
 	"""
@@ -122,11 +122,6 @@ if __name__ == "__main__":
 		help='Name of dataset (default: "cards")'
 	)
 	parser.add_argument(
-		'--set_splits',
-		action='store_true',
-		help='Use if using the instance-level version oc CheXpert'
-	)
-	parser.add_argument(
 		'--n_classes',
 		type=int,
 		help='Number of classes in dataset'
@@ -206,7 +201,7 @@ if __name__ == "__main__":
 	else:
 		x_to_c_model = model.x_to_c_model
 
-	score, pred_matrix, oracle_matrix = imputityScore(x_to_c_model, train_loader, val_loader, mode=args.mode, dataset=args.dataset_name, save_dir=f"./results/metrics/{model_name}", set_splits=args.set_splits)
+	score, pred_matrix, oracle_matrix = imputityScore(x_to_c_model, train_loader, val_loader, mode=args.mode, dataset=args.dataset_name, save_dir=f"./results/metrics/{model_name}")
 	with open(args.results_txt, "a") as f:
 		f.write(f"{model_name} {score}\n")
 
