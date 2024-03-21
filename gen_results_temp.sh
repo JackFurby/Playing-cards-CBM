@@ -1,23 +1,176 @@
 #!/bin/bash
 
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
 
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
 
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
 
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
-python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
+
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
+
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
+
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
+
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1
+python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM
+
+# Extra runs. I may not use the results from these
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_cheXbert_train_val_test --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_1_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_1 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_0.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_1.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_2.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
+python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/sequential_class_2_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/all_class_level_2 --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq
