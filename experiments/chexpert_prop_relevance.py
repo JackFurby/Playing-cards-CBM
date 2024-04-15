@@ -20,6 +20,7 @@ from easydict import EasyDict as edict
 import json
 from PIL import Image, ImageDraw
 import torchvision.transforms as transforms
+import pickle
 
 from captum.attr import IntegratedGradients, Saliency, GuidedGradCam
 from captum.attr import NoiseTunnel
@@ -227,7 +228,9 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 	concept_pos_prop = sum(concept_pos) / sum(all_pos)
 
-	return concept_pos_prop, concept_neg_prop
+	positive, negative = zip(concept_pos, all_pos), zip(concept_neg, all_neg)
+
+	return concept_pos_prop, concept_neg_prop, positive, negative
 
 
 if __name__ == "__main__":
@@ -309,12 +312,16 @@ if __name__ == "__main__":
 	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
 	# gen average saliency maps for concepts
 	for i in range(len(concept_index_to_string.string_dict)):                                                                #<<< temp for testing
-		concept_pos_prop, concept_neg_prop = gen_relevancy_prop(model, args.saliency_mode, val_loader, concept_index_to_string, i, device, model_name)
+		concept_pos_prop, concept_neg_prop, positive_rel, negative_rel = gen_relevancy_prop(model, args.saliency_mode, val_loader, concept_index_to_string, i, device, model_name)
 		concept_relevance_prop.append((concept_pos_prop, concept_neg_prop))
 
 	save_dir = f"results/{args.saliency_mode}/{model_name}"
 	if not os.path.exists(f"{save_dir}"):
 		os.makedirs(f"{save_dir}")
+
+	# save relevancy to pickle files
+	pickle.dump(positive_rel, f"{save_dir}/positive_rel.pkl")
+	pickle.dump(negative_rel, f"{save_dir}/negative_rel.pkl")
 
 	# open file in write mode
 	with open(f"{save_dir}/concept_props.txt", "w") as fp:
