@@ -310,7 +310,7 @@ if __name__ == "__main__":
 	model.to(device)
 
 	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
-	positive_rel_list, negative_rel_list = []  # index of list is concept index
+	positive_rel_list, negative_rel_list = [], []  # index of list is concept index
 	# gen average saliency maps for concepts
 	for i in range(len(concept_index_to_string.string_dict)):                                                                #<<< temp for testing
 		concept_pos_prop, concept_neg_prop, positive_rel, negative_rel = gen_relevancy_prop(model, args.saliency_mode, val_loader, concept_index_to_string, i, device, model_name)
