@@ -320,8 +320,8 @@ if __name__ == "__main__":
 		os.makedirs(f"{save_dir}")
 
 	# save relevancy to pickle files
-	pickle.dump(positive_rel, f"{save_dir}/positive_rel.pkl")
-	pickle.dump(negative_rel, f"{save_dir}/negative_rel.pkl")
+	pickle.dump(positive_rel, open(f"{save_dir}/positive_rel.pkl", "wb"))
+	pickle.dump(negative_rel, open(f"{save_dir}/negative_rel.pkl", "wb"))
 
 	# open file in write mode
 	with open(f"{save_dir}/concept_props.txt", "w") as fp:
