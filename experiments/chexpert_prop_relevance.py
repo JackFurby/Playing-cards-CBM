@@ -310,9 +310,12 @@ if __name__ == "__main__":
 	model.to(device)
 
 	concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
+	positive_rel_list, negative_rel_list = []  # index of list is concept index
 	# gen average saliency maps for concepts
 	for i in range(len(concept_index_to_string.string_dict)):                                                                #<<< temp for testing
 		concept_pos_prop, concept_neg_prop, positive_rel, negative_rel = gen_relevancy_prop(model, args.saliency_mode, val_loader, concept_index_to_string, i, device, model_name)
+		positive_rel_list.append(positive_rel)
+		negative_rel_list.append(negative_rel)
 		concept_relevance_prop.append((concept_pos_prop, concept_neg_prop))
 
 	save_dir = f"results/{args.saliency_mode}/{model_name}"
@@ -320,8 +323,8 @@ if __name__ == "__main__":
 		os.makedirs(f"{save_dir}")
 
 	# save relevancy to pickle files
-	pickle.dump(positive_rel, open(f"{save_dir}/positive_rel.pkl", "wb"))
-	pickle.dump(negative_rel, open(f"{save_dir}/negative_rel.pkl", "wb"))
+	pickle.dump(positive_rel_list, open(f"{save_dir}/positive_rel.pkl", "wb"))
+	pickle.dump(negative_rel_list, open(f"{save_dir}/negative_rel.pkl", "wb"))
 
 	# open file in write mode
 	with open(f"{save_dir}/concept_props.txt", "w") as fp:
