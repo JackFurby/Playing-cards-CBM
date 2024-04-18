@@ -89,8 +89,9 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 	concept_relevance, all_relevance, concept_predictions = [], [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
-		for image_index in range(images.size(0)):
+		for image_index in range(images.size(0)):  # for each image
 			image = images[image_index].to(device)
+			true_concepts = concepts[image_index]
 			image = image.unsqueeze(0)
 			image.requires_grad_(True)
 			image.grad = None  # Reset gradient
@@ -102,7 +103,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 			for sample in pred_concepts:
 				for i, concept in enumerate(sample):
-					if (i == target_concept):  # Only get saliency for target concept
+					if (i == target_concept) and (true_concepts[i] == 1):  # Only get saliency for target concept. ground truth also needs to have present concept
 
 						segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
 
@@ -176,7 +177,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 							concept_neg = all_neg.detach().cpu() * alpha  # all image negative relevance
 							concept_relevance.append((torch.sum(concept_pos).item(), torch.sum(concept_neg).item()))
 
-							concept_predictions.append(torch.nn.Sigmoid()(concept))
+							concept_predictions.append(torch.nn.Sigmoid()(concept).cpu().item())
 
 	# work out the proportion of positive and negative relevance for the concept from the total relevance
 	all_pos = [x[0] for x in all_relevance]
