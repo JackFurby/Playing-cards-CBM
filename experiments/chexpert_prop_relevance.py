@@ -87,7 +87,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	elif mode == "gradCAM":
 		guided_gc = GuidedGradCam(model, model.backbone.features.denseblock4.denselayer16[5])
 
-	concept_relevance, all_relevance, concept_predictions = [], []. []
+	concept_relevance, all_relevance, concept_predictions = [], [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
 		for image_index in range(images.size(0)):
 			image = images[image_index].to(device)
