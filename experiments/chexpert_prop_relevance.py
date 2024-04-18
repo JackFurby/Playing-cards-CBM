@@ -87,7 +87,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	elif mode == "gradCAM":
 		guided_gc = GuidedGradCam(model, model.backbone.features.denseblock4.denselayer16[5])
 
-	concept_relevance, all_relevance = [], []
+	concept_relevance, all_relevance, concept_predictions = [], []. []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
 		for image_index in range(images.size(0)):
 			image = images[image_index].to(device)
@@ -176,44 +176,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 							concept_neg = all_neg.detach().cpu() * alpha  # all image negative relevance
 							concept_relevance.append((torch.sum(concept_pos).item(), torch.sum(concept_neg).item()))
 
-							"""
-							save_dir = f"results/{mode}/{model_name}"
-
-							attr = heatmap(attribution, cmap_name=seismic_alpha, num_clannels=4)
-
-							AX.clear()
-							AX.set_axis_off()
-							#AX.imshow(orig_image[image_index].squeeze())
-							if type(segmentation_img) == np.ndarray:
-								AX.imshow(alpha, cmap=green_alpha, interpolation='none', alpha=0.5)
-							AX.imshow(attr.squeeze(), cmap=seismic_alpha)
-							FIG.savefig(f'{save_dir}/full{(i)}.png', bbox_inches='tight', pad_inches = 0)
-
-							# Save concept saliency map
-							AX.clear()
-							AX.set_axis_off()
-							AX.set_facecolor("white")
-							AX.imshow(heatmap(all_pos).squeeze(), cmap='seismic')
-							FIG.savefig(f'{save_dir}/all_pos{(i)}.png', bbox_inches='tight', pad_inches = 0)
-
-							# Save concept saliency map
-							AX.clear()
-							AX.set_axis_off()
-							AX.imshow(heatmap(all_neg).squeeze(), cmap='seismic')
-							FIG.savefig(f'{save_dir}/all_neg{(i)}.png', bbox_inches='tight', pad_inches = 0)
-
-							# Save concept saliency map
-							AX.clear()
-							AX.set_axis_off()
-							AX.imshow(heatmap(concept_pos).squeeze())
-							FIG.savefig(f'{save_dir}/concept_pos{(i)}.png', bbox_inches='tight', pad_inches = 0)
-
-							# Save concept saliency map
-							AX.clear()
-							AX.set_axis_off()
-							AX.imshow(heatmap(concept_neg).squeeze())
-							FIG.savefig(f'{save_dir}/concept_neg{(i)}.png', bbox_inches='tight', pad_inches = 0)
-							"""
+							concept_predictions.append(torch.nn.Sigmoid()(concept))
 
 	# work out the proportion of positive and negative relevance for the concept from the total relevance
 	all_pos = [x[0] for x in all_relevance]
@@ -228,7 +191,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 	concept_pos_prop = sum(concept_pos) / sum(all_pos)
 
-	positive, negative = zip(concept_pos, all_pos), zip(concept_neg, all_neg)
+	positive, negative = zip(concept_pos, all_pos, concept_predictions), zip(concept_neg, all_neg, concept_predictions)
 
 	return concept_pos_prop, concept_neg_prop, positive, negative
 
