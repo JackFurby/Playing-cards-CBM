@@ -55,6 +55,8 @@ segmentations.update(segmentations_test)
 
 def get_human_segmentation(sample_key, concept_key, segmentations=segmentations):
 
+	#print(segmentations[sample_key].keys(), concept_key)
+
 	if sample_key not in segmentations.keys():
 		return None
 	if concept_key not in segmentations[sample_key].keys():
@@ -109,7 +111,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 						# get ground truth segmentation
 						if i == 0:
-							concept_key = "Enlarged Cardiomediastium"
+							concept_key = "Enlarged Cardiomediastinum"
 						if i == 1:
 							concept_key = "Cardiomegaly"
 						if i == 2:

@@ -391,7 +391,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 
 						# get ground truth segmentation
 						if i == 0:
-							concept_key = "Enlarged Cardiomediastium"
+							concept_key = "Enlarged Cardiomediastinum"
 						if i == 1:
 							concept_key = "Cardiomegaly"
 						if i == 2:
