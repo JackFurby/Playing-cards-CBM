@@ -108,31 +108,31 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 						segmentation_key = "_".join(extra["path"][image_index].split("/")[-3:]).split(".")[0]
 
 						# get ground truth segmentation
-						if image_index == 0:
+						if i == 0:
 							concept_key = "Enlarged Cardiomediastium"
-						if image_index == 1:
+						if i == 1:
 							concept_key = "Cardiomegaly"
-						if image_index == 2:
+						if i == 2:
 							concept_key = "Airspace Opacity"  # Lung Opacity
-						if image_index == 3:
+						if i == 3:
 							concept_key = "Lung Lesion"
-						if image_index == 4:
+						if i == 4:
 							concept_key = "Edema"
-						if image_index == 5:
+						if i == 5:
 							concept_key = "Consolidation"
-						if image_index == 6:
+						if i == 6:
 							concept_key = "Pneumonia"
-						if image_index == 7:
+						if i == 7:
 							concept_key = "Atelectasis"
-						if image_index == 8:
+						if i == 8:
 							concept_key = "Pneumothorax"
-						if image_index == 9:
+						if i == 9:
 							concept_key = "Pleural Effusion"
-						if image_index == 10:
+						if i == 10:
 							concept_key = "Plaural Other"
-						if image_index == 11:
+						if i == 11:
 							concept_key = "Fracture"
-						if image_index == 12:
+						if i == 12:
 							concept_key = "Support Devices"
 
 						segmentation_img = get_human_segmentation(segmentation_key, concept_key)
