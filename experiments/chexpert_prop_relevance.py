@@ -192,7 +192,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 
 	concept_pos_prop = sum(concept_pos) / sum(all_pos)
 
-	positive, negative = zip(concept_pos, all_pos, concept_predictions), zip(concept_neg, all_neg, concept_predictions)
+	positive, negative = (concept_pos, all_pos, concept_predictions), (concept_neg, all_neg, concept_predictions)
 
 	return concept_pos_prop, concept_neg_prop, positive, negative
 
