@@ -123,7 +123,7 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 						if i == 5:
 							concept_key = "Consolidation"
 						if i == 6:
-							concept_key = "Pneumonia"
+							concept_key = "Pneumonia"  # not included in CheXlocalize
 						if i == 7:
 							concept_key = "Atelectasis"
 						if i == 8:
@@ -131,9 +131,9 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 						if i == 9:
 							concept_key = "Pleural Effusion"
 						if i == 10:
-							concept_key = "Plaural Other"
+							concept_key = "Plaural Other"  # not included in CheXlocalize
 						if i == 11:
-							concept_key = "Fracture"
+							concept_key = "Fracture"  # not included in CheXlocalize
 						if i == 12:
 							concept_key = "Support Devices"
 
@@ -190,9 +190,14 @@ def gen_relevancy_prop(model, mode, data_loader, concept_index_to_string, target
 	if mode == "ig_sg_sq":
 		concept_neg_prop = 0
 	else:
-		concept_neg_prop = sum(concept_neg) / sum(all_neg)
-
-	concept_pos_prop = sum(concept_pos) / sum(all_pos)
+		if len(all_neg) == 0:
+			concept_neg_prop = 0
+		else:
+			concept_neg_prop = sum(concept_neg) / sum(all_neg)
+	if len(all_pos) == 0:
+		concept_pos_prop = 0
+	else:
+		concept_pos_prop = sum(concept_pos) / sum(all_pos)
 
 	positive, negative = (concept_pos, all_pos, concept_predictions), (concept_neg, all_neg, concept_predictions)
 

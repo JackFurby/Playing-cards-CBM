@@ -403,7 +403,7 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						if i == 5:
 							concept_key = "Consolidation"
 						if i == 6:
-							concept_key = "Pneumonia"
+							concept_key = "Pneumonia"  # not included in CheXlocalize
 						if i == 7:
 							concept_key = "Atelectasis"
 						if i == 8:
@@ -411,9 +411,9 @@ def gen_captum_saliency(model, mode, data_loader, concept_index_to_string, devic
 						if i == 9:
 							concept_key = "Pleural Effusion"
 						if i == 10:
-							concept_key = "Plaural Other"
+							concept_key = "Plaural Other"  # not included in CheXlocalize
 						if i == 11:
-							concept_key = "Fracture"
+							concept_key = "Fracture"  # not included in CheXlocalize
 						if i == 12:
 							concept_key = "Support Devices"
 
