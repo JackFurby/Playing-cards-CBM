@@ -20,6 +20,7 @@ from easydict import EasyDict as edict
 import json
 from PIL import Image, ImageDraw
 import torchvision.transforms as transforms
+import pickle
 
 from captum.attr import IntegratedGradients, Saliency, GuidedGradCam
 from captum.attr import NoiseTunnel, LayerAttribution
