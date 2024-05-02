@@ -151,7 +151,7 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		sample_gen_count.append(0)
 
 	sample_num = 0
-	concept_saliency, card_relevance, all_relevance, all_cards_relevance = [], [], [], []
+	concept_saliency, card_relevance, all_relevance, all_cards_relevance, concept_predictions = [], [], [], [], []
 	for images, labels, concepts, extra in tqdm(data_loader, unit="batch"):
 		card_points = extra["points"]
 		card_classes = extra["card_classes"]
@@ -246,6 +246,8 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 
 							concept_saliency.append(card_gradient)
 
+							concept_predictions.append(torch.nn.Sigmoid()(pred_concepts[0][i]).cpu().item())
+
 			sample_num += 1
 
 	if len(concept_saliency) > 0:
@@ -273,7 +275,9 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		concept_cards_pos_prop = sum(concept_pos) / sum(cards_pos)
 		concept_cards_neg_prop = sum(concept_neg) / sum(cards_neg)
 
-		return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop
+		positive, negative = zip(concept_pos, all_pos, cards_pos, concept_predictions), zip(concept_neg, all_neg, cards_neg, concept_predictions)
+
+		return concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop, positive, negative
 	# We only use the return values if we have a target concept
 	else:
 		return None
@@ -585,10 +589,13 @@ if __name__ == "__main__":
 
 
 		concept_relevance_prop = []  # all_pos, all_neg, cards_pos, cards_neg
+		positive_rel_list, negative_rel_list = [], []  # index of list is concept index
 		# gen average saliency maps for concepts
 		for i in range(len(concept_index_to_string.string_dict)):
-			concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop = gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
+			concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop, positive, negative = gen_lrp_saliency([XtoC_model_1, XtoC_model_2, XtoC_model_3], ["alpha1beta0", "epsilon", "gradient"], val_loader, concept_index_to_string, device, model_name, target_concept=i)
 			concept_relevance_prop.append((concept_all_pos_prop, concept_all_neg_prop, concept_cards_pos_prop, concept_cards_neg_prop))
+			positive_rel_list.append(positive)
+			negative_rel_list.append(negative)
 
 		# open file in write mode
 		with open(f"results/lrp/{model_name}/concept_props.txt", "w") as fp:
@@ -596,6 +603,10 @@ if __name__ == "__main__":
 			for idx, item in enumerate(concept_relevance_prop):
 				# write each item on a new line
 				fp.write(f"{idx}, {concept_index_to_string(idx)}, {item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
+
+		# save relevancy to pickle files
+		pickle.dump(positive_rel_list, open(f"results/lrp/{model_name}/positive_rel.pkl", "wb"))
+		pickle.dump(negative_rel_list, open(f"results/lrp/{model_name}/negative_rel.pkl", "wb"))
 
 	else:
 		if args.dataset_name == "chexpert":

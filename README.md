@@ -182,33 +182,33 @@ Note: CheXpert models can be tested with the notebook `chexpert_test.ipynb`
 
 ### saliency maps (samples and averages)
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode lrp`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/independent-poker-seed-782.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/joint_sig-poker-seed-738.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
+`python experiments/relevance.py --pretrained_weights ./saves/converted/sequential-three-seed-46.pth --dataset_root dataset/playing-cards --dataset_postfix splits/three_card_poker --n_classes 6 --n_concepts 52 --saliency_mode ig_sg_sq`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
+`python experiments/relevance.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1`
+`python experiments/relevance.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1`
+`python experiments/relevance.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
 `python experiments/chexpert_prop_relevance.py --pretrained_weights ./saves/chexpert/joint_4.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/cheXbert --n_classes 2 --n_concepts 13 --saliency_mode ig_sg_sq`
 
-`python experiments/relevancy.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
+`python experiments/relevance.py --pretrained_weights ./saves/chexpert/sequential_class_0_3.ckpt --dataset_root dataset/chexpert --dataset_postfix splits/class_level_0 --n_classes 2 --n_concepts 13 --saliency_mode gradCAM --dataset_file test --dataset_name chexpert --samples_per_class -1`
 
 ### ROAR
 
@@ -221,75 +221,6 @@ Note: CheXpert models can be tested with the notebook `chexpert_test.ipynb`
 
 
 ### Purity (OIS)
-
-#### setup
-
-1. Clone `https://github.com/mateoespinosa/concept-quality`
-
-2. Update `requiremetns.txt`
-
-  ```
-  matplotlib==3.7.1
-  matplotlib-inline==0.1.6
-  numpy==1.24.2
-  scanpy==1.9.3
-  scikit-learn==1.2.0
-  scipy==1.9.1
-  Pillow==10.2.0
-  pandas==1.5.3
-  h5py==3.8.0
-  PyYAML==6.0
-  sklearn==0.0
-  setuptools==67.5.*
-  tensorboard==2.11.2
-  tensorboard-data-server==0.6.1
-  tensorboard-plugin-wit==1.8.1
-  tensorflow==2.11.0
-  tensorflow-datasets==4.8.3
-  tensorflow-estimator==2.11.0
-  tensorflow-io-gcs-filesystem==0.31.0
-  tensorflow-metadata==1.12.0
-  tensorflow-probability==0.19.0
-  ```
-
-3. Update `setup.py`
-
-  ```py
-  from setuptools import setup, find_packages
-
-  with open("README.md", "r") as f:
-      long_description = f.read()
-
-  with open('requirements.txt') as f:
-      required = f.read().splitlines()
-
-  version = '0.1.0'
-  setup(
-      name='concepts_xai',
-      version=version,
-      packages=find_packages(),
-      install_requires=required,
-      description='Concept Extraction Comparison',
-      long_description=long_description,
-      long_description_content_type="text/markdown",
-      python_requires='>=3.6',
-      classifiers=[
-          "Programming Language :: Python :: 3",
-          "License :: OSI Approved :: Apache-2.0 License",
-          "Operating System :: OS Independent",
-      ],
-  )
-  ```
-
-4. Update `requirements.txt`
-
-  Some pip packages will need updating. This list may not be complete
-
-  ```
-  Pillow==10.2.*
-  ```
-
-5. Install `concepts_xai` from concept-quality directory: `python setup.py install`
 
 #### Run experiments
 

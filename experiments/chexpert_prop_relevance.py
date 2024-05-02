@@ -55,8 +55,6 @@ segmentations.update(segmentations_test)
 
 def get_human_segmentation(sample_key, concept_key, segmentations=segmentations):
 
-	#print(segmentations[sample_key].keys(), concept_key)
-
 	if sample_key not in segmentations.keys():
 		return None
 	if concept_key not in segmentations[sample_key].keys():
