@@ -256,6 +256,9 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 		avg_gradient = avg_gradient.unsqueeze(0)
 		attr = heatmap(avg_gradient, cmap_name='seismic')
 
+		save_dir = f"results/lrp/{model_name}/"
+		if not os.path.exists(f"{save_dir}"):
+			os.makedirs(f"{save_dir}")
 		AX.clear()
 		AX.set_axis_off()
 		AX.imshow(attr.squeeze(), cmap='seismic')
