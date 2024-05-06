@@ -234,9 +234,13 @@ def gen_lrp_saliency(model_parts, rules, data_loader, concept_index_to_string, d
 									if card_classes[image_index][concept].item() == i:  # true if card in image matches i
 										card_cord = card_points[image_index][concept]
 
+							temp_all_cards_relevance = []
 							for i in range(card_classes[image_index].size(0)):
 								card_gradient, card_pos, card_neg = extract_card(image_gradient, card_points[image_index][i])
-								all_cards_relevance.append((card_pos, card_neg))
+								temp_all_cards_relevance.append((card_pos, card_neg))
+							temp_cards_pos = sum([x[0] for x in temp_all_cards_relevance])
+							temp_cards_neg = sum([x[1] for x in temp_all_cards_relevance])
+							all_cards_relevance.append((temp_cards_pos, temp_cards_neg))
 
 							card_gradient, card_pos, card_neg = extract_card(image_gradient, card_cord)
 							card_relevance.append((card_pos, card_neg))
