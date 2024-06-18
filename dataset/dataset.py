@@ -10,7 +10,7 @@ from dataset.chexpert import ChexpertDataset
 from dataset.cub import CubDataset
 from dataset.playing_cards import PlayingCardDataset
 from dataset.skin import SkinDataset
-from datast.blackjack import BlackjackDataset
+from dataset.blackjack import BlackjackDataset
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
