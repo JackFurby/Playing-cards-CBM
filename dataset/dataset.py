@@ -10,6 +10,7 @@ from dataset.chexpert import ChexpertDataset
 from dataset.cub import CubDataset
 from dataset.playing_cards import PlayingCardDataset
 from dataset.skin import SkinDataset
+from datast.blackjack import BlackjackDataset
 
 
 # https://github.com/yewsiang/ConceptBottleneck/blob/master/CUB/dataset.py
@@ -61,7 +62,7 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 	"""
 	"""
 	is_training = True if ('train.pkl' in pkl_path and train_transform) else False
-	if dataset_name=="cards":
+	if dataset_name in ["cards", "blackjack"]:
 		if is_training:
 			transform = transforms.Compose([
 				transforms.Resize((y_resize, x_resize)),
@@ -141,6 +142,8 @@ def load_data(pkl_path, batch_size, dataset_root='dataset/playing_cards', datase
 
 	if dataset_name == "cards":
 		dataset = PlayingCardDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
+	if dataset_name == "blackjack":
+		dataset = BlackjackDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path, return_points=return_points)
 	elif dataset_name == "CUB":
 		dataset = CubDataset(pkl_path, dataset_root, transform, return_orig=return_orig, resize_orig=resize_orig, return_path=return_path)
 	elif dataset_name == "chexpert":
