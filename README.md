@@ -1,6 +1,6 @@
 # Playing cards CBM
 
-This repository is for the IJCAI review process. This code will train models on the playing cards dataset and test models on the playing cards dataset and CheXpert. The playing cards dataset is not included for the review process but will be made available for the camera-ready paper.
+This code was used for the paper ["Can we Constrain Concept Bottleneck Models to Learn Semantically Meaningful Input Features?"](https://arxiv.org/abs/2402.00912). The code includes functions to train models on the [playing cards](https://huggingface.co/datasets/JackFurby/playing-cards) dataset and test models on the datasets playing cards, and [CheXpert](https://stanfordmlgroup.github.io/competitions/chexpert/).
 
 If you do not have enough memory on your GPU (some experiments will need 24GB), the flag `--use_cpu` can be added to run experiments on the CPU. This will increase time required to run experiments significantly.
 
@@ -28,6 +28,7 @@ Note: These instructions were designed for Ubuntu 22.04. They should however be 
 
     Datasets should be in the following file structure
 
+    ```
     root
     |
     |--datasets
@@ -126,6 +127,7 @@ Note: These instructions were designed for Ubuntu 22.04. They should however be 
     |  |  |  |  |--classes.txt
     |  |  |  |  |
     |  |  |  |  |--concepts.txt
+    ```
 
 ## Model training (optional)
 
